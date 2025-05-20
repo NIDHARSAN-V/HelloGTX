@@ -32,7 +32,7 @@ const QueryPackageManagerSchema = new mongoose.Schema({
 //     type: mongoose.Schema.Types.ObjectId,
 //     ref: "Itinerary"
 //   },
-
+//added
   // Status Tracking
   status: {
     type: String,
