@@ -186,3 +186,6 @@ const LeadSchema = new mongoose.Schema({
   LeadSchema.index({ assignedTo: 1, status: 1 });
   LeadSchema.index({ "destinations.country": 1 });
   LeadSchema.index({ "travelDates.exactDates.from": 1 });
+
+
+  
