@@ -1,8 +1,8 @@
-const AgentPerformanceSchema = new mongoose.Schema({
+const EmployeePerformanceSchema = new mongoose.Schema({
     // Reference
-    agentId: { 
+    empId: { 
       type: mongoose.Schema.Types.ObjectId, 
-      ref: "User", 
+      ref: "Employee", 
       required: true,
       index: true
     },
@@ -13,11 +13,14 @@ const AgentPerformanceSchema = new mongoose.Schema({
       enum: ["daily", "weekly", "monthly", "quarterly", "yearly", "custom"],
       required: true
     },
+
+
     startDate: { 
       type: Date, 
       required: true,
       index: true
     },
+    
     endDate: { 
       type: Date, 
       required: true,

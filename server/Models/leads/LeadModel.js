@@ -189,3 +189,27 @@ const LeadSchema = new mongoose.Schema({
 
 
   
+
+
+
+  //   tasks: [
+//     {
+//       title: String,
+//       description: String,
+//       priority: {
+//         type: String,
+//         enum: ["Low", "Medium", "High"],
+//         default: "Medium",
+//       },
+//       dueDate: Date,
+//       status: {
+//         type: String,
+//         enum: ["Pending", "Completed", "In Progress"],
+//         default: "Pending",
+//       },
+//       relatedCustomer: {
+//         type: mongoose.Schema.Types.ObjectId,
+//         ref: "Customer",
+//       },
+//     },
+//   ],

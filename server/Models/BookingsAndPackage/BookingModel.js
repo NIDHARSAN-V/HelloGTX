@@ -8,19 +8,16 @@ const BookingSchema = new mongoose.Schema({
     },
     customerId: { 
       type: mongoose.Schema.Types.ObjectId, 
-      ref: "User", 
+      ref: "Customer", 
       required: true,
       index: true
     },
-    agentId: { 
+    empId: { 
       type: mongoose.Schema.Types.ObjectId, 
-      ref: "User", 
+      ref: "Employee", 
       index: true
     },
-    itineraryId: { 
-      type: mongoose.Schema.Types.ObjectId, 
-      ref: "Itinerary" 
-    },
+
   
     // Booking Details
     bookingReference: { 
@@ -149,6 +146,9 @@ const BookingSchema = new mongoose.Schema({
     timestamps: true
   });
   
+
+
+
   // Indexes
   BookingSchema.index({ bookingReference: 1 }, { unique: true });
   BookingSchema.index({ customerId: 1, status: 1 });
