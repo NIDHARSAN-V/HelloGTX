@@ -1,5 +1,8 @@
 const UserSchema = new mongoose.Schema({
-    // Identity
+    //Customer Ref
+    customerRef: { type: mongoose.Schema.Types.ObjectId, ref: "Customer" },
+    // Employee Ref
+    employeeRef: { type: mongoose.Schema.Types.ObjectId, ref: "Employee" },
     firstName: { type: String, required: true, trim: true },
     lastName: { type: String, required: true, trim: true },
     email: { 
@@ -31,65 +34,27 @@ const UserSchema = new mongoose.Schema({
     // Roles & Permissions
     role: { 
       type: String, 
-      enum: ["super_admin", "admin", "agent", "customer"], 
+      enum: ["super_admin","employee", "admin", "customer"], 
       default: "customer",
       required: true
     },
-    permissions: {
-      dashboard: { type: Boolean, default: false },
-      leads: { type: Boolean, default: false },
-      bookings: { type: Boolean, default: false },
-      payments: { type: Boolean, default: false },
-      reports: { type: Boolean, default: false },
-      settings: { type: Boolean, default: false }
-    },
-  
-    // Agent-Specific
-    employeeId: { type: String, unique: true, sparse: true },
-    department: {
-      type: String,
-      enum: ["sales", "operations", "customer_support", "marketing"]
-    },
-    joiningDate: Date,
-    commissionRate: { 
-      type: Number, 
-      min: 0, 
-      max: 100,
-      default: 5 
-    },
-    targets: {
-      monthlyLeads: Number,
-      monthlySales: Number
-    },
   
     // Customer-Specific
-    address: {
+   /*  address: {
       street: { type: String, trim: true },
       city: { type: String, trim: true },
       state: { type: String, trim: true },
       country: { type: String, trim: true, default: "India" },
       postalCode: { type: String, trim: true }
-    },
-    passportDetails: {
-      number: { type: String, trim: true },
-      expiryDate: Date,
-      issueDate: Date,
-      issueCountry: String,
-      scanFront: String, // URL to document
-      scanBack: String
-    },
-    preferences: {
-      preferredDestinations: [String],
-      travelClass: { type: String, enum: ["economy", "business", "first"] },
-      dietaryRequirements: [String]
-    },
+    }, */
+    
+    dateOfBirth: { type: Date },
   
     // Authentication
     emailVerified: { type: Boolean, default: false },
     phoneVerified: { type: Boolean, default: false },
     verificationToken: String,
     resetPasswordToken: String,
-    resetPasswordExpires: Date,
   
     // Status
     isActive: { type: Boolean, default: true },
@@ -101,18 +66,14 @@ const UserSchema = new mongoose.Schema({
       os: String,
       timestamp: { type: Date, default: Date.now }
     }],
-  
-    // Timestamps
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: Date,
-    deletedAt: Date // Soft delete
+
+
   }, {
     timestamps: true,
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true }
+    /* toJSON: { virtuals: true },
+    toObject: { virtuals: true } */
   });
   
   // Indexes
   UserSchema.index({ email: 1 }, { unique: true });
   UserSchema.index({ phone: 1 }, { unique: true, sparse: true });
-  UserSchema.index({ role: 1, isActive: 1 });
