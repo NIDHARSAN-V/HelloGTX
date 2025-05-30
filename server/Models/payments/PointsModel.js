@@ -17,6 +17,8 @@ const CommissionSchema = new mongoose.Schema({
     index: true
   },
 
+
+
   // Commission Calculation
   commissionType: { 
     type: String, 
@@ -40,6 +42,10 @@ const CommissionSchema = new mongoose.Schema({
     uppercase: true
   },
 
+
+  
+
+
   // Achkos Points System
   points: {
     earned: { type: Number, default: 0 },
@@ -57,6 +63,7 @@ const CommissionSchema = new mongoose.Schema({
     rate: Number, // Points per currency unit
     expiryDate: Date
   },
+
 
   // Payment Status
   status: { 
@@ -80,6 +87,8 @@ const CommissionSchema = new mongoose.Schema({
     processedAt: Date,
     processedBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" }
   },
+
+
 
   // Dispute Resolution
   dispute: {
@@ -107,6 +116,9 @@ const CommissionSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
+
+
 
 // Indexes
 CommissionSchema.index({ agentId: 1, status: 1 });

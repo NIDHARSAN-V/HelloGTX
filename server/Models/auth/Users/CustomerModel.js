@@ -9,6 +9,7 @@ const customerSchema = new mongoose.Schema({
     zipCode: String,
   },
 
+
   passport: {
     passportNumber: { type: String, required: true },
     countryOfIssue: { type: String, required: true },
@@ -18,7 +19,9 @@ const customerSchema = new mongoose.Schema({
     nationality: String,
     documentImage: String, // URL or path to uploaded image (e.g., S3 or local storage)
     isVerified: { type: Boolean, default: false }
-  },  
+  }, 
+  
+  
   nationality: String,
   preferredDestinations: [String],
   travelHistory: [

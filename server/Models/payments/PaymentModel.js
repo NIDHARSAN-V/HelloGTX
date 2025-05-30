@@ -18,6 +18,8 @@ const PaymentMilestoneSchema = new mongoose.Schema({
       required: true,
       index: true
     },
+
+
   
     // Milestone Details
     name: { 
@@ -84,8 +86,11 @@ const PaymentMilestoneSchema = new mongoose.Schema({
         "other"
       ]
     },
+
+
     paymentGateway: String,
     paymentGatewayReference: String,
+    //
   
     // Transactions
     transactions: [{
@@ -98,6 +103,8 @@ const PaymentMilestoneSchema = new mongoose.Schema({
       receiptUrl: String
     }],
   
+
+
     // Achkos Points
     pointsAwarded: { type: Number, default: 0 },
     pointsRate: Number, // Points per currency unit
@@ -109,12 +116,17 @@ const PaymentMilestoneSchema = new mongoose.Schema({
       templateId: String,
       response: String
     }],
+
+
+
   
     // Documents
     invoiceNumber: String,
     invoiceUrl: String,
     receiptNumber: String,
     receiptUrl: String,
+
+
   
     // Metadata
     notes: [{
@@ -122,6 +134,8 @@ const PaymentMilestoneSchema = new mongoose.Schema({
       createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
       createdAt: { type: Date, default: Date.now }
     }],
+
+
   
     // Timestamps
     createdAt: { type: Date, default: Date.now, index: true },
@@ -130,6 +144,9 @@ const PaymentMilestoneSchema = new mongoose.Schema({
   }, {
     timestamps: true
   });
+
+
+
   
   // Indexes
   PaymentMilestoneSchema.index({ dueDate: 1, status: 1 });

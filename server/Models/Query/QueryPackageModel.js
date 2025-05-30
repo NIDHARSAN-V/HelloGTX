@@ -8,9 +8,9 @@ const QueryPackageManagerSchema = new mongoose.Schema({
   },
 
 
-  status: {
+  onStatus: {
     type: String,
-    enum: ["draft", "confirmed", "active", "completed", "cancelled"],
+    enum: ["draft", "confirmed", "completed", "cancelled"],
   },
 
   
@@ -108,7 +108,7 @@ const QueryPackageManagerSchema = new mongoose.Schema({
             weight: Number,
           },
         },
-        refundable: Boolean,
+        refundable:{required:true ,  type:Boolean , default:false}, // whether the flight is refundable
       },
     ],
 
@@ -129,7 +129,7 @@ const QueryPackageManagerSchema = new mongoose.Schema({
         amenities: [String],
         checkIn: { type: Date, required: true },
         checkOut: { type: Date, required: true },
-        cancellationPolicy: String,
+        cancellationPolicy: [String],
 
       },
     ],
@@ -151,9 +151,11 @@ const QueryPackageManagerSchema = new mongoose.Schema({
 
 
 
+
     // ======================
     // 4. PRICING & PAYMENTS
     // ======================
+
     pricing: {
       basePrice: { type: Number, required: true },
       components: {
@@ -200,6 +202,9 @@ const QueryPackageManagerSchema = new mongoose.Schema({
     },
 
 
+
+
+
     // ======================
     // 5. LOGISTICS & POLICIES
     // ======================
@@ -213,13 +218,15 @@ const QueryPackageManagerSchema = new mongoose.Schema({
     },
     termsConditions: String,
 
+
+
     // ======================
     // 6. SYSTEM FIELDS
     // ======================
-    status: {
+    offStatus: {
       type: String,
-      enum: ["draft", "active", "sold_out", "archived"],
-      default: "draft",
+      enum: [ "sold_out", "active"],
+      default: "active",
     },
 
 
