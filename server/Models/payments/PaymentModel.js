@@ -153,3 +153,6 @@ const PaymentMilestoneSchema = new mongoose.Schema({
   PaymentMilestoneSchema.index({ bookingId: 1, status: 1 });
   PaymentMilestoneSchema.index({ customerId: 1 });
   PaymentMilestoneSchema.index({ "transactions.date": -1 });
+
+
+  //transx
