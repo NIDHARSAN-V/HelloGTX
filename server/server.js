@@ -1,10 +1,44 @@
-// 1 ) relate the ref and complete the queryPackageModel.js
+// require('dotenv').config();  // Load environment variables from .env file
+const express = require("express");
+const mongoose = require("mongoose");
+const cookieParser = require("cookie-parser");
+const cors = require("cors");
+const auth_router = require('./Routers/Auth/AuthRouter');  // Import the auth router
 
-// 2 ) check out the  variables with the releated to the hellogtx and also verify with video  if not added add it 
+require("dotenv").config();  // Load environment variables from .env file
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("MongoDB connected"))
+  .catch((error) => console.log(error));
 
-// 3 ) put an itinery url attribute in the requried schema / model 
+const app = express();
+const PORT = process.env.PORT || 5000;  
 
-// 4 ) if any schema is missing then implment it along with the notes and videos 
+app.use(
+  cors({
+    origin: "http://localhost:5173",  
+    methods: ["GET", "POST", "DELETE", "PUT"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "Cache-Control",
+      "Expires",
+      "Pragma",
+    ],
+    credentials: true,
+  })
+);
 
-// 5 ) Segregate the schema into folders with relted ones like query contains visa , flight , hotel ...
 
+
+app.use(cookieParser());
+app.use(express.json());
+
+
+
+
+app.use('/api/auth' , auth_router);
+
+
+
+app.listen(PORT, () => console.log(`Server is now running on port ${PORT}`));

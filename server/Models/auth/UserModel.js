@@ -1,3 +1,5 @@
+const mongoose = require("mongoose");
+
 const UserSchema = new mongoose.Schema({
     //Customer Ref
     customerRef: { type: mongoose.Schema.Types.ObjectId, ref: "Customer" },
@@ -75,5 +77,9 @@ const UserSchema = new mongoose.Schema({
   });
   
   // Indexes
-  UserSchema.index({ email: 1 }, { unique: true });
-  UserSchema.index({ phone: 1 }, { unique: true, sparse: true });
+// Indexes
+UserSchema.index({ email: 1 }, { unique: true });
+UserSchema.index({ phone: 1 }, { unique: true, sparse: true });
+
+const User = mongoose.model("User", UserSchema);
+module.exports = User;

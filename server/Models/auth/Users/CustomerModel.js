@@ -1,3 +1,5 @@
+//profile filling customer 
+
 const mongoose = require("mongoose");
 
 const customerSchema = new mongoose.Schema({
