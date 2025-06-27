@@ -126,6 +126,7 @@ import { checkAuth } from "./Store/AuthSlice";
 import { useDispatch, useSelector } from "react-redux";
 import CheckAuth from "./Common/CheckAuth";
 import NotFound from "./Common/NotFound";
+import CustomizePackageForm from "./pages/pakages/CustomizePackageForm";
 
 const RootLayout = () => {
   const { isAuthenticated, isLoading } = useSelector(state => state.auth);
@@ -163,6 +164,7 @@ const RootLayout = () => {
             <Route path="/hotels" element={<HotelsPage />} />
             <Route path="/hotels/:id" element={<HotelDetailPage />} />
             <Route path="/packages/:id" element={<PackageDetailsPage />} />
+            <Route path="/customize-packages" element={<CustomizePackageForm />} />
             <Route path="/flights" element={<FlightsPage />} />
             <Route path="/packages" element={<PackagesPage />} />
 
