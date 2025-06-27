@@ -69,7 +69,6 @@ const AuthRegister = () => {
     try {
       await dispatch(registerUser(data));
       console.log(data , " Object Reg +++++++")
-      //store the data.email in localstorage
       localStorage.setItem('registeredEmail', data.email);
       setRegisteredEmail(data.email); // Store the email for OTP verification
     } finally {
