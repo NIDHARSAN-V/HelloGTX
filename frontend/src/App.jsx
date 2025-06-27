@@ -125,6 +125,7 @@ import AuthRegister from "./pages/auth/AuthRegister";
 import { checkAuth } from "./Store/AuthSlice";
 import { useDispatch, useSelector } from "react-redux";
 import CheckAuth from "./Common/CheckAuth";
+import NotFound from "./Common/NotFound";
 
 const RootLayout = () => {
   const { isAuthenticated, isLoading } = useSelector(state => state.auth);
@@ -178,7 +179,7 @@ const RootLayout = () => {
             } />
 
             {/* Fallback route */}
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<NotFound/>} />
           </Routes>
         </main>
         <Footer />
