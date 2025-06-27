@@ -55,6 +55,7 @@ export default function Header() {
 
   const handleLogout = async () => {
     try {
+      console.log("Logout in header called");
       const response = await axios.post(
         "http://localhost:8000/api/auth/logout"
       );
