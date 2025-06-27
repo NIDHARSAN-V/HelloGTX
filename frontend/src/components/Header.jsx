@@ -2,8 +2,10 @@ import { useState, useRef, useEffect } from "react";
 import { Menu, User, Search, MapPin } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import ThemeSelector from "./ThemeSelector";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useDispatch, useSelector } from "react-redux";
+import { logoutUser } from "../Store/AuthSlice";
 
 const navigation = [
   { name: "Home", href: "/" },
@@ -19,10 +21,15 @@ export default function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
+  // const [isLoggedIn, setIsLoggedIn] = useState(false);
   const sidebarRef = useRef(null);
   const profileDropdownRef = useRef(null);
   const userIconRef = useRef(null);
+
+
+  const { isAuthenticated } = useSelector(state => state.auth);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -53,32 +60,24 @@ export default function Header() {
     };
   }, [isMobileMenuOpen, isUserDropdownOpen]);
 
+
   const handleLogout = async () => {
     try {
-      console.log("Logout in header called");
-      const response = await axios.post(
-        "http://localhost:8000/api/auth/logout"
-      );
-      console.log("Logout response:", response);
-      if (response.status === 200) {
-        console.log("Logout successful");
-        setIsUserDropdownOpen(false);
-
-        // window.location.reload();
-      }
+      await dispatch(logoutUser());
+      navigate("/");
     } catch (error) {
-      console.error("Logout failed:", error);
+      console.log("Error occured at Logout UI");
     }
   };
 
-  const UserDropdown = ({ isLoggedIn }) => {
+  const UserDropdown = ({ }) => {
     return (
       <div
         ref={profileDropdownRef}
         className="absolute right-0 mt-2 w-48 rounded-md bg-white shadow-lg border border-gray-200"
       >
         <div className="py-1">
-          {!isLoggedIn ? (
+          {isAuthenticated ? (
             <>
               <Link
                 to="/profile"
@@ -98,16 +97,16 @@ export default function Header() {
           ) : (
             <>
               <Link
-                to="/signin"
+                to="/login"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
               >
-                Sign In
+                Login
               </Link>
               <Link
-                to="/signup"
+                to="/register"
                 className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
               >
-                Sign Up
+                Register
               </Link>
             </>
           )}
