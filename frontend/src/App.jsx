@@ -13,6 +13,7 @@ import ItineraryForm from "./pages/ItineraryForm/ItineraryForm";
 import PackageDetailsPage from "./pages/pakages/PackageDetailsPage";
 import AuthLogin from "./pages/auth/AuthLogin";
 import AuthRegister from "./pages/auth/AuthRegister";
+import ForgotPassword from "./pages/auth/ForgotPassword";
 
 const RootLayout = () => {
   return (
@@ -24,6 +25,7 @@ const RootLayout = () => {
             <Route path="/" element={<Home />} />
             <Route path="/login" element={<AuthLogin />} />
             <Route path="/register" element={<AuthRegister />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/destinations" element={<DestinationsPage />} />
             <Route path="/hotels" element={<HotelsPage />} />
             <Route path="/hotels/:id" element={<HotelDetailPage />} />

@@ -171,7 +171,7 @@ const forgotPassword = async (req, res) => {
     const otp = generateOTP();
     otpStorage.set(email, {
       otp,
-      expiresAt: Date.now() + 600000, // 10 minutes
+      expiresAt: Date.now() + 600000,
       purpose: 'password_reset'
     });
 
