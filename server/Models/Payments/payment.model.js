@@ -1,5 +1,4 @@
 const PaymentMilestoneSchema = new mongoose.Schema({
-    // References
     bookingId: { 
       type: mongoose.Schema.Types.ObjectId, 
       ref: "Booking", 

@@ -1,5 +1,5 @@
 const User = require("../../Models/auth/UserModel");
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const emailjs = require('@emailjs/nodejs');
 const crypto = require("crypto");
