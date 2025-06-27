@@ -13,6 +13,7 @@ import ItineraryForm from "./pages/ItineraryForm/ItineraryForm";
 import PackageDetailsPage from "./pages/pakages/PackageDetailsPage";
 import AuthLogin from "./pages/auth/AuthLogin";
 import AuthRegister from "./pages/auth/AuthRegister";
+import CustomizePackageForm from "./pages/pakages/CustomizePackageForm";
 
 const RootLayout = () => {
   return (
@@ -28,6 +29,7 @@ const RootLayout = () => {
             <Route path="/hotels" element={<HotelsPage />} />
             <Route path="/hotels/:id" element={<HotelDetailPage />} />
             <Route path="/packages/:id" element={<PackageDetailsPage />} />
+            <Route path="/customize-packages" element={<CustomizePackageForm />} />
             <Route path="/flights" element={<FlightsPage />} />
             <Route path="/packages" element={<PackagesPage />} />
             <Route path="/profile" element={<ProfilePage />} />

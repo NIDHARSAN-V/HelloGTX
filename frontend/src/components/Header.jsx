@@ -3,6 +3,7 @@ import { Menu, User, Search, MapPin } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import ThemeSelector from "./ThemeSelector";
 import { Link } from "react-router-dom";
+import axios from "axios";
 
 const navigation = [
   { name: "Home", href: "/" },
@@ -25,7 +26,6 @@ export default function Header() {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      // Close sidebar if clicked outside
       if (
         sidebarRef.current &&
         !sidebarRef.current.contains(event.target) &&
@@ -34,7 +34,6 @@ export default function Header() {
         setIsMobileMenuOpen(false);
       }
 
-      // Close profile dropdown if clicked outside
       if (
         profileDropdownRef.current &&
         !profileDropdownRef.current.contains(event.target) &&
@@ -54,6 +53,24 @@ export default function Header() {
     };
   }, [isMobileMenuOpen, isUserDropdownOpen]);
 
+  
+
+  const handleLogout = () => {
+    try {
+      const response = axios.post("http://localhost:8000/api/auth/logout");
+      if (response.status === 200) {
+        
+        console.log("Logout successful");
+        setIsUserDropdownOpen(false);
+       
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error("Logout failed:", error);
+      
+    }
+  };
+
   const UserDropdown = ({ isLoggedIn }) => {
     return (
       <div
@@ -61,7 +78,7 @@ export default function Header() {
         className="absolute right-0 mt-2 w-48 rounded-md bg-white shadow-lg border border-gray-200"
       >
         <div className="py-1">
-          {isLoggedIn ? (
+          {!isLoggedIn ? (
             <>
               <Link
                 to="/profile"
@@ -71,9 +88,7 @@ export default function Header() {
               </Link>
               <button
                 onClick={() => {
-                  // Handle logout logic
-                  console.log("User logged out");
-                  setIsUserDropdownOpen(false);
+                  handleLogout();
                 }}
                 className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
               >
