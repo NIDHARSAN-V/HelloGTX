@@ -3,7 +3,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
-const auth_router = require('./Routers/Auth/AuthRouter');  // Import the auth router
+const auth_router = require('./Routers/Auth/auth.router');  // Import the auth router
 
 require("dotenv").config();  // Load environment variables from .env file
 mongoose

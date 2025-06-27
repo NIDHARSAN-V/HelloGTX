@@ -8,7 +8,7 @@ const {
   authMiddleware,
   forgotPassword,
   resetPassword,
-} = require("../../Controllers/Auth/AuthController");
+} = require("../../Controllers/Auth/auth.controller");
 
 // @desc    Register new user (sends OTP via EmailJS)
 // @route   POST /api/auth/register
