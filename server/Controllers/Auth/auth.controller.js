@@ -1,4 +1,4 @@
-const User = require("../../Models/auth/user.model");
+const User = require("../../Models/auth/user.model.js");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const emailjs = require('@emailjs/nodejs');
@@ -171,7 +171,7 @@ const forgotPassword = async (req, res) => {
     const otp = generateOTP();
     otpStorage.set(email, {
       otp,
-      expiresAt: Date.now() + 600000, // 10 minutes
+      expiresAt: Date.now() + 600000,
       purpose: 'password_reset'
     });
 
