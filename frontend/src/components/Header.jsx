@@ -61,16 +61,22 @@ export default function Header() {
   }, [isMobileMenuOpen, isUserDropdownOpen]);
 
 
+
   const handleLogout = async () => {
     try {
-      await dispatch(logoutUser());
-      navigate("/");
+      const result = await dispatch(logoutUser());
+
+      if (result.payload?.success) {
+        navigate('/');
+        window.location.reload();
+      }
     } catch (error) {
-      console.log("Error occured at Logout UI");
+      console.log("Error occurred at Logout UI", error);
     }
   };
 
-  const UserDropdown = ({ }) => {
+
+  const UserDropdown = () => {
     return (
       <div
         ref={profileDropdownRef}
