@@ -47,7 +47,7 @@ const AuthRegister = () => {
   // Handle OTP verification success
   useEffect(() => {
     if (otp.verified) {
-      navigate('/auth/login', { 
+      navigate('/login', { 
         state: { 
           registrationSuccess: true,
           email: registeredEmail
