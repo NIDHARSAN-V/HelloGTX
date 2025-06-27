@@ -53,21 +53,20 @@ export default function Header() {
     };
   }, [isMobileMenuOpen, isUserDropdownOpen]);
 
-  
-
-  const handleLogout = () => {
+  const handleLogout = async () => {
     try {
-      const response = axios.post("http://localhost:8000/api/auth/logout");
+      const response = await axios.post(
+        "http://localhost:8000/api/auth/logout"
+      );
+      console.log("Logout response:", response);
       if (response.status === 200) {
-        
         console.log("Logout successful");
         setIsUserDropdownOpen(false);
-       
-        window.location.reload();
+
+        // window.location.reload();
       }
     } catch (error) {
       console.error("Logout failed:", error);
-      
     }
   };
 

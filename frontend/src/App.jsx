@@ -125,6 +125,7 @@ import AuthRegister from "./pages/auth/AuthRegister";
 import { checkAuth } from "./Store/AuthSlice";
 import { useDispatch, useSelector } from "react-redux";
 import CheckAuth from "./Common/CheckAuth";
+import CustomizePackageForm from "./pages/pakages/CustomizePackageForm";
 
 const RootLayout = () => {
   const { isAuthenticated, isLoading } = useSelector(state => state.auth);
