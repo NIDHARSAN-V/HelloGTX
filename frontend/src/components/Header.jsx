@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Menu, User, Search, MapPin } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import ThemeSelector from "./ThemeSelector";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { logoutUser } from "../Store/AuthSlice";
@@ -29,6 +29,7 @@ export default function Header() {
 
   const { isAuthenticated } = useSelector(state => state.auth);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -59,15 +60,17 @@ export default function Header() {
     };
   }, [isMobileMenuOpen, isUserDropdownOpen]);
 
+
   const handleLogout = async () => {
     try {
-      dispatch(logoutUser());
+      await dispatch(logoutUser());
+      navigate("/");
     } catch (error) {
       console.log("Error occured at Logout UI");
     }
   };
 
-  const UserDropdown = ({ isLoggedIn }) => {
+  const UserDropdown = ({ }) => {
     return (
       <div
         ref={profileDropdownRef}
