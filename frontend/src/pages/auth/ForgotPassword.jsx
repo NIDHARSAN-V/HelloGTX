@@ -60,7 +60,7 @@ const ForgotPassword = () => {
       
       if (result.payload?.success) {
         setResetStep(3);
-        setTimeout(() => navigate('/auth/login'), 3000);
+        setTimeout(() => navigate('/login'), 3000);
       }
     } finally {
       setIsSubmitting(false);
@@ -342,7 +342,7 @@ const ForgotPassword = () => {
           {/* Back to Login Link */}
           <div className="mt-6 text-center">
             <Link
-              to="/auth/login"
+              to="/login"
               className="font-medium text-blue-600 hover:text-blue-500"
             >
               Back to login
