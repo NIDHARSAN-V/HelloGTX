@@ -77,7 +77,6 @@ const UserSchema = new mongoose.Schema({
   });
   
   // Indexes
-// Indexes
 UserSchema.index({ email: 1 }, { unique: true });
 UserSchema.index({ phone: 1 }, { unique: true, sparse: true });
 
