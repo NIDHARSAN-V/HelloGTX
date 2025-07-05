@@ -11,7 +11,7 @@ import shopAddressSlice from "./Shop/AddressSlice/index.js"
 
 import customerProfileSlice from "./CustomerProfile/index.js"
 // import shopAddressSlice from "./Shop/AddressSlice/index.js"
-
+import packageReducer from "./Package/packageSlice.js";
 
 const store = configureStore({
     reducer: {
@@ -21,7 +21,8 @@ const store = configureStore({
         shopproducts : shopProductSlice,
         shopcart : shopCartSlice,
         shopaddress : shopAddressSlice,
-        Customerprofile : customerProfileSlice
+        Customerprofile : customerProfileSlice,
+        packages: packageReducer,
         
     },
 });

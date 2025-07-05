@@ -78,7 +78,8 @@ const handleLogout = async () => {
 
   // useEffect(()=>{ navigate("/") },[handleLogout])
 
-  const UserDropdown = ({ }) => {
+
+  const UserDropdown = () => {
     return (
       <div
         ref={profileDropdownRef}
