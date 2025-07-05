@@ -9,16 +9,17 @@ import shopCartSlice from "./Shop/CartSlice/index.js"
 
 import shopAddressSlice from "./Shop/AddressSlice/index.js"
 
-const store = configureStore({
-    reducer: {
+import packageReducer from "./Package/packageSlice.js";
 
-        auth: authReducer,
-        adminproducts : adminProductSlice,
-        shopproducts : shopProductSlice,
-        shopcart : shopCartSlice,
-        shopaddress : shopAddressSlice
-        
-    },
+const store = configureStore({
+  reducer: {
+    auth: authReducer,
+    adminproducts: adminProductSlice,
+    shopproducts: shopProductSlice,
+    shopcart: shopCartSlice,
+    shopaddress: shopAddressSlice,
+    packages: packageReducer,
+  },
 });
 
 export default store;
