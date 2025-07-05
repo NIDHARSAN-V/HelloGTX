@@ -335,3 +335,9 @@ module.exports = {
   forgotPassword,
   resetPassword
 };
+
+
+
+
+
+//seperate the middle ware 

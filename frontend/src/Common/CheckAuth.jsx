@@ -9,14 +9,12 @@ function CheckAuth({ children, isAuthenticated, requireAuth = false }) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  
-
   // If route requires being unauthenticated (like login/register) but user is authenticated
   if (!requireAuth && isAuthenticated) {
     return <Navigate to="/" replace />;
   }
 
-  // If all checks pass, render the children
+  // For all other cases, render the children
   return children;
 }
 

@@ -61,14 +61,22 @@ export default function Header() {
   }, [isMobileMenuOpen, isUserDropdownOpen]);
 
 
-  const handleLogout = async () => {
-    try {
-      await dispatch(logoutUser());
-      navigate("/");
-    } catch (error) {
-      console.log("Error occured at Logout UI");
-    }
-  };
+const handleLogout = async () => {
+  try {
+    // First navigate to home page immediately
+    navigate("/");
+    
+    // Then dispatch the logout action
+    await dispatch(logoutUser()).unwrap();
+    
+    console.log("Logout successful");
+  } catch (error) {
+    console.error("Logout failed:", error);
+    // Optionally show error to user
+  }
+};
+
+  // useEffect(()=>{ navigate("/") },[handleLogout])
 
   const UserDropdown = ({ }) => {
     return (
@@ -77,6 +85,7 @@ export default function Header() {
         className="absolute right-0 mt-2 w-48 rounded-md bg-white shadow-lg border border-gray-200"
       >
         <div className="py-1">
+          
           {isAuthenticated ? (
             <>
               <Link

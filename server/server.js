@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const auth_router = require('./Routers/Auth/auth.router');  // Import the auth router
+const CustomerProfileRouter = require("./Routers/Profile/customer.profile.router");
 
 require("dotenv").config();  // Load environment variables from .env file
 mongoose
@@ -36,6 +37,7 @@ app.use(express.json());
 
 // Auth Routes 
 app.use('/api/auth', auth_router);
+app.use("/api/customer/profile" ,CustomerProfileRouter )
 
 
 app.listen(PORT, () => console.log(`Server is now running on port ${PORT}`));
