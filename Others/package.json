@@ -1,0 +1,10 @@
+{
+  "dependencies": {
+    "@emailjs/nodejs": "^5.0.2",
+    "axios": "^1.11.0",
+    "dotenv": "^17.2.1",
+    "express": "^5.1.0",
+    "nodemailer": "^7.0.5",
+    "nodemon": "^3.1.10"
+  }
+}
