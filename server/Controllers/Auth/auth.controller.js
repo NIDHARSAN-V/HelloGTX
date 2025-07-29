@@ -1,4 +1,4 @@
-const User = require("../../Models/auth/user.model.js");
+const User = require("../../Models/Auth/user.model");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const emailjs = require('@emailjs/nodejs');
@@ -305,6 +305,8 @@ const logoutUser = (req, res) => {
 
 const authMiddleware = (req, res, next) => {
   const token = req.cookies.token;
+  console.log("Auth Middleware - Token:", token);   
+  
   if (!token) {
     return res.status(401).json({
       success: false,

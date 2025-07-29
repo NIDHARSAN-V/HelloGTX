@@ -11,6 +11,8 @@ import shopAddressSlice from "./Shop/AddressSlice/index.js"
 
 import packageReducer from "./Package/packageSlice.js";
 
+import userSlice from "./Admin/User/userSlice.js";
+
 const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -19,6 +21,7 @@ const store = configureStore({
     shopcart: shopCartSlice,
     shopaddress: shopAddressSlice,
     packages: packageReducer,
+    users: userSlice,
   },
 });
 

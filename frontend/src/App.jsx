@@ -104,11 +104,13 @@
 
 // export default RootLayout;
 
-
-
-
 import React, { useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import Header from "./components/Header";
 import Home from "./pages/Home";
 import Footer from "./components/Footer";
@@ -126,9 +128,16 @@ import { checkAuth } from "./Store/AuthSlice";
 import { useDispatch, useSelector } from "react-redux";
 import CheckAuth from "./Common/CheckAuth";
 import CustomizePackageForm from "./pages/pakages/CustomizePackageForm";
+import UserManagement from "./pages/admin/UserManagement";
+import HotelPackageList from "./pages/hotels/HotelPackageList";
+import HotelPackageForm from "./pages/hotels/HotelPackageForm";
+import HotelPackageDetail from "./pages/hotels/HotelPackageDetail";
+import FlightPackageList from "./pages/flights/FlightPackageList";
+import FlightPackageForm from "./pages/flights/FlightPackageForm";
+import FlightPackageDetail from "./pages/flights/FlightPackageDetail";
 
 const RootLayout = () => {
-  const { isAuthenticated, isLoading } = useSelector(state => state.auth);
+  const { isAuthenticated, isLoading } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
 
   useEffect(() => {
@@ -136,7 +145,11 @@ const RootLayout = () => {
   }, [dispatch]);
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        Loading...
+      </div>
+    );
   }
 
   return (
@@ -146,16 +159,54 @@ const RootLayout = () => {
         <main className="flex-1">
           <Routes>
             {/* Public routes that should only be accessible when not authenticated */}
-            <Route path="/login" element={
-              <CheckAuth isAuthenticated={isAuthenticated} requireAuth={false}>
-                <AuthLogin />
-              </CheckAuth>
-            } />
-            <Route path="/register" element={
-              <CheckAuth isAuthenticated={isAuthenticated} requireAuth={false}>
-                <AuthRegister />
-              </CheckAuth>
-            } />
+
+            <Route path="/admin" element={<UserManagement />} />
+
+            <Route
+              path="/login"
+              element={
+                <CheckAuth
+                  isAuthenticated={isAuthenticated}
+                  requireAuth={false}
+                >
+                  <AuthLogin />
+                </CheckAuth>
+              }
+            />
+            <Route
+              path="/register"
+              element={
+                <CheckAuth
+                  isAuthenticated={isAuthenticated}
+                  requireAuth={false}
+                >
+                  <AuthRegister />
+                </CheckAuth>
+              }
+            />
+
+            <Route path="/hotel-packages" element={<HotelPackageList />} />
+            <Route
+              path="/admin/hotel-packages/create"
+              element={<HotelPackageForm />}
+            />
+
+            <Route
+              path="/hotel-packages/details"
+              element={<HotelPackageDetail />}
+            />
+
+
+            <Route path="/flight-packages" element={<FlightPackageList />} />
+            <Route
+              path="/admin/flight-packages/create"
+              element={<FlightPackageForm />}
+            />
+
+            <Route
+              path="/flight-packages/details"
+              element={<FlightPackageDetail />}
+            />
 
             {/* Public routes accessible to all */}
             <Route path="/" element={<Home />} />
@@ -163,21 +214,30 @@ const RootLayout = () => {
             <Route path="/hotels" element={<HotelsPage />} />
             <Route path="/hotels/:id" element={<HotelDetailPage />} />
             <Route path="/packages/:id" element={<PackageDetailsPage />} />
-            <Route path="/customize-packages" element={<CustomizePackageForm />} />
+            <Route
+              path="/customize-packages"
+              element={<CustomizePackageForm />}
+            />
             <Route path="/flights" element={<FlightsPage />} />
             <Route path="/packages" element={<PackagesPage />} />
 
             {/* Protected routes - only accessible when authenticated */}
-            <Route path="/profile" element={
-              <CheckAuth isAuthenticated={isAuthenticated} requireAuth={true}>
-                <ProfilePage />
-              </CheckAuth>
-            } />
-            <Route path="/itenaryCreation" element={
-              <CheckAuth isAuthenticated={isAuthenticated} requireAuth={true}>
-                <ItineraryForm />
-              </CheckAuth>
-            } />
+            <Route
+              path="/profile"
+              element={
+                <CheckAuth isAuthenticated={isAuthenticated} requireAuth={true}>
+                  <ProfilePage />
+                </CheckAuth>
+              }
+            />
+            <Route
+              path="/itenaryCreation"
+              element={
+                <CheckAuth isAuthenticated={isAuthenticated} requireAuth={true}>
+                  <ItineraryForm />
+                </CheckAuth>
+              }
+            />
 
             {/* Fallback route */}
             <Route path="*" element={<Navigate to="/" replace />} />
@@ -190,6 +250,3 @@ const RootLayout = () => {
 };
 
 export default RootLayout;
-
-
-
