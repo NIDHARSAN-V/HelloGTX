@@ -21,7 +21,7 @@ const store = configureStore({
         shopproducts : shopProductSlice,
         shopcart : shopCartSlice,
         shopaddress : shopAddressSlice,
-        Customerprofile : customerProfileSlice,
+        customerProfile : customerProfileSlice,
         packages: packageReducer,
         
     },

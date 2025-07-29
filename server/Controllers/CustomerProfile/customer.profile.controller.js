@@ -1,15 +1,10 @@
 const Customer = require("../../Models/Auth/Users/customer.model");
 const User = require("../../Models/Auth/user.model");
-const { validationResult } = require("express-validator");
 
-/**
- * @desc Get customer profile
- * @route GET /api/profile
- * @access Private (Customer only)
- */
 const getProfile = async (req, res) => {
   try {
     const user = req.user;
+    console.log("Fetching profile for user:", user.id);
 
     if (user.role !== "customer") {
       return res.status(403).json({
@@ -18,18 +13,34 @@ const getProfile = async (req, res) => {
       });
     }
 
-    const customer = await Customer.findById(user.customerRef).populate(
+    // Check if customer profile exists
+    let customer = await Customer.findOne({ userId: user.id }).populate(
       "bookings.packageId travelHistory.packageId"
     );
 
-    if (!customer) {
-      return res.status(404).json({
-        success: false,
-        message: "Profile not found. Please complete your profile.",
-      });
-    }
 
-    // Combine user and customer data
+    console.log("Customer : "  , customer);
+    console.log("User : " , user);
+
+    // If no customer profile exists, create one with default values
+    if (!customer) {
+      customer = await Customer.create({
+        userId: user.id,
+        passport: {
+          passportNumber: 'TEMP-' + Math.random().toString(36).substring(2, 10),
+          countryOfIssue: 'TBD',
+          dateOfIssue: new Date(),
+          dateOfExpiry: new Date(new Date().setFullYear(new Date().getFullYear() + 10)),
+          isVerified: false
+        }
+        
+      });
+      
+      // Update user with customerRef
+      await User.findByIdAndUpdate(user.id, { customerRef: customer._id });
+    }
+    
+
     const profileData = {
       user: {
         firstName: user.firstName,
@@ -40,14 +51,14 @@ const getProfile = async (req, res) => {
         dateOfBirth: user.dateOfBirth,
       },
       customer: {
-        address: customer.address,
-        passport: customer.passport,
-        nationality: customer.nationality,
-        preferredDestinations: customer.preferredDestinations,
-        travelHistory: customer.travelHistory,
-        inquiries: customer.inquiries,
-        bookings: customer.bookings,
-        notes: customer.notes,
+        address: customer.address || {},
+        passport: customer.passport || {},
+        nationality: customer.nationality || '',
+        preferredDestinations: customer.preferredDestinations || [],
+        travelHistory: customer.travelHistory || [],
+        inquiries: customer.inquiries || [],
+        bookings: customer.bookings || [],
+        notes: customer.notes || [],
       },
     };
 
@@ -60,26 +71,16 @@ const getProfile = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Server error while fetching profile.",
+      error: error.message
     });
   }
 };
 
-/**
- * @desc Save or update customer profile
- * @route POST /api/profile
- * @access Private (Customer only)
- */
 const saveProfile = async (req, res) => {
   try {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        errors: errors.array(),
-      });
-    }
-
     const user = req.user;
+    console.log("called=====================================")
+    console.log(req.body)
 
     if (user.role !== "customer") {
       return res.status(403).json({
@@ -100,6 +101,8 @@ const saveProfile = async (req, res) => {
       preferredDestinations,
     } = req.body;
 
+    
+
     // Update user data
     const userUpdates = {};
     if (firstName) userUpdates.firstName = firstName;
@@ -112,56 +115,68 @@ const saveProfile = async (req, res) => {
       await User.findByIdAndUpdate(user._id, userUpdates, { new: true });
     }
 
-    // Update or create customer data
-    const customerUpdates = {
-      address: address || {},
-      passport: passport || {},
-      nationality,
-      preferredDestinations: preferredDestinations || [],
-    };
-
-    // Clean up undefined fields
-    if (customerUpdates.passport) {
-      Object.keys(customerUpdates.passport).forEach(
-        (key) =>
-          customerUpdates.passport[key] === undefined &&
-          delete customerUpdates.passport[key]
-      );
+    // Check if customer profile exists, create if not
+    let customer = await Customer.findOne({ userId: user.id });
+    if (!customer) {
+      customer = await Customer.create({
+        userId: user.id,
+        passport: {
+          passportNumber: passport?.passportNumber || 'TEMP-' + Math.random().toString(36).substring(2, 10),
+          countryOfIssue: passport?.countryOfIssue || 'TBD',
+          dateOfIssue: passport?.dateOfIssue || new Date(),
+          dateOfExpiry: passport?.dateOfExpiry || new Date(new Date().setFullYear(new Date().getFullYear() + 10)),
+          isVerified: false
+        }
+      });
+      await User.findByIdAndUpdate(user.id, { customerRef: customer._id });
     }
 
-    if (customerUpdates.address) {
-      Object.keys(customerUpdates.address).forEach(
-        (key) =>
-          customerUpdates.address[key] === undefined &&
-          delete customerUpdates.address[key]
-      );
+    // Prepare update data
+    const updateData = {};
+    
+    if (address) updateData.address = address;
+    if (nationality) updateData.nationality = nationality;
+    if (preferredDestinations) updateData.preferredDestinations = preferredDestinations;
+    
+    if (passport) {
+      console.log("Called Updated");
+      updateData.passport = {
+        passportNumber: passport.passportNumber || customer.passport?.passportNumber || 'TEMP-' + Math.random().toString(36).substring(2, 10),
+        countryOfIssue: passport.countryOfIssue || customer.passport?.countryOfIssue || 'TBD',
+        dateOfIssue: passport.dateOfIssue || customer.passport?.dateOfIssue || new Date(),
+        dateOfExpiry: passport.dateOfExpiry || customer.passport?.dateOfExpiry || new Date(new Date().setFullYear(new Date().getFullYear() + 10)),
+        placeOfIssue: passport.placeOfIssue || customer.passport?.placeOfIssue || '',
+        nationality: passport.nationality || customer.passport?.nationality || '',
+        documentImage: passport.documentImage || customer.passport?.documentImage || '',
+        isVerified: passport.isVerified || customer.passport?.isVerified || false,
+      };
     }
 
-    const customer = await Customer.findOneAndUpdate(
-      { _id: user.customerRef },
-      customerUpdates,
-      { new: true, upsert: true }
+    // Update customer data
+    const updatedCustomer = await Customer.findOneAndUpdate(
+      { userId: user.id },
+      updateData,
+      { new: true, runValidators: true }
     );
 
     res.status(200).json({
       success: true,
       message: "Profile saved successfully",
-      data: customer,
+      data: {
+        user: userUpdates,
+        customer: updatedCustomer
+      },
     });
   } catch (error) {
     console.error("Error saving profile:", error);
     res.status(500).json({
       success: false,
       message: "Server error while saving profile.",
+      error: error.message
     });
   }
 };
 
-/**
- * @desc Clear customer profile data
- * @route DELETE /api/profile
- * @access Private (Customer only)
- */
 const clearProfile = async (req, res) => {
   try {
     const user = req.user;
@@ -173,16 +188,16 @@ const clearProfile = async (req, res) => {
       });
     }
 
-    const clearedCustomer = await Customer.findByIdAndUpdate(
-      user.customerRef,
+    const clearedCustomer = await Customer.findOneAndUpdate(
+      { userId: user._id },
       {
         $set: {
           address: {},
           passport: {
-            passportNumber: "",
-            countryOfIssue: "",
-            dateOfIssue: null,
-            dateOfExpiry: null,
+            passportNumber: "TEMP-" + Math.random().toString(36).substring(2, 10),
+            countryOfIssue: "TBD",
+            dateOfIssue: new Date(),
+            dateOfExpiry: new Date(new Date().setFullYear(new Date().getFullYear() + 10)),
             placeOfIssue: "",
             nationality: "",
             documentImage: "",
@@ -205,6 +220,7 @@ const clearProfile = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Server error while clearing profile.",
+      error: error.message
     });
   }
 };

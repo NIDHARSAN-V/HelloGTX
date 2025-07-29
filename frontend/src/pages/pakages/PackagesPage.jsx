@@ -26,13 +26,18 @@ const PackagesPage = () => {
     };
   }, [dispatch]);
 
-  useEffect(() => {
-    if (activeTab === "all") {
-      dispatch(fetchPackages());
-    } else {
-      dispatch(filterPackages(activeTab));
-    }
-  }, [activeTab, dispatch]);
+
+
+  // useEffect(() => {
+  //   if (activeTab === "all") {
+  //     dispatch(fetchPackages());
+  //   } else {
+  //     dispatch(filterPackages(activeTab));
+  //   }
+  // }, [activeTab, dispatch]);
+
+
+  
 
   useEffect(() => {
     const timer = setTimeout(() => {
