@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Send Itinerary - NextStop Holidays</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+      background: #f2f2f2;
+    }
+    form {
+      background: white;
+      padding: 30px;
+      border-radius: 8px;
+      width: 400px;
+      margin: auto;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    input, button {
+      display: block;
+      width: 100%;
+      margin-bottom: 15px;
+      padding: 10px;
+      font-size: 16px;
+    }
+    button {
+      background: #2196F3;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    #status {
+      text-align: center;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <form id="itineraryForm">
+    <h2>Send Itinerary Email</h2>
+    <input type="text" name="name" placeholder="Recipient Name" required />
+    <input type="email" name="email" placeholder="Recipient Email" required />
+    <input type="text" name="title" placeholder="Email Title" required />
+    <input type="text" name="itinerary_link" placeholder="Itinerary Link" required />
+    <button type="submit">Send Email</button>
+    <div id="status"></div>
+  </form>
+
+  <script>
+    document.getElementById('itineraryForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const data = {
+        name: form.name.value,
+        email: form.email.value,
+        title: form.title.value,
+        itinerary_link: form.itinerary_link.value
+      };
+
+      const status = document.getElementById('status');
+      status.textContent = "Sending...";
+
+      try {
+        const res = await fetch('/send-itinerary', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data)
+        });
+
+        const result = await res.json();
+        status.textContent = result.message;
+        status.style.color = result.success ? 'green' : 'red';
+      } catch (err) {
+        status.textContent = "Error sending email.";
+        status.style.color = 'red';
+      }
+    });
+  </script>
+
+</body>
+</html>

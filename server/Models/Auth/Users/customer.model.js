@@ -1,8 +1,12 @@
-//profile filling customer 
-
 const mongoose = require("mongoose");
 
 const customerSchema = new mongoose.Schema({
+  userId: { 
+    type: mongoose.Schema.Types.ObjectId, 
+    ref: "User", 
+    required: true,
+    unique: true 
+  },
   address: {
     street: String,
     city: String,
@@ -10,8 +14,6 @@ const customerSchema = new mongoose.Schema({
     country: String,
     zipCode: String,
   },
-
-
   passport: {
     passportNumber: { type: String, required: true },
     countryOfIssue: { type: String, required: true },
@@ -19,11 +21,9 @@ const customerSchema = new mongoose.Schema({
     dateOfExpiry: { type: Date, required: true },
     placeOfIssue: String,
     nationality: String,
-    documentImage: String, // URL or path to uploaded image (e.g., S3 or local storage)
+    documentImage: String,
     isVerified: { type: Boolean, default: false }
   }, 
-  
-  
   nationality: String,
   preferredDestinations: [String],
   travelHistory: [
@@ -73,4 +73,4 @@ const customerSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.model("Customer", customerSchema);
+module.exports = mongoose.models.Customer || mongoose.model("Customer", customerSchema);

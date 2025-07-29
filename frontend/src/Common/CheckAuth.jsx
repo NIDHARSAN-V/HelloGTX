@@ -14,7 +14,7 @@ function CheckAuth({ children, isAuthenticated, requireAuth = false }) {
     return <Navigate to="/" replace />;
   }
 
-  // If all checks pass, render the children
+  // For all other cases, render the children
   return children;
 }
 
