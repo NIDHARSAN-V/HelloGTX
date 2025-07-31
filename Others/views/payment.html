@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stripe Payment</title>
+    <script src="https://js.stripe.com/v3/"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .card {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        button {
+            background-color: #6772e5;
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #5469d4;
+        }
+        #payment-message {
+            margin-top: 20px;
+            padding: 10px;
+            border-radius: 4px;
+            display: none;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <h1>Complete Your Payment</h1>
+    
+    <div class="card">
+        <h2><%= description %></h2>
+        <p>Amount: $<%= (amount / 100).toFixed(2) %></p>
+    </div>
+
+    <form id="payment-form">
+        <div id="card-element">
+            <!-- Stripe Card Element will be inserted here -->
+        </div>
+        
+        <button id="submit-button">Pay $<%= (amount / 100).toFixed(2) %></button>
+        
+        <div id="payment-message"></div>
+    </form>
+
+    <script>
+        const stripePublicKey = '<%= stripePublicKey %>';
+        const amount = <%= amount %>;
+        
+        const stripe = Stripe(stripePublicKey);
+        const elements = stripe.elements();
+        const cardElement = elements.create('card');
+        cardElement.mount('#card-element');
+        
+        const form = document.getElementById('payment-form');
+        const submitButton = document.getElementById('submit-button');
+        const paymentMessage = document.getElementById('payment-message');
+        
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            submitButton.disabled = true;
+            
+            try {
+                // Create payment method
+                const { paymentMethod, error } = await stripe.createPaymentMethod({
+                    type: 'card',
+                    card: cardElement,
+                });
+                
+                if (error) {
+                    showMessage(error.message, 'error');
+                    submitButton.disabled = false;
+                    return;
+                }
+                
+                // Process payment
+                const response = await fetch('/process-payment', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        paymentMethodId: paymentMethod.id,
+                        amount: amount,
+                        currency: 'usd'
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showMessage('Payment successful!', 'success');
+                    cardElement.clear();
+                } else {
+                    showMessage(result.error || 'Payment failed', 'error');
+                }
+            } catch (err) {
+                showMessage(err.message, 'error');
+            } finally {
+                submitButton.disabled = false;
+            }
+        });
+        
+        function showMessage(message, type) {
+            paymentMessage.textContent = message;
+            paymentMessage.className = type;
+            paymentMessage.style.display = 'block';
+            
+            setTimeout(() => {
+                paymentMessage.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

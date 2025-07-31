@@ -1,5 +1,8 @@
 const LeadSchema = new mongoose.Schema({
     // Basic Info
+
+
+    
     firstName: { type: String, required: true, trim: true },
     lastName: { type: String, trim: true },
     email: { 
@@ -109,6 +112,8 @@ const LeadSchema = new mongoose.Schema({
       ref: "User",
       index: true
     },
+
+    
     status: { 
       type: String, 
       enum: [

@@ -2,9 +2,13 @@
   "dependencies": {
     "@emailjs/nodejs": "^5.0.2",
     "axios": "^1.11.0",
+    "body-parser": "^2.2.0",
     "dotenv": "^17.2.1",
+    "ejs": "^3.1.10",
     "express": "^5.1.0",
     "nodemailer": "^7.0.5",
-    "nodemon": "^3.1.10"
+    "nodemon": "^3.1.10",
+    "stripe": "^18.4.0",
+    "uuid": "^11.1.0"
   }
 }

@@ -8,7 +8,7 @@ const InteractionSchema = new mongoose.Schema({
     },
     agentId: { 
       type: mongoose.Schema.Types.ObjectId, 
-      ref: "User", 
+      ref: "Employee", 
       required: true,
       index: true
     },
