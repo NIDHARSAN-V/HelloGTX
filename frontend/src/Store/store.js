@@ -13,18 +13,17 @@ import customerProfileSlice from "./CustomerProfile/index.js"
 // import shopAddressSlice from "./Shop/AddressSlice/index.js"
 import packageReducer from "./Package/packageSlice.js";
 
-const store = configureStore({
-    reducer: {
+import userSlice from "./Admin/User/userSlice.js";
 
-        auth: authReducer,
-        adminproducts : adminProductSlice,
-        shopproducts : shopProductSlice,
-        shopcart : shopCartSlice,
-        shopaddress : shopAddressSlice,
-        customerProfile : customerProfileSlice,
-        packages: packageReducer,
-        
-    },
+const store = configureStore({
+  reducer: {
+    auth: authReducer,
+    adminproducts: adminProductSlice,
+    shopproducts: shopProductSlice,
+    shopcart: shopCartSlice,
+    shopaddress: shopAddressSlice,
+    packages: packageReducer,
+  },
 });
 
 export default store;

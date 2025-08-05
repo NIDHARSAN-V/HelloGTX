@@ -6,6 +6,9 @@ const cors = require("cors");
 const auth_router = require('./Routers/Auth/auth.router');  // Import the auth router
 const CustomerProfileRouter = require("./Routers/Profile/customer.profile.router");
 const package_router = require('./Routers/Package/package.router');  // Import the package router
+const admin_router = require('./Routers/Admin/admin.router');  // Import the admin router
+const hotel_router = require('./Routers/Hotel/hotelPackage.router');  // Import the hotel router
+const flight_router = require('./Routers/Flight/flightPackage.router');  // Import the flight router
 
 require("dotenv").config();  // Load environment variables from .env file
 mongoose
@@ -41,6 +44,13 @@ app.use('/api/auth', auth_router);
 app.use("/api/customer/profile" ,CustomerProfileRouter )
 // Package Routes
 app.use('/api/packages', package_router);
+// Hotel Routes
+app.use('/api/hotel-packages', hotel_router);
+// Flight Routes
+app.use('/api/flight-packages', flight_router);
+
+// Admin Routes
+app.use('/api/admin', admin_router);
 
 
 app.listen(PORT, () => console.log(`Server is now running on port ${PORT}`));
