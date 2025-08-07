@@ -23,6 +23,7 @@ const store = configureStore({
     shopcart: shopCartSlice,
     shopaddress: shopAddressSlice,
     packages: packageReducer,
+    users:userSlice
   },
 });
 

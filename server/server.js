@@ -10,6 +10,8 @@ const admin_router = require('./Routers/Admin/admin.router');  // Import the adm
 const hotel_router = require('./Routers/Hotel/hotelPackage.router');  // Import the hotel router
 const flight_router = require('./Routers/Flight/flightPackage.router');  // Import the flight router
 
+const employee_router = require('./Routers/Lead/lead.router');
+
 require("dotenv").config();  // Load environment variables from .env file
 mongoose
   .connect(process.env.MONGO_URI)
@@ -51,6 +53,8 @@ app.use('/api/flight-packages', flight_router);
 
 // Admin Routes
 app.use('/api/admin', admin_router);
+
+app.use('/api/employee' , employee_router );
 
 
 app.listen(PORT, () => console.log(`Server is now running on port ${PORT}`));

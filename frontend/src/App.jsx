@@ -104,6 +104,12 @@
 
 // export default RootLayout;
 
+
+
+
+
+
+
 import React, { useEffect } from "react";
 import {
   BrowserRouter as Router,
@@ -136,6 +142,7 @@ import HotelPackageDetail from "./pages/hotels/HotelPackageDetail";
 import FlightPackageList from "./pages/flights/FlightPackageList";
 import FlightPackageForm from "./pages/flights/FlightPackageForm";
 import FlightPackageDetail from "./pages/flights/FlightPackageDetail";
+import Lead from "./pages/lead/Lead";
 
 const RootLayout = () => {
   const { isAuthenticated, isLoading } = useSelector((state) => state.auth);
@@ -239,6 +246,11 @@ const RootLayout = () => {
                 </CheckAuth>
               }
             />
+
+            <Route path="/lead" element={<Lead/>}/>
+
+            
+
 
             {/* Fallback route */}
             <Route path="*" element={<NotFound/>} />

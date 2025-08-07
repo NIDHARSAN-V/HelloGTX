@@ -3,6 +3,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const emailjs = require('@emailjs/nodejs');
 const crypto = require("crypto");
+const Customer = require("../../Models/Auth/Users/customer.model")
 
 // In-memory OTP storage (replace with Redis in production)
 const otpStorage = new Map();
@@ -247,6 +248,10 @@ const resetPassword = async (req, res) => {
   }
 };
 
+
+
+
+
 // Authentication
 const loginUser = async (req, res) => {
   try {
@@ -327,6 +332,59 @@ const authMiddleware = (req, res, next) => {
 
 
 
+const checkCustomerByEmail = async function (req, res) {
+  try {
+    const { email } = req.body;
+
+    console.log("Checking email:", email);
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required"
+      });
+    }
+
+    const user = await User.findOne({ email : email.email });
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    const customer = await Customer.findOne({ userId: user._id }).populate('userId');
+
+    // Merge user and customer data into a single object (optional)
+    const response = {
+      user,
+      customer: customer || null
+    };
+
+
+
+    //need to remove the unwanted datas
+
+    return res.status(200).json({
+      success: true,
+      exists: !!customer,
+      customer: response
+    });
+
+  } catch (error) {
+    console.error("Check Customer Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Error checking customer existence"
+    });
+  }
+};
+
+
+
+
+
 
 module.exports = {
   registerUser,
@@ -335,7 +393,8 @@ module.exports = {
   logoutUser,
   authMiddleware,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  checkCustomerByEmail
 };
 
 
