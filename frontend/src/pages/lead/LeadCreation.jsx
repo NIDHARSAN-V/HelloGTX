@@ -3,7 +3,7 @@ import React from 'react'
 function LeadCreation({customer}) {
   return (
     <div>
-        new Customer need to add , register and customerprofile
+        passed data from the lead component as customer data 
     </div>
   )
 }

@@ -18,7 +18,7 @@ export const checkCustomerByEmail = createAsyncThunk(
   async (email, { rejectWithValue }) => {
     try {
       const response = await axios.post('http://localhost:8000/api/employee/check-customer', { email });
-      // console.log(response.data.customer);
+      console.log(response.data.customer);
       return {
         exists: response.data.exists,
         customer: response.data.customer || null
@@ -28,6 +28,23 @@ export const checkCustomerByEmail = createAsyncThunk(
     }
   }
 );
+
+
+export const registerNewCustomerLead = createAsyncThunk(
+  'customer/registerNewCustomerLead',
+  async (registrationData, { rejectWithValue }) => {
+    try {
+      const response = await axios.post(
+        'http://localhost:8000/api/employee/register-new-customer',
+        registrationData
+      );
+      return response.data; 
+    } catch (err) {
+      return rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
+
 
 
 
