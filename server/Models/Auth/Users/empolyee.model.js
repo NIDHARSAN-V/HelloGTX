@@ -12,10 +12,10 @@ const employeeSchema = new mongoose.Schema({
   ],
 
 
-  leadId:{
+  leadId:[{
     type: mongoose.Schema.Types.ObjectId,
     ref: "Lead",
-  },
+  }],
 
   empPerformId: {
     type: mongoose.Schema.Types.ObjectId,

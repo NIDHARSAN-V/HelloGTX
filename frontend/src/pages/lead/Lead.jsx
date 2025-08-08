@@ -41,7 +41,8 @@ const AddCustomerForm = ({ onCancel, leadType }) => {
       
       if (isExist) {
         // Proceed with lead creation for existing customer
-        navigate('/leads/create', { state: { customerId: customerData.customer._id } });
+        // console.log(customerData , "Exists ")
+        navigate('/leads/create', { state:  customerData} );
       } else {
         // Register new customer with all collected details
         const registrationData = {

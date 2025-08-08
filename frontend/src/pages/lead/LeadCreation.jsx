@@ -1,9 +1,24 @@
 import React from 'react'
+import { useLocation } from 'react-router-dom';
 
-function LeadCreation({customer}) {
+function LeadCreation({ customer: propCustomer }) {
+  const location = useLocation();
+  
+  const customer = propCustomer || location.state;
+
+  const DataView = function() {
+    if (!customer) {
+      console.log("User Not found");
+
+    
+      return;
+    }
+    console.log(customer);
+  }
+
   return (
     <div>
-        passed data from the lead component as customer data 
+      <button onClick={DataView}>click</button>
     </div>
   )
 }

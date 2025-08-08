@@ -143,6 +143,7 @@ import FlightPackageList from "./pages/flights/FlightPackageList";
 import FlightPackageForm from "./pages/flights/FlightPackageForm";
 import FlightPackageDetail from "./pages/flights/FlightPackageDetail";
 import Lead from "./pages/lead/Lead";
+import LeadCreation from "./pages/lead/LeadCreation";
 
 const RootLayout = () => {
   const { isAuthenticated, isLoading } = useSelector((state) => state.auth);
@@ -247,7 +248,12 @@ const RootLayout = () => {
               }
             />
 
+
+
+
+
             <Route path="/lead" element={<Lead/>}/>
+            <Route path="/leads/create" element={<LeadCreation/>}/>
 
             
 

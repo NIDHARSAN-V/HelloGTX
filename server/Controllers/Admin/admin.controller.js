@@ -1,4 +1,5 @@
 const User = require("../../Models/Auth/user.model")
+const Employee = require("../../Models/Auth/Users/empolyee.model");
 
 // @desc    Get all users
 const getUsers = async (req, res, next) => {
@@ -75,12 +76,17 @@ const updateUserRole = async (req, res, next) => {
     //     message: "You cannot change your own role",
     //   });
     // }
+    
+  
 
     const user = await User.findByIdAndUpdate(
       req.params.id,
       { role },
       { new: true, runValidators: true }
     ).select("-password -verificationToken -resetPasswordToken");
+
+
+     // if the role is employee then update the details in employee also and delete it from the customer
 
     if (!user) {
       return res.status(404).json({
@@ -167,3 +173,16 @@ module.exports = {
   updateUser,
   deleteUser,
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
