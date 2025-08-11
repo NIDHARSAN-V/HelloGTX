@@ -3,7 +3,8 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const emailjs = require('@emailjs/nodejs');
 const crypto = require("crypto");
-const Customer = require("../../Models/Auth/Users/customer.model")
+const Customer = require("../../Models/Auth/Users/customer.model");
+const { clearProfile } = require("../CustomerProfile/customer.profile.controller");
 
 // In-memory OTP storage (replace with Redis in production)
 const otpStorage = new Map();
@@ -256,9 +257,16 @@ const resetPassword = async (req, res) => {
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
+    console.log(email)
+  
+    const user = await User.findOne({ email :email }).select("+password");
+    
+    console.log(user)  
+    console.log(password)
 
-    const user = await User.findOne({ email }).select("+password");
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+
+
+    if (!user || !(await bcrypt.compare(password.toString(), user.password))) {
       return res.status(401).json({
         success: false,
         message: "Invalid credentials"

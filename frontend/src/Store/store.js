@@ -13,10 +13,10 @@ import customerProfileSlice from "./CustomerProfile/index.js"
 // import shopAddressSlice from "./Shop/AddressSlice/index.js"
 import packageReducer from "./Package/packageSlice.js";
 
-// import userSlice from "./Admin/User/userSlice.js";
-
+import userSlice from "./Admin/User/userSlice.js";
 
 import employeeSlice from "./Admin/User/userSlice copy.js"
+
 const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -25,7 +25,9 @@ const store = configureStore({
     shopcart: shopCartSlice,
     shopaddress: shopAddressSlice,
     packages: packageReducer,
-    employees:employeeSlice
+    users:userSlice,
+    employees : employeeSlice
+
   },
 });
 

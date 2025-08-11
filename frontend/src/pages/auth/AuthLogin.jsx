@@ -13,7 +13,8 @@ const AuthLogin = () => {
   const { 
     isAuthenticated, 
     isLoading, 
-    error 
+    error ,
+    user
   } = useSelector(state => state.auth);
 
   const {
@@ -29,10 +30,18 @@ const AuthLogin = () => {
     };
   }, [dispatch]);
 
+
+
   // Redirect if already authenticated
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/');
+      
+
+    if (isAuthenticated && user.role==="employee") {
+      navigate('/lead');
+    }
+    else if(isAuthenticated && user.role==="customer")
+    {
+      navigate("/")
     }
   }, [isAuthenticated, navigate]);
 
@@ -42,7 +51,19 @@ const AuthLogin = () => {
       const result = await dispatch(loginUser(data));
       
       if (result.payload?.success) {
-        navigate('/');
+
+        console.log(result.payload , "result payload login");
+        if(result.payload.user.role=="employee")
+        {
+          navigate('/lead');
+
+        }
+        else if(result.payload.user.role=="customer")
+        {
+          navigate('/');
+
+        }
+
       }
     } finally {
       setIsSubmitting(false);

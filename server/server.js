@@ -6,7 +6,13 @@ const cors = require("cors");
 const auth_router = require('./Routers/Auth/auth.router');  // Import the auth router
 const CustomerProfileRouter = require("./Routers/Profile/customer.profile.router");
 const package_router = require('./Routers/Package/package.router');  // Import the package router
-const admin_router = require('./Routers/Admin/admin.router');  // Import the admin router
+// const admin_router = require('./Routers/Admin/admin.router');  // Import the admin router
+
+
+
+
+
+const admin_router = require("./Routers/Admin/admin.router copy");  // Import the admin router
 const hotel_router = require('./Routers/Hotel/hotelPackage.router');  // Import the hotel router
 const flight_router = require('./Routers/Flight/flightPackage.router');  // Import the flight router
 

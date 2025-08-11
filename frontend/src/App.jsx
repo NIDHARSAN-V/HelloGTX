@@ -146,10 +146,15 @@ import Lead from "./pages/lead/Lead";
 import LeadCreation from "./pages/lead/LeadCreation";
 
 const RootLayout = () => {
-  const { isAuthenticated, isLoading } = useSelector((state) => state.auth);
+
+
+  const { isAuthenticated, isLoading, user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
 
+  //user contains role - > customer or employee
+
   useEffect(() => {
+
     dispatch(checkAuth());
   }, [dispatch]);
 
@@ -217,6 +222,8 @@ const RootLayout = () => {
               element={<FlightPackageDetail />}
             />
 
+
+
             {/* Public routes accessible to all */}
             <Route path="/" element={<Home />} />
             <Route path="/destinations" element={<DestinationsPage />} />
@@ -239,6 +246,11 @@ const RootLayout = () => {
                 </CheckAuth>
               }
             />
+
+
+
+
+            
             <Route
               path="/itenaryCreation"
               element={

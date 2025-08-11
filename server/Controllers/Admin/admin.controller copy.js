@@ -1,6 +1,8 @@
-const User = require("../models/User");
-const Employee = require("../models/Employee");
-const { generatePassword } = require("../utils/authUtils"); // You'll need to implement password generation
+const User = require("../../Models/Auth/user.model");
+const Employee = require("../../Models/Auth/Users/empolyee.model");
+
+const bcrypt = require("bcryptjs");
+
 
 /**
  * @desc    Register a new employee (admin only)
@@ -8,6 +10,8 @@ const { generatePassword } = require("../utils/authUtils"); // You'll need to im
  * @access  Private/Admin
  */
 const registerEmployee = async (req, res) => {
+
+  console.log("RegisterEmployee Called");
   try {
     const {
       firstName,
@@ -21,12 +25,12 @@ const registerEmployee = async (req, res) => {
     } = req.body;
 
     // Validate that the requester is an admin
-    if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
-      return res.status(403).json({
-        success: false,
-        message: "Unauthorized - Only admins can register employees"
-      });
-    }
+    // if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
+    //   return res.status(403).json({
+    //     success: false,
+    //     message: "Unauthorized - Only admins can register employees"
+    //   });
+    // }
 
     // Validate employee role
     if (role !== 'employee') {
@@ -46,7 +50,8 @@ const registerEmployee = async (req, res) => {
     }
 
     // Generate a random password (you might want to send it via email)
-    const password = generatePassword(); // Implement this function
+  // Implement this function
+    const password = await bcrypt.hash("123123123@", 12);
 
     // Create the user first
     const newUser = new User({
@@ -109,6 +114,13 @@ const registerEmployee = async (req, res) => {
   }
 };
 
+
+
+
+
+
+
+
 /**
  * @desc    Get all employees
  * @route   GET /api/employees
@@ -117,23 +129,25 @@ const registerEmployee = async (req, res) => {
 const getAllEmployees = async (req, res) => {
   try {
     // Verify admin access
-    if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
-      return res.status(403).json({
-        success: false,
-        message: "Unauthorized - Admin access required"
-      });
-    }
+
+     console.log("Employee get called");
+    // if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
+    //   return res.status(403).json({
+    //     success: false,
+    //     message: "Unauthorized - Admin access required"
+    //   });
+    // }
 
     // Get all employees with populated user data
-    const employees = await Employee.find()
-      .populate('userRef', 'firstName lastName email phone role')
-      .select('-__v');
+    // const employees = await Employee.find()
+    //   .populate('userRef', 'firstName lastName email phone role')
+    //   .select('-__v');
 
     res.status(200).json({
       success: true,
-      count: employees.length,
-      data: employees
     });
+
+
   } catch (error) {
     console.error("Get employees error:", error);
     res.status(500).json({
@@ -152,12 +166,12 @@ const getAllEmployees = async (req, res) => {
 const getEmployeeById = async (req, res) => {
   try {
     // Verify admin access
-    if (req.user.role !== 'admin' && req.user.role !== 'super_admin') {
-      return res.status(403).json({
-        success: false,
-        message: "Unauthorized - Admin access required"
-      });
-    }
+    // if (req.user.role !== 'admin' && req.user.role !== 'super_admin' ) {
+    //   return res.status(403).json({
+    //     success: false,
+    //     message: "Unauthorized - Admin access required"
+    //   });
+    // }
 
     const employee = await Employee.findById(req.params.id)
       .populate('userRef', 'firstName lastName email phone role')
@@ -186,6 +200,13 @@ const getEmployeeById = async (req, res) => {
     });
   }
 };
+
+
+
+
+
+
+
 
 /**
  * @desc    Update employee details
@@ -233,6 +254,12 @@ const updateEmployee = async (req, res) => {
     });
   }
 };
+
+
+
+
+
+
 
 /**
  * @desc    Deactivate employee
