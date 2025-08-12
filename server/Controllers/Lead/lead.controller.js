@@ -7,8 +7,9 @@ const jwt = require("jsonwebtoken");
 const emailjs = require('@emailjs/nodejs');
 const crypto = require("crypto");
 const Customer = require("../../Models/Auth/Users/customer.model")
+const Employee = require("../../Models/Auth/Users/empolyee.model");
 
-
+const Lead =  require("../../Models/Leads/lead.model");
 
 
 const registerNewCustomer = async function(req,  res)
@@ -106,8 +107,121 @@ const registerNewCustomer = async function(req,  res)
 }
 
 
+
+
+const createNewLead = async function(req,res)
+{
+    try {
+
+      console.log(req.body)
+
+      const {assignedTo ,  assignedFor , status , source }  = req.body;
+      
+      //
+
+
+   const customerData = await Customer.findById(assignedFor).populate({ path: 'userId' });
+
+  console.log("------------------------------" , customerData)
+
+      const newLead = await Lead.create({
+        assignedTo: assignedTo,
+        assignedFor: assignedFor,
+        firstName : customerData.userId.firstName,
+        lastName : customerData.userId.lastName,
+        email : customerData.userId.email,
+        phone : customerData.userId.phone,
+        status:  status,
+        source:source
+
+      });
+
+
+
+
+
+
+      const employee = await Employee.findById(assignedTo);
+     
+      employee.leadId.push(newLead._id);
+
+      await employee.save();
+
+      
+
+      return res.status(201).json({
+        success: true,
+        message: "Lead created successfully",
+        data: newLead
+      });
+
+    } catch (error) {
+      console.error("Error creating lead:", error);
+      return res.status(500).json({
+        success: false,
+        message: "Failed to create lead"
+      });
+    }
+}
+
+
+const getLeadsfromEmployee = async function(req, res) {
+  try {
+    const { empid } = req.body; // expecting { empid: "employeeId" }
+
+    if (!empid) {
+      return res.status(400).json({
+        success: false,
+        message: "Employee ID is required"
+      });
+    }
+
+    // const employee = await Employee.findById(empid).populate({
+    //   path: 'leadId', // or 'leads' if that's the field name in your Employee model
+    //   populate: {
+    //     path: 'assignedFor',
+    //     model: 'Customer'
+    //   }
+    // });
+
+
+      const employee = await Employee.findById(empid).populate({
+      path: 'leadId', // or 'leads' if that's the field name in your Employee model
+     
+      });
+
+    if (!employee) {
+      return res.status(404).json({
+        success: false,
+        message: "Employee not found"
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      leads: employee.leadId // or employee.leads if that's the field name
+    });
+  } catch (error) {
+    console.error("Error fetching leads:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch leads"
+    });
+  }
+}
+
+
+
+
+
+
+
+
+
 module.exports = {
-registerNewCustomer
+registerNewCustomer,
+createNewLead,
+getLeadsfromEmployee  
 };
 
 

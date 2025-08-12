@@ -151,6 +151,8 @@ const RootLayout = () => {
   const { isAuthenticated, isLoading, user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
 
+  // console.log(user)
+
   //user contains role - > customer or employee
 
   useEffect(() => {

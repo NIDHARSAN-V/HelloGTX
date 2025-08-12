@@ -273,15 +273,41 @@ const loginUser = async (req, res) => {
       });
     }
 
-    const token = jwt.sign(
+  
+     var token;
+        
+    if(user.role === "employee")
+      {
+        token = jwt.sign(
       {
         id: user._id,
         email: user.email,
-        role: user.role
+        role: user.role,
+        employeeId: user.employeeRef
       },
       process.env.JWT_SECRET,
       { expiresIn: "7d" }
     );
+      }
+
+
+      else{
+        
+       token = jwt.sign(
+          {
+            id: user._id,
+            email: user.email,
+            role: user.role
+          },
+          process.env.JWT_SECRET,
+          { expiresIn: "7d" }
+        );
+        
+      }
+
+
+
+
 
     res.cookie("token", token, {
       httpOnly: true,
@@ -290,13 +316,36 @@ const loginUser = async (req, res) => {
       sameSite: "strict"
     });
 
+
+    
+    if(user.role === "employee")
+      {
+       return res.json({
+      success: true,
+      user: {
+        id: user._id,
+        email: user.email,
+        name: `${user.firstName} ${user.lastName}`,
+        role: user.role,
+        employeeId : user.employeeRef
+       
+      }
+    });
+      }
+
+
+
+
+
+    
     return res.json({
       success: true,
       user: {
         id: user._id,
         email: user.email,
         name: `${user.firstName} ${user.lastName}`,
-        role: user.role
+        role: user.role,
+       
       }
     });
 
@@ -371,7 +420,7 @@ const checkCustomerByEmail = async function (req, res) {
     };
 
 
-
+     
     //need to remove the unwanted datas
 
     return res.status(200).json({

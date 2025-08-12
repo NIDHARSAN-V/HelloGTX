@@ -1,4 +1,33 @@
+
+const mongoose = require("mongoose");
+
+
 const LeadSchema = new mongoose.Schema({
+
+
+  //assignments
+
+
+      assignedTo: { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: "Employee",
+      index: true
+    },
+
+
+    assignedFor: { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: "Customer",
+      index: true
+    },
+
+
+
+
+
+
+
+    
     // Basic Info
 
 
@@ -59,9 +88,10 @@ const LeadSchema = new mongoose.Schema({
         "family",
         "adventure",
         "group_tour",
-        "custom_package"
+        "custom_package",
+        "not_specified"
       ],
-      required: true
+      default: "not_specified",
     },
     destinations: [{
       country: { type: String, required: true },
@@ -107,11 +137,7 @@ const LeadSchema = new mongoose.Schema({
     specialRequirements: String,
   
     // Assignment & Status
-    assignedTo: { 
-      type: mongoose.Schema.Types.ObjectId, 
-      ref: "User",
-      index: true
-    },
+
 
     
     status: { 
@@ -185,12 +211,12 @@ const LeadSchema = new mongoose.Schema({
   });
   
   // Indexes
-  LeadSchema.index({ email: 1 });
-  LeadSchema.index({ phone: 1 });
-  LeadSchema.index({ status: 1, priority: 1 });
-  LeadSchema.index({ assignedTo: 1, status: 1 });
-  LeadSchema.index({ "destinations.country": 1 });
-  LeadSchema.index({ "travelDates.exactDates.from": 1 });
+  // LeadSchema.index({ email: 1 });
+  // LeadSchema.index({ phone: 1 });
+  // LeadSchema.index({ status: 1, priority: 1 });
+  // LeadSchema.index({ assignedTo: 1, status: 1 });
+  // LeadSchema.index({ "destinations.country": 1 });
+  // LeadSchema.index({ "travelDates.exactDates.from": 1 });
 
 
   
@@ -218,3 +244,7 @@ const LeadSchema = new mongoose.Schema({
 //       },
 //     },
 //   ],
+
+
+module.exports = mongoose.model("Lead", LeadSchema);
+

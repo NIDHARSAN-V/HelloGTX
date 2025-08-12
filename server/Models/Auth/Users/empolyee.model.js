@@ -7,9 +7,7 @@ const employeeSchema = new mongoose.Schema({
     enum: ["Sales", "Support", "Admin", "Operations"],       //teams roles 
   },
 
-  assignedCustomers: [
-    { type: mongoose.Schema.Types.ObjectId, ref: "Customer" },
-  ],
+
 
 
   leadId:[{
@@ -23,12 +21,12 @@ const employeeSchema = new mongoose.Schema({
   },
 
 
-  // userId: { 
-  //     type: mongoose.Schema.Types.ObjectId, 
-  //     ref: "User", 
-  //     required: true,
-  //     unique: true 
-  //   }
+  userId: { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: "User", 
+      required: true,
+      unique: true 
+    }
 
 
   

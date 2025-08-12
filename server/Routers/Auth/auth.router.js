@@ -51,16 +51,23 @@ router.post("/reset-password", resetPassword);
 // @route   GET /api/auth/check-auth
 // @access  Private
 router.get("/check-auth", authMiddleware, (req, res) => {
+  const userData = {
+    id: req.user.id,
+    email: req.user.email,
+    role: req.user.role,
+    name: req.user.name,
+  };
+
+  if (req.user.role === "employee") {
+    userData.employeeId = req.user.employeeId;
+  }
+
   res.status(200).json({
     success: true,
     message: "User is authenticated",
-    user: {
-      id: req.user.id,
-      email: req.user.email,
-      role: req.user.role,
-      name: req.user.name,
-    },
+    user: userData,
   });
 });
+
 
 module.exports = router;

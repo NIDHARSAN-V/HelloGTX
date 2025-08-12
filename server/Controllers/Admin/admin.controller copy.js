@@ -71,6 +71,7 @@ const registerEmployee = async (req, res) => {
     const newEmployee = new Employee({
       department,
       // Other employee-specific fields can be added here
+      userId: newUser._id
     });
 
     // Save the employee record
