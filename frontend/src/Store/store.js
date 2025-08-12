@@ -17,6 +17,9 @@ import userSlice from "./Admin/User/userSlice.js";
 
 import employeeSlice from "./Admin/User/userSlice copy.js"
 
+
+import leadSlice from "./Lead/index.js";
+
 const store = configureStore({
   reducer: {
     auth: authReducer,
@@ -26,7 +29,8 @@ const store = configureStore({
     shopaddress: shopAddressSlice,
     packages: packageReducer,
     users:userSlice,
-    employees : employeeSlice
+    employees : employeeSlice,  
+    leadData : leadSlice
 
   },
 });

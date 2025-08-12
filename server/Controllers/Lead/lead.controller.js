@@ -109,6 +109,28 @@ const registerNewCustomer = async function(req,  res)
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const createNewLead = async function(req,res)
 {
     try {
@@ -147,7 +169,7 @@ const createNewLead = async function(req,res)
 
       await employee.save();
 
-      
+
 
       return res.status(201).json({
         success: true,
@@ -165,30 +187,44 @@ const createNewLead = async function(req,res)
 }
 
 
-const getLeadsfromEmployee = async function(req, res) {
-  try {
-    const { empid } = req.body; // expecting { empid: "employeeId" }
 
-    if (!empid) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const getLeadsfromEmployee = async function(req, res) {
+  console.log("11111111111111111111111111111111111111111111111111111")
+  try {
+
+    
+    const { employeeId } = req.params; // expecting { empid: "employeeId" }
+
+    if (!employeeId) {
       return res.status(400).json({
         success: false,
         message: "Employee ID is required"
       });
     }
 
-    // const employee = await Employee.findById(empid).populate({
-    //   path: 'leadId', // or 'leads' if that's the field name in your Employee model
-    //   populate: {
-    //     path: 'assignedFor',
-    //     model: 'Customer'
-    //   }
-    // });
-
-
-      const employee = await Employee.findById(empid).populate({
-      path: 'leadId', // or 'leads' if that's the field name in your Employee model
-     
-      });
+    // Find the employee and populate the leadId array with Lead documents
+    const employee = await Employee.findById(employeeId).populate({
+      path: 'leadId',
+      populate: {
+        path: 'assignedFor',
+        model: 'Customer'
+      }
+    });
 
     if (!employee) {
       return res.status(404).json({
@@ -199,7 +235,7 @@ const getLeadsfromEmployee = async function(req, res) {
 
     return res.status(200).json({
       success: true,
-      leads: employee.leadId // or employee.leads if that's the field name
+      leads: employee.leadId // Array of populated leads
     });
   } catch (error) {
     console.error("Error fetching leads:", error);
@@ -209,8 +245,6 @@ const getLeadsfromEmployee = async function(req, res) {
     });
   }
 }
-
-
 
 
 

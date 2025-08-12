@@ -1,20 +1,39 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation } from "react-router-dom";
-import axios from "axios";
-
-import { createNewLead } from "../../Store/Lead";
+import { createNewLead, getLeadfromEmployee } from "../../Store/Lead";
 
 function LeadCreation({ customer: propCustomer }) {
   const location = useLocation();
   const { user } = useSelector((state) => state.auth);
-
   const customer = propCustomer || location.state;
 
   const [leadStatus, setLeadStatus] = useState("new");
   const [leadSource, setLeadSource] = useState("");
+  const [leads, setLeads] = useState([]);
+  const [loadingLeads, setLoadingLeads] = useState(false);
+  const [selectedLead, setSelectedLead] = useState(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   const dispatch = useDispatch();
+
+  const fetchLeads = async () => {
+    if (!user?.employeeId) return;
+    setLoadingLeads(true);
+    try {
+      const result = await dispatch(getLeadfromEmployee(user.employeeId));
+      setLeads(result.payload?.leads || []);
+    } catch (error) {
+      setLeads([]);
+      console.error("Error fetching leads:", error);
+    }
+    setLoadingLeads(false);
+  };
+
+  useEffect(() => {
+    fetchLeads();
+    // eslint-disable-next-line
+  }, [user?.employeeId]);
 
   const CreateLead = async () => {
     if (!customer || !user) {
@@ -30,78 +49,260 @@ function LeadCreation({ customer: propCustomer }) {
         source: leadSource,
       };
 
-      // console.log("Data in lead creation" , payload)
-
-      // const { data } = await axios.post("/api/leads", payload, {
-      //   withCredentials: true,
-      // });
-      // console.log("Lead created:", data);
-
-      dispatch(createNewLead(payload)).then((data) , function()
-    {
-      console.log(data)
-    })
-
-      
+      await dispatch(createNewLead(payload));
+      fetchLeads();
     } catch (error) {
-      console.error("Error creating lead:", error.response?.data || error.message);
+      console.error("Error creating lead:", error);
     }
   };
 
+  const handleLeadClick = (lead) => {
+    setSelectedLead(lead);
+    setIsDetailOpen(true);
+  };
+
+  const formatDate = (dateString) => {
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString(undefined, options);
+  };
+
   return (
-    <div className="max-w-md mx-auto mt-8 p-6 bg-white shadow-lg rounded-xl border border-gray-200">
-      <h2 className="text-xl font-semibold text-gray-800 mb-4">Create New Lead</h2>
+    <div className="container mx-auto p-4">
+      <div className="flex flex-col lg:flex-row gap-8">
+        {/* Lead Creation Form */}
+        <div className="w-full lg:w-1/3 bg-white p-6 rounded-xl shadow-md border border-gray-200">
+          <h2 className="text-xl font-semibold text-gray-800 mb-4">Create New Lead</h2>
 
-      {/* Status Selector */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-600 mb-1">
-          Lead Status
-        </label>
-        <select
-          value={leadStatus}
-          onChange={(e) => setLeadStatus(e.target.value)}
-          className="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 text-sm p-2"
-        >
-          <option value="new">New</option>
-          <option value="contacted">Contacted</option>
-          <option value="proposal_sent">Proposal Sent</option>
-          <option value="follow_up">Follow Up</option>
-          <option value="negotiation">Negotiation</option>
-          <option value="converted">Converted</option>
-          <option value="lost">Lost</option>
-          <option value="not_interested">Not Interested</option>
-        </select>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-600 mb-1">
+              Lead Status
+            </label>
+            <select
+              value={leadStatus}
+              onChange={(e) => setLeadStatus(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 text-sm p-2"
+            >
+              <option value="new">New</option>
+              <option value="contacted">Contacted</option>
+              <option value="proposal_sent">Proposal Sent</option>
+              <option value="follow_up">Follow Up</option>
+              <option value="negotiation">Negotiation</option>
+              <option value="converted">Converted</option>
+              <option value="lost">Lost</option>
+              <option value="not_interested">Not Interested</option>
+            </select>
+          </div>
+
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-600 mb-1">
+              Lead Source
+            </label>
+            <select
+              value={leadSource}
+              onChange={(e) => setLeadSource(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 text-sm p-2"
+            >
+              <option value="">-- Select Source --</option>
+              <option value="website_form">Website Form</option>
+              <option value="whatsapp">WhatsApp</option>
+              <option value="phone_call">Phone Call</option>
+              <option value="walk_in">Walk In</option>
+              <option value="referral">Referral</option>
+              <option value="social_media">Social Media</option>
+              <option value="email_campaign">Email Campaign</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <button
+            onClick={CreateLead}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition"
+          >
+            Create Lead
+          </button>
+        </div>
+
+        {/* Leads List */}
+        <div className="w-full lg:w-2/3">
+          <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200">
+            <h3 className="text-lg font-semibold mb-4">Leads Under You</h3>
+            {loadingLeads ? (
+              <div className="flex justify-center items-center h-32">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+              </div>
+            ) : leads.length === 0 ? (
+              <div className="text-gray-500 text-center py-8">No leads found.</div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {leads.map((lead) => (
+                      <tr 
+                        key={lead._id} 
+                        onClick={() => handleLeadClick(lead)}
+                        className="hover:bg-gray-50 cursor-pointer transition"
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="ml-0">
+                              <div className="text-sm font-medium text-gray-900">
+                                {lead.firstName} {lead.lastName}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {lead.email}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {lead.phone}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                            ${lead.status === 'new' ? 'bg-blue-100 text-blue-800' : 
+                              lead.status === 'converted' ? 'bg-green-100 text-green-800' :
+                              lead.status === 'lost' ? 'bg-red-100 text-red-800' :
+                              'bg-yellow-100 text-yellow-800'}`}>
+                            {lead.status.replace(/_/g, ' ')}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                          {formatDate(lead.createdAt)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* Source Selector */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-600 mb-1">
-          Lead Source
-        </label>
-        <select
-          value={leadSource}
-          onChange={(e) => setLeadSource(e.target.value)}
-          className="w-full border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 text-sm p-2"
-        >
-          <option value="">-- Select Source --</option>
-          <option value="website_form">Website Form</option>
-          <option value="whatsapp">WhatsApp</option>
-          <option value="phone_call">Phone Call</option>
-          <option value="walk_in">Walk In</option>
-          <option value="referral">Referral</option>
-          <option value="social_media">Social Media</option>
-          <option value="email_campaign">Email Campaign</option>
-          <option value="other">Other</option>
-        </select>
-      </div>
+      {/* Lead Detail Modal */}
+      {isDetailOpen && selectedLead && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-start">
+                <h2 className="text-2xl font-bold text-gray-800">
+                  {selectedLead.firstName} {selectedLead.lastName}
+                </h2>
+                <button 
+                  onClick={() => setIsDetailOpen(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+                </button>
+              </div>
 
-      {/* Submit Button */}
-      <button
-        onClick={CreateLead}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 rounded-lg transition"
-      >
-        Create Lead
-      </button>
+              <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Basic Info */}
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-medium text-gray-700 mb-3">Basic Information</h3>
+                  <div className="space-y-2">
+                    <div>
+                      <span className="text-sm text-gray-500">Email:</span>
+                      <p className="text-gray-800">{selectedLead.email}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-500">Phone:</span>
+                      <p className="text-gray-800">{selectedLead.phone}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-500">Status:</span>
+                      <p className="text-gray-800 capitalize">{selectedLead.status.replace(/_/g, ' ')}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-500">Source:</span>
+                      <p className="text-gray-800 capitalize">{selectedLead.source.replace(/_/g, ' ')}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-500">Created:</span>
+                      <p className="text-gray-800">{formatDate(selectedLead.createdAt)}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Travel Info */}
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <h3 className="font-medium text-gray-700 mb-3">Travel Information</h3>
+                  <div className="space-y-2">
+                    <div>
+                      <span className="text-sm text-gray-500">Trip Type:</span>
+                      <p className="text-gray-800 capitalize">{selectedLead.tripType.replace(/_/g, ' ') || 'Not specified'}</p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-500">Travelers:</span>
+                      <p className="text-gray-800">
+                        {selectedLead.travelers?.adults || 0} Adults, 
+                        {selectedLead.travelers?.children || 0} Children, 
+                        {selectedLead.travelers?.infants || 0} Infants
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-500">Budget:</span>
+                      <p className="text-gray-800">
+                        {selectedLead.budget?.amount 
+                          ? `${selectedLead.budget.amount} ${selectedLead.budget.currency || ''}`
+                          : 'Not specified'}
+                      </p>
+                    </div>
+                    <div>
+                      <span className="text-sm text-gray-500">Flexible Dates:</span>
+                      <p className="text-gray-800">{selectedLead.travelDates?.flexible ? 'Yes' : 'No'}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Additional Sections */}
+                {selectedLead.destinations?.length > 0 && (
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="font-medium text-gray-700 mb-3">Destinations</h3>
+                    <ul className="list-disc pl-5 space-y-1">
+                      {selectedLead.destinations.map((dest, index) => (
+                        <li key={index} className="text-gray-800">{dest}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {selectedLead.notes?.length > 0 && (
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <h3 className="font-medium text-gray-700 mb-3">Notes</h3>
+                    <ul className="space-y-2">
+                      {selectedLead.notes.map((note, index) => (
+                        <li key={index} className="text-gray-800">{note}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="mt-6 flex justify-end space-x-3">
+                <button className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50">
+                  Edit
+                </button>
+                <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+                  Update Status
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

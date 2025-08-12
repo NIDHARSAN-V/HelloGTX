@@ -7,7 +7,8 @@ const initialState = {
   customerData: null,
   exists: false,
   error: null,
-  leadData: null // For storing created lead info
+  leadData: null,
+  employeeLeads: [] // For storing created lead info
 };
 
 // ✅ Check customer by email
@@ -63,7 +64,25 @@ export const createNewLead = createAsyncThunk(
   }
 );
 
-const customerSlice = createSlice({
+
+
+export const getLeadfromEmployee = createAsyncThunk(
+  "customer/getLeadfromEmployee",
+  async (employeeId, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/employee/get-employee-lead/${employeeId}`
+      );
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
+
+
+
+const leadSlice = createSlice({
   name: "customer",
   initialState,
   reducers: {
@@ -116,9 +135,22 @@ const customerSlice = createSlice({
       .addCase(createNewLead.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload || "Failed to create lead";
-      });
+      })
+
+           .addCase(getLeadfromEmployee.pending, (state) => {
+              state.isLoading = true;
+              state.error = null;
+            })
+            .addCase(getLeadfromEmployee.fulfilled, (state, action) => {
+              state.isLoading = false;
+              state.employeeLeads = action.payload.leads;
+            })
+            .addCase(getLeadfromEmployee.rejected, (state, action) => {
+              state.isLoading = false;
+              state.error = null;
+            });
   }
 });
 
-export const { resetCustomerCheck } = customerSlice.actions;
-export default customerSlice.reducer;
+export const { resetCustomerCheck } = leadSlice.actions;
+export default leadSlice.reducer;
