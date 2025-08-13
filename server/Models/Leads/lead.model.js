@@ -3,7 +3,17 @@ const mongoose = require("mongoose");
 
 
 const LeadSchema = new mongoose.Schema({
+  //mapped Queries[]
 
+  queryId : {
+     type: mongoose.Schema.Types.ObjectId, 
+      ref: "Query", 
+      index: true
+    
+  },
+
+
+  
 
   //assignments
 

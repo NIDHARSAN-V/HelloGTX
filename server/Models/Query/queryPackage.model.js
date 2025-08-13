@@ -1,4 +1,7 @@
-const QueryPackageManagerSchema = new mongoose.Schema({
+const mongoose = require("mongoose");
+
+
+const QuerySchema = new mongoose.Schema({
 
  leadId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -237,11 +240,11 @@ const QueryPackageManagerSchema = new mongoose.Schema({
   
   
     
-  
     
-
+    
   }
   
+  module.exports = mongoose.model("Query", QuerySchema);
 
 
 
