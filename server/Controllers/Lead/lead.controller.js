@@ -252,6 +252,28 @@ const getLeadsfromEmployee = async function(req, res) {
 
 
 
+
+
+
+const editLeadsfromEmployee =async function(req,res)
+{
+    try {
+      
+      
+    } catch (error) {
+      
+    }
+}
+
+
+
+
+
+
+
+
+
+
 module.exports = {
 registerNewCustomer,
 createNewLead,

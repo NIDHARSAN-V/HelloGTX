@@ -11,9 +11,12 @@ function LeadCreation({ customer: propCustomer }) {
   const [leadStatus, setLeadStatus] = useState("new");
   const [leadSource, setLeadSource] = useState("");
   const [leads, setLeads] = useState([]);
+  const [filteredLeads, setFilteredLeads] = useState([]);
   const [loadingLeads, setLoadingLeads] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortOrder, setSortOrder] = useState("desc");
 
   const dispatch = useDispatch();
 
@@ -22,9 +25,12 @@ function LeadCreation({ customer: propCustomer }) {
     setLoadingLeads(true);
     try {
       const result = await dispatch(getLeadfromEmployee(user.employeeId));
-      setLeads(result.payload?.leads || []);
+      const fetchedLeads = result.payload?.leads || [];
+      setLeads(fetchedLeads);
+      setFilteredLeads(fetchedLeads);
     } catch (error) {
       setLeads([]);
+      setFilteredLeads([]);
       console.error("Error fetching leads:", error);
     }
     setLoadingLeads(false);
@@ -34,6 +40,29 @@ function LeadCreation({ customer: propCustomer }) {
     fetchLeads();
     // eslint-disable-next-line
   }, [user?.employeeId]);
+
+  // Search and sort leads
+  useEffect(() => {
+    let results = [...leads];
+    
+    // Apply search filter
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      results = results.filter(lead => 
+        (lead.firstName + ' ' + lead.lastName).toLowerCase().includes(term) ||
+        lead.email.toLowerCase().includes(term)
+      );
+    }
+    
+    // Apply sorting
+    results.sort((a, b) => {
+      const dateA = new Date(a.createdAt);
+      const dateB = new Date(b.createdAt);
+      return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+    });
+    
+    setFilteredLeads(results);
+  }, [searchTerm, sortOrder, leads]);
 
   const CreateLead = async () => {
     if (!customer || !user) {
@@ -66,9 +95,13 @@ function LeadCreation({ customer: propCustomer }) {
     return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
+  const toggleSortOrder = () => {
+    setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
+  };
+
   return (
-    <div className="container mx-auto p-4">
-      <div className="flex flex-col lg:flex-row gap-8">
+    <div className="container mx-auto p-4 ">
+      <div className="flex flex-col lg:flex-col justify-center align-center  gap-8">
         {/* Lead Creation Form */}
         <div className="w-full lg:w-1/3 bg-white p-6 rounded-xl shadow-md border border-gray-200">
           <h2 className="text-xl font-semibold text-gray-800 mb-4">Create New Lead</h2>
@@ -125,13 +158,47 @@ function LeadCreation({ customer: propCustomer }) {
         {/* Leads List */}
         <div className="w-full lg:w-2/3">
           <div className="bg-white p-6 rounded-xl shadow-md border border-gray-200">
-            <h3 className="text-lg font-semibold mb-4">Leads Under You</h3>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
+              <h3 className="text-lg font-semibold">Leads Under You</h3>
+              
+              <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                {/* Search Input */}
+                <div className="relative w-full sm:w-64">
+                  <input
+                    type="text"
+                    placeholder="Search by name or email..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500 text-sm"
+                  />
+                  <div className="absolute left-3 top-2.5 text-gray-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </div>
+                </div>
+                
+                {/* Sort Button */}
+                <button
+                  onClick={toggleSortOrder}
+                  className="flex items-center gap-1 px-3 py-2 border border-gray-300 rounded-lg text-sm hover:bg-gray-50 whitespace-nowrap"
+                >
+                  <span>Date {sortOrder === 'asc' ? '↑' : '↓'}</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
             {loadingLeads ? (
               <div className="flex justify-center items-center h-32">
                 <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
               </div>
-            ) : leads.length === 0 ? (
-              <div className="text-gray-500 text-center py-8">No leads found.</div>
+            ) : filteredLeads.length === 0 ? (
+              <div className="text-gray-500 text-center py-8">
+                {searchTerm ? "No matching leads found." : "No leads found."}
+              </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
@@ -141,11 +208,27 @@ function LeadCreation({ customer: propCustomer }) {
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Phone</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <button 
+                          onClick={toggleSortOrder}
+                          className="flex items-center gap-1 hover:text-gray-700"
+                        >
+                          Created
+                          {sortOrder === 'asc' ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                            </svg>
+                          ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          )}
+                        </button>
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {leads.map((lead) => (
+                    {filteredLeads.map((lead) => (
                       <tr 
                         key={lead._id} 
                         onClick={() => handleLeadClick(lead)}
@@ -188,7 +271,7 @@ function LeadCreation({ customer: propCustomer }) {
         </div>
       </div>
 
-      {/* Lead Detail Modal */}
+      {/* Lead Detail Modal - Remains the same as before */}
       {isDetailOpen && selectedLead && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">

@@ -14,6 +14,14 @@ router.post("/create-lead", createNewLead);
 router.get("/get-employee-lead/:employeeId" , getLeadsfromEmployee)
 
 
+
+//edit the particluart lead
+
+//delete lead
+
+
+
+
 module.exports = router;
 
 

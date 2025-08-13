@@ -144,6 +144,7 @@ import FlightPackageForm from "./pages/flights/FlightPackageForm";
 import FlightPackageDetail from "./pages/flights/FlightPackageDetail";
 import Lead from "./pages/lead/Lead";
 import LeadCreation from "./pages/lead/LeadCreation";
+import NewQuery from "./pages/lead/NewQuery";
 
 const RootLayout = () => {
 
@@ -238,6 +239,8 @@ const RootLayout = () => {
             />
             <Route path="/flights" element={<FlightsPage />} />
             <Route path="/packages" element={<PackagesPage />} />
+
+            <Route path="/leads/query" element={<NewQuery />} />
 
             {/* Protected routes - only accessible when authenticated */}
             <Route

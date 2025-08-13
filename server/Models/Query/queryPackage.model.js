@@ -7,6 +7,8 @@ const QueryPackageManagerSchema = new mongoose.Schema({
     index: true
   },
 
+  
+
 
   onStatus: {
     type: String,
