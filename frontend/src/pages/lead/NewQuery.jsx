@@ -46,16 +46,22 @@ function NewQuery() {
     infants: 0,
     flightClass: 'Economy',
     preferredAirline: '',
+    // Hotel specific
+    hotelSelectionType: 'new', // 'new' or 'existing'
+    selectedHotelPackage: null,
+    hotelDetails: {
+      checkIn: '',
+      checkOut: '',
+      roomType: 'Standard',
+      adults: 2,
+      children: 0,
+      mealPlan: 'breakfast'
+    },
     // Additional fields for other requirement types
     transferDetails: {
       pickup: '',
       dropoff: '',
       vehicleType: 'Sedan'
-    },
-    hotelDetails: {
-      checkIn: '',
-      checkOut: '',
-      roomType: 'Standard'
     },
     visaDetails: {
       country: '',
@@ -75,10 +81,24 @@ function NewQuery() {
     sort: ''
   });
 
+  // Hotel packages state
+  const [hotelPackages, setHotelPackages] = useState([]);
+  const [hotelLoading, setHotelLoading] = useState(false);
+  const [hotelFilters, setHotelFilters] = useState({
+    city: '',
+    country: '',
+    minPrice: '',
+    maxPrice: '',
+    sort: '',
+    starRating: ''
+  });
+
   // Options for multi-select fields
   const inclusionOptions = ['Flights', 'Hotels', 'Transfers', 'Meals', 'Sightseeing', 'Insurance', 'Visa Assistance'];
   const themeOptions = ['Beach', 'Adventure', 'Honeymoon', 'Family', 'Luxury', 'Wildlife', 'Cultural'];
   const foodPreferenceOptions = ['Vegetarian', 'Vegan', 'Halal', 'Kosher', 'Gluten-Free', 'Jain'];
+  const mealPlanOptions = ['breakfast', 'half_board', 'full_board', 'all_inclusive'];
+  const roomTypeOptions = ['Standard', 'Deluxe', 'Suite', 'Executive', 'Family'];
 
   // Fetch flight packages when flight tab is active
   useEffect(() => {
@@ -86,6 +106,13 @@ function NewQuery() {
       fetchFlightPackages();
     }
   }, [activeTab, flightFilters]);
+
+  // Fetch hotel packages when hotel tab is active
+  useEffect(() => {
+    if (requirementTypes[activeTab] === 'Hotel') {
+      fetchHotelPackages();
+    }
+  }, [activeTab, hotelFilters]);
 
   const fetchFlightPackages = async () => {
     try {
@@ -101,6 +128,23 @@ function NewQuery() {
     } catch (error) {
       console.error("Failed to fetch flight packages", error);
       setFlightLoading(false);
+    }
+  };
+
+  const fetchHotelPackages = async () => {
+    try {
+      setHotelLoading(true);
+      const params = new URLSearchParams();
+      Object.entries(hotelFilters).forEach(([key, value]) => {
+        if (value) params.append(key, value);
+      });
+
+      const response = await axios.get(`http://localhost:8000/api/hotel-packages?${params.toString()}`);
+      setHotelPackages(response.data);
+      setHotelLoading(false);
+    } catch (error) {
+      console.error("Failed to fetch hotel packages", error);
+      setHotelLoading(false);
     }
   };
 
@@ -131,6 +175,14 @@ function NewQuery() {
     }));
   };
 
+  const handleHotelFilterChange = (e) => {
+    const { name, value } = e.target;
+    setHotelFilters(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   const handleCheckboxChange = (field, option) => {
     setFormData(prev => {
       const currentOptions = prev[field] || [];
@@ -148,23 +200,41 @@ function NewQuery() {
     });
   };
 
-const handleFlightPackageSelect = (flight) => {
-  setFormData(prev => ({
-    ...prev,
-    selectedFlightPackage: flight._id,
-    flightType: flight.tripType || 'oneway',
-    sourceCity: flight.departure?.city || '',
-    destinationCity: flight.arrival?.city || '',
-    departureDate: flight.departure?.datetime ? flight.departure.datetime.split('T')[0] : '',
-    returnDate: flight.returnFlight?.datetime ? flight.returnFlight.datetime.split('T')[0] : '',
-    adults: flight.passengers?.adults?.toString() || "1",
-    children: flight.passengers?.children || 0,
-    infants: flight.passengers?.infants || 0,
-    flightClass: flight.class || 'Economy',
-    preferredAirline: flight.airline || '',
-    remarks: flight.remarks || ''
-  }));
-};
+  const handleFlightPackageSelect = (flight) => {
+    setFormData(prev => ({
+      ...prev,
+      selectedFlightPackage: flight._id,
+      flightType: flight.tripType || 'oneway',
+      sourceCity: flight.departure?.city || '',
+      destinationCity: flight.arrival?.city || '',
+      departureDate: flight.departure?.datetime ? flight.departure.datetime.split('T')[0] : '',
+      returnDate: flight.returnFlight?.datetime ? flight.returnFlight.datetime.split('T')[0] : '',
+      adults: flight.passengers?.adults?.toString() || "1",
+      children: flight.passengers?.children || 0,
+      infants: flight.passengers?.infants || 0,
+      flightClass: flight.class || 'Economy',
+      preferredAirline: flight.airline || '',
+      remarks: flight.remarks || ''
+    }));
+  };
+
+  const handleHotelPackageSelect = (hotel) => {
+    setFormData(prev => ({
+      ...prev,
+      selectedHotelPackage: hotel._id,
+      goingTo: hotel.location?.city || '',
+      hotelDetails: {
+        checkIn: hotel.checkIn ? new Date(hotel.checkIn).toISOString().split('T')[0] : '',
+        checkOut: hotel.checkOut ? new Date(hotel.checkOut).toISOString().split('T')[0] : '',
+        roomType: hotel.roomType || 'Standard',
+        adults: hotel.guests?.adults || 2,
+        children: hotel.guests?.children || 0,
+        mealPlan: hotel.mealPlan || 'breakfast'
+      },
+      hotelPreference: hotel.starRating?.toString() || '3',
+      remarks: hotel.remarks || ''
+    }));
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -181,6 +251,12 @@ const handleFlightPackageSelect = (flight) => {
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return `${hours}h ${mins}m`;
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const options = { year: 'numeric', month: 'short', day: 'numeric' };
+    return new Date(dateString).toLocaleDateString(undefined, options);
   };
 
   const renderFormFields = () => {
@@ -216,20 +292,20 @@ const handleFlightPackageSelect = (flight) => {
       </>
     );
 
-    const flightSelectionTabs = (
+    const selectionTabs = (type) => (
       <div className="mb-6">
         <div className="flex border-b border-gray-200">
           <button
             type="button"
-            onClick={() => setFormData({...formData, flightSelectionType: 'new'})}
-            className={`py-2 px-4 font-medium text-sm ${formData.flightSelectionType === 'new' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+            onClick={() => setFormData({...formData, [`${type.toLowerCase()}SelectionType`]: 'new'})}
+            className={`py-2 px-4 font-medium text-sm ${formData[`${type.toLowerCase()}SelectionType`] === 'new' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
           >
-            Create New Flight
+            Create New {type}
           </button>
           <button
             type="button"
-            onClick={() => setFormData({...formData, flightSelectionType: 'existing'})}
-            className={`py-2 px-4 font-medium text-sm ${formData.flightSelectionType === 'existing' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+            onClick={() => setFormData({...formData, [`${type.toLowerCase()}SelectionType`]: 'existing'})}
+            className={`py-2 px-4 font-medium text-sm ${formData[`${type.toLowerCase()}SelectionType`] === 'existing' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
           >
             Select From Existing
           </button>
@@ -429,6 +505,164 @@ const handleFlightPackageSelect = (flight) => {
       </div>
     );
 
+    const hotelFormFields = (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Location/City *</label>
+            <input
+              type="text"
+              name="goingTo"
+              value={formData.goingTo}
+              onChange={handleInputChange}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Hotel Preference (1-5)</label>
+            <div className="flex items-center space-x-2">
+              {[1, 2, 3, 4, 5].map(star => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setFormData({...formData, hotelPreference: star.toString()})}
+                  className={`p-1 rounded-full ${formData.hotelPreference >= star ? 'text-yellow-400' : 'text-gray-300'}`}
+                >
+                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                  </svg>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Check-In Date *</label>
+            <input
+              type="date"
+              name="checkIn"
+              value={formData.hotelDetails.checkIn}
+              onChange={(e) => handleNestedInputChange('hotelDetails', e)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Check-Out Date *</label>
+            <input
+              type="date"
+              name="checkOut"
+              value={formData.hotelDetails.checkOut}
+              onChange={(e) => handleNestedInputChange('hotelDetails', e)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              required
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Adults</label>
+            <input
+              type="number"
+              name="adults"
+              value={formData.hotelDetails.adults}
+              onChange={(e) => handleNestedInputChange('hotelDetails', e)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              min="1"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Children</label>
+            <input
+              type="number"
+              name="children"
+              value={formData.hotelDetails.children}
+              onChange={(e) => handleNestedInputChange('hotelDetails', e)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              min="0"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Room Type</label>
+            <select
+              name="roomType"
+              value={formData.hotelDetails.roomType}
+              onChange={(e) => handleNestedInputChange('hotelDetails', e)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            >
+              {roomTypeOptions.map(option => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Meal Plan</label>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mt-2">
+            {mealPlanOptions.map(option => (
+              <label key={option} className="inline-flex items-center">
+                <input
+                  type="radio"
+                  name="mealPlan"
+                  checked={formData.hotelDetails.mealPlan === option}
+                  onChange={() => setFormData(prev => ({
+                    ...prev,
+                    hotelDetails: {
+                      ...prev.hotelDetails,
+                      mealPlan: option
+                    }
+                  }))}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                />
+                <span className="ml-2 text-gray-700 capitalize">{option.replace('_', ' ')}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
+          <textarea
+            name="remarks"
+            value={formData.remarks}
+            onChange={handleInputChange}
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            rows="3"
+          ></textarea>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Expected Closure Date</label>
+            <input
+              type="date"
+              name="expectedClosureDate"
+              value={formData.expectedClosureDate}
+              onChange={handleInputChange}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Expected Closure Amount</label>
+            <input
+              type="number"
+              name="expectedClosureAmount"
+              value={formData.expectedClosureAmount}
+              onChange={handleInputChange}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              min="0"
+              step="0.01"
+            />
+          </div>
+        </div>
+      </div>
+    );
+
     const existingFlightPackages = (
       <div>
         {flightLoading ? (
@@ -509,13 +743,12 @@ const handleFlightPackageSelect = (flight) => {
                 </div>
               ) : (
                 flightPackages.map((flight) => (
-            <div
-  key={flight._id}
-  className={`bg-white rounded-lg shadow-md overflow-hidden border-2 ${
-    formData.selectedFlightPackage === flight._id ? 'border-blue-500' : 'border-transparent'
-  }`}
->
-
+                  <div
+                    key={flight._id}
+                    className={`bg-white rounded-lg shadow-md overflow-hidden border-2 ${
+                      formData.selectedFlightPackage === flight._id ? 'border-blue-500' : 'border-transparent'
+                    }`}
+                  >
                     <div className="p-4">
                       <div className="flex justify-between items-start">
                         <div>
@@ -548,7 +781,7 @@ const handleFlightPackageSelect = (flight) => {
                             </div>
                             <div className="relative flex justify-center">
                               <span className="px-2 bg-white text-sm text-gray-500">
-                                {flight.stops > 0 ? `$${flight.stops} stop${flight.stops > 1 ? 's' : ''}` : 'Non-stop'}
+                                {flight.stops > 0 ? `${flight.stops} stop${flight.stops > 1 ? 's' : ''}` : 'Non-stop'}
                               </span>
                             </div>
                           </div>
@@ -566,10 +799,9 @@ const handleFlightPackageSelect = (flight) => {
                       <div className="mt-4 flex justify-between items-center">
                         <div>
                           <p className="text-sm text-gray-500">Total Price</p>
-                        <p className="text-xl font-bold text-blue-600">
-  {flight.currency} {flight.price?.toLocaleString() ?? "0"}
-</p>
-
+                          <p className="text-xl font-bold text-blue-600">
+                            {flight.currency} {flight.price?.toLocaleString() ?? "0"}
+                          </p>
                         </div>
                         <button
                           type="button"
@@ -577,6 +809,225 @@ const handleFlightPackageSelect = (flight) => {
                           className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                         >
                           {formData.selectedFlightPackage === flight._id ? 'Selected' : 'Select'}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+
+    const existingHotelPackages = (
+      <div>
+        {hotelLoading ? (
+          <div className="flex justify-center items-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+          </div>
+        ) : (
+          <div>
+            {/* Hotel package filters */}
+            <div className="bg-white p-4 rounded-lg shadow-md mb-6">
+              <h2 className="text-xl font-semibold mb-4">Filter Hotel Packages</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    City
+                  </label>
+                  <input
+                    type="text"
+                    name="city"
+                    value={hotelFilters.city}
+                    onChange={handleHotelFilterChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Country
+                  </label>
+                  <input
+                    type="text"
+                    name="country"
+                    value={hotelFilters.country}
+                    onChange={handleHotelFilterChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Star Rating
+                  </label>
+                  <select
+                    name="starRating"
+                    value={hotelFilters.starRating}
+                    onChange={handleHotelFilterChange}
+                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                  >
+                    <option value="">Any</option>
+                    <option value="1">1 Star</option>
+                    <option value="2">2 Stars</option>
+                    <option value="3">3 Stars</option>
+                    <option value="4">4 Stars</option>
+                    <option value="5">5 Stars</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Min Price
+                  </label>
+                  <input
+                    type="number"
+                    name="minPrice"
+                    value={hotelFilters.minPrice}
+                    onChange={handleHotelFilterChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Sort By
+                  </label>
+                  <select
+                    name="sort"
+                    value={hotelFilters.sort}
+                    onChange={handleHotelFilterChange}
+                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                  >
+                    <option value="">Default</option>
+                    <option value="price_asc">Price: Low to High</option>
+                    <option value="price_desc">Price: High to Low</option>
+                    <option value="rating">Rating</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Hotel packages list */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {hotelPackages.length === 0 ? (
+                <div className="text-center py-12 col-span-3">
+                  <p className="text-gray-500">
+                    No hotel packages found matching your criteria
+                  </p>
+                </div>
+              ) : (
+                hotelPackages.map((hotel) => (
+                  <div
+                    key={hotel._id}
+                    className={`bg-white rounded-lg shadow-md overflow-hidden border-2 ${
+                      formData.selectedHotelPackage === hotel._id ? 'border-blue-500' : 'border-transparent'
+                    }`}
+                  >
+                    <img
+                      src={hotel.images?.[0] || "https://via.placeholder.com/300x200?text=No+Image"}
+                      alt={hotel.name}
+                      className="w-full h-48 object-cover"
+                    />
+                    <div className="p-4">
+                      <div className="flex justify-between items-start">
+                        <h3 className="text-lg font-bold text-gray-800">{hotel.name}</h3>
+                        <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
+                          Available
+                        </span>
+                      </div>
+
+                      <div className="mt-2 flex items-center">
+                        {[...Array(5)].map((_, i) => (
+                          <svg
+                            key={i}
+                            className={`w-4 h-4 ${
+                              i < hotel.starRating ? "text-yellow-400" : "text-gray-300"
+                            }`}
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                        ))}
+                        <span className="ml-1 text-gray-600 text-sm">
+                          {hotel.starRating} stars
+                        </span>
+                      </div>
+
+                      <p className="mt-2 text-gray-600">
+                        <svg
+                          className="w-4 h-4 inline mr-1"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
+                        </svg>
+                        {hotel.location?.city}, {hotel.location?.country}
+                      </p>
+
+                      <div className="mt-4 grid grid-cols-2 gap-2">
+                        <div>
+                          <p className="text-sm text-gray-500">Room Type</p>
+                          <p className="font-medium">{hotel.roomType}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">Meal Plan</p>
+                          <p className="font-medium capitalize">
+                            {hotel.mealPlan?.replace('_', ' ') || 'Not specified'}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">Check In</p>
+                          <p className="font-medium">
+                            {formatDate(hotel.checkIn)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-500">Check Out</p>
+                          <p className="font-medium">
+                            {formatDate(hotel.checkOut)}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-4">
+                        <p className="text-sm text-gray-500">Guests</p>
+                        <p className="font-medium">
+                          {hotel.guests?.adults || 0} Adults, {hotel.guests?.children || 0} Children
+                        </p>
+                      </div>
+
+                      <div className="mt-4 flex justify-between items-center">
+                        <div>
+                          <p className="text-sm text-gray-500">Total Price</p>
+                          <p className="text-xl font-bold text-blue-600">
+                            {hotel.currency} {hotel.totalPrice?.toLocaleString() ?? "0"}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {hotel.nights} night{hotel.nights !== 1 ? 's' : ''}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleHotelPackageSelect(hotel)}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                        >
+                          {formData.selectedHotelPackage === hotel._id ? 'Selected' : 'Select'}
                         </button>
                       </div>
                     </div>
@@ -619,10 +1070,7 @@ const handleFlightPackageSelect = (flight) => {
                 </div>
               </div>
 
-              {/* Rest of the package fields... */}
-              {/* ... (keep all the existing package fields as they were) */}
-
- <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Specific Date *</label>
                   <input
@@ -783,39 +1231,24 @@ const handleFlightPackageSelect = (flight) => {
                   />
                 </div>
               </div>
-
-
-
-
-
-
-
-
-
-
-
-              
             </div>
           );
         case 'Flight':
           return (
             <div>
-              {flightSelectionTabs}
+              {selectionTabs('Flight')}
               {formData.flightSelectionType === 'new' ? flightFormFields : existingFlightPackages}
             </div>
           );
-
-
-
-
-
-
-
-
-
-
+        case 'Hotel':
+          return (
+            <div>
+              {selectionTabs('Hotel')}
+              {formData.hotelSelectionType === 'new' ? hotelFormFields : existingHotelPackages}
+            </div>
+          );
         case 'Transfer':
-         return (
+          return (
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -895,10 +1328,6 @@ const handleFlightPackageSelect = (flight) => {
               </div>
             </div>
           );
-
-
-
-
         case 'Visa':
           return (
             <div className="space-y-6">
@@ -940,136 +1369,6 @@ const handleFlightPackageSelect = (flight) => {
                   className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   placeholder="e.g., 5-7 business days"
                 />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
-                <textarea
-                  name="remarks"
-                  value={formData.remarks}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  rows="3"
-                ></textarea>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Expected Closure Date</label>
-                  <input
-                    type="date"
-                    name="expectedClosureDate"
-                    value={formData.expectedClosureDate}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Expected Closure Amount</label>
-                  <input
-                    type="number"
-                    name="expectedClosureAmount"
-                    value={formData.expectedClosureAmount}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
-              </div>
-            </div>
-          );
-
-
-
-
-
-       case 'Hotel':
-          return (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Check-In Date *</label>
-                  <input
-                    type="date"
-                    name="checkIn"
-                    value={formData.hotelDetails.checkIn}
-                    onChange={(e) => handleNestedInputChange('hotelDetails', e)}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Check-Out Date *</label>
-                  <input
-                    type="date"
-                    name="checkOut"
-                    value={formData.hotelDetails.checkOut}
-                    onChange={(e) => handleNestedInputChange('hotelDetails', e)}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Location/City *</label>
-                  <input
-                    type="text"
-                    name="goingTo"
-                    value={formData.goingTo}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Room Type</label>
-                  <select
-                    name="roomType"
-                    value={formData.hotelDetails.roomType}
-                    onChange={(e) => handleNestedInputChange('hotelDetails', e)}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="Standard">Standard</option>
-                    <option value="Deluxe">Deluxe</option>
-                    <option value="Suite">Suite</option>
-                    <option value="Executive">Executive</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Guests *</label>
-                  <input
-                    type="number"
-                    name="travellers"
-                    value={formData.travellers}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    min="1"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Hotel Preference (1-5)</label>
-                  <div className="flex items-center space-x-2">
-                    {[1, 2, 3, 4, 5].map(star => (
-                      <button
-                        key={star}
-                        type="button"
-                        onClick={() => setFormData({...formData, hotelPreference: star.toString()})}
-                        className={`p-1 rounded-full ${formData.hotelPreference >= star ? 'text-yellow-400' : 'text-gray-300'}`}
-                      >
-                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                      </button>
-                    ))}
-                  </div>
-                </div>
               </div>
 
               <div>
