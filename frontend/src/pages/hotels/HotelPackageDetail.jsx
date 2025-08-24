@@ -49,7 +49,7 @@ const HotelPackageDetail = () => {
         <h1 className="text-3xl font-bold text-gray-800">{packages.name}</h1>
         <div className="flex space-x-2">
           <button
-            onClick={() => navigate(`/admin/hotel-packages/edit/${id}`)}
+            onClick={() => navigate(`/admin/hotel-packages/edit/${packageId}`)}
             className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600"
           >
             Edit Package
@@ -86,7 +86,7 @@ const HotelPackageDetail = () => {
           <div className="mb-6 ">
             <h2 className="text-2xl font-semibold mb-2">Package Details</h2>
             <div className="flex flex-col md:flex-row gap-4">
-              {packages.images.map((image, index) => (
+              {packages.images && packages.images.map((image, index) => (
                 <img
                   key={index}
                   src={image}
@@ -112,18 +112,18 @@ const HotelPackageDetail = () => {
                 </p>
                 <p>
                   <span className="font-medium">Location:</span>{" "}
-                  {packages.location.address
+                  {packages.location && packages.location.address
                     ? `${packages.location.address}, `
                     : ""}
-                  {packages.location.city}, {packages.location.country}
+                  {packages.location && packages.location.city}, {packages.location && packages.location.country}
                 </p>
-                {packages.location.landmark && (
+                {packages.location && packages.location.landmark && (
                   <p>
                     <span className="font-medium">Landmark:</span>{" "}
                     {packages.location.landmark}
                   </p>
                 )}
-                {packages.location.coordinates.lat &&
+                {packages.location && packages.location.coordinates && packages.location.coordinates.lat &&
                   packages.location.coordinates.lng && (
                     <p>
                       <span className="font-medium">Coordinates:</span>{" "}
@@ -137,14 +137,6 @@ const HotelPackageDetail = () => {
             <div>
               <h2 className="text-xl font-semibold mb-4">Stay Details</h2>
               <div className="space-y-2">
-                <p>
-                  <span className="font-medium">Check In:</span>{" "}
-                  {new Date(packages.checkIn).toLocaleDateString()}
-                </p>
-                <p>
-                  <span className="font-medium">Check Out:</span>{" "}
-                  {new Date(packages.checkOut).toLocaleDateString()}
-                </p>
                 <p>
                   <span className="font-medium">Nights:</span> {packages.nights}
                 </p>
@@ -184,7 +176,7 @@ const HotelPackageDetail = () => {
               </div>
               <div>
                 <p className="font-medium">Room Amenities:</p>
-                {packages.roomAmenities.length > 0 ? (
+                {packages.roomAmenities && packages.roomAmenities.length > 0 ? (
                   <ul className="list-disc list-inside">
                     {packages.roomAmenities.map((amenity) => (
                       <li key={amenity}>{amenity}</li>
@@ -231,7 +223,7 @@ const HotelPackageDetail = () => {
           </div>
 
           {/* Amenities */}
-          {packages.amenities.length > 0 && (
+          {packages.amenities && packages.amenities.length > 0 && (
             <div className="mb-8">
               <h2 className="text-xl font-semibold mb-4">Hotel Amenities</h2>
               <div className="flex flex-wrap gap-2">
@@ -285,7 +277,7 @@ const HotelPackageDetail = () => {
               ).toLocaleString()}`}
           </p>
           <button
-            onClick={() => navigate(`/admin/hotel-packages/edit/${id}`)}
+            onClick={() => navigate(`/admin/hotel-packages/edit/${packageId}`)}
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
           >
             Edit Package

@@ -27,8 +27,6 @@ const HotelPackageSchema = new mongoose.Schema(
     roomAmenities: [String],
 
     // Stay Details
-    checkIn: { type: Date, required: true },
-    checkOut: { type: Date, required: true },
     nights: { type: Number, required: true },
 
     // Pricing

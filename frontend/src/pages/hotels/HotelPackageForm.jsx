@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
-import DatePicker from 'react-datepicker';
-import 'react-datepicker/dist/react-datepicker.css';
 
 const HotelPackageForm = () => {
   const { id } = useParams();
@@ -30,8 +28,6 @@ const HotelPackageForm = () => {
     maxOccupancy: 2,
     roomView: '',
     roomAmenities: [],
-    checkIn: new Date(),
-    checkOut: new Date(Date.now() + 86400000), // Tomorrow
     nights: 1,
     baseRate: 0,
     taxes: 0,
@@ -63,19 +59,6 @@ const HotelPackageForm = () => {
   }, [id]);
 
   useEffect(() => {
-    // Calculate nights when checkIn or checkOut changes
-    if (formData.checkIn && formData.checkOut) {
-      const diffTime = Math.abs(formData.checkOut - formData.checkIn);
-      const calculatedNights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      setFormData(prev => ({
-        ...prev,
-        nights: calculatedNights,
-        totalPrice: (prev.baseRate + prev.taxes + prev.fees) * calculatedNights
-      }));
-    }
-  }, [formData.checkIn, formData.checkOut]);
-
-  useEffect(() => {
     // Calculate total price when baseRate, taxes, fees, or nights change
     setFormData(prev => ({
       ...prev,
@@ -87,11 +70,7 @@ const HotelPackageForm = () => {
     try {
       setLoading(true);
       const response = await axios.get(`http://localhost:8000/api/hotel-packages/${id}`);
-      setFormData({
-        ...response.data,
-        checkIn: new Date(response.data.checkIn),
-        checkOut: new Date(response.data.checkOut)
-      });
+      setFormData(response.data);
       setLoading(false);
     } catch (error) {
       toast.error('Failed to fetch package');
@@ -120,13 +99,6 @@ const HotelPackageForm = () => {
         [name]: value
       }));
     }
-  };
-
-  const handleDateChange = (date, field) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: date
-    }));
   };
 
   const handleCheckboxChange = (e, listName) => {
@@ -451,37 +423,15 @@ const HotelPackageForm = () => {
           </div>
           
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Check In Date*</label>
-            <DatePicker
-              selected={formData.checkIn}
-              onChange={(date) => handleDateChange(date, 'checkIn')}
-              minDate={new Date()}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              required
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Check Out Date*</label>
-            <DatePicker
-              selected={formData.checkOut}
-              onChange={(date) => handleDateChange(date, 'checkOut')}
-              minDate={formData.checkIn}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              required
-            />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nights</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Number of Nights*</label>
             <input
               type="number"
               min="1"
               name="nights"
               value={formData.nights}
               onChange={handleChange}
+              required
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-              readOnly
             />
           </div>
           

@@ -11,15 +11,18 @@ import {
   Calendar,
   Users,
   Heart,
+  Moon,
 } from "lucide-react";
 
 export default function HotelDetailPage() {
-  /* const hotelName = params.id
-    .split('-')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' '); */
-
   const [tab, setTab] = useState("overview");
+  const [nights, setNights] = useState(5);
+  const [guests, setGuests] = useState("2 Adults");
+
+  // Calculate price based on nights
+  const baseRate = 299;
+  const taxesAndFees = 59.8; // 20% of base rate per night
+  const totalPrice = baseRate * nights + taxesAndFees * nights;
 
   return (
     <div className="container py-8">
@@ -56,7 +59,6 @@ export default function HotelDetailPage() {
           <img
             src="https://housing.com/news/wp-content/uploads/2022/11/Famous-tourist-places-in-India-state-compressed.jpg"
             alt="Hotel main image"
-            fill
             className="object-cover w-full h-full"
           />
         </div>
@@ -65,7 +67,6 @@ export default function HotelDetailPage() {
             <img
               src="https://housing.com/news/wp-content/uploads/2022/11/Famous-tourist-places-in-India-state-compressed.jpg"
               alt="Hotel image 2"
-              fill
               className="object-cover w-full h-full"
             />
           </div>
@@ -73,7 +74,6 @@ export default function HotelDetailPage() {
             <img
               src="https://housing.com/news/wp-content/uploads/2022/11/Famous-tourist-places-in-India-state-compressed.jpg"
               alt="Hotel image 3"
-              fill
               className="object-cover w-full h-full"
             />
           </div>
@@ -81,7 +81,6 @@ export default function HotelDetailPage() {
             <img
               src="https://housing.com/news/wp-content/uploads/2022/11/Famous-tourist-places-in-India-state-compressed.jpg"
               alt="Hotel image 4"
-              fill
               className="object-cover w-full h-full"
             />
           </div>
@@ -92,7 +91,6 @@ export default function HotelDetailPage() {
             <img
               src="https://housing.com/news/wp-content/uploads/2022/11/Famous-tourist-places-in-India-state-compressed.jpg"
               alt="Hotel image 5"
-              fill
               className="object-cover w-full h-full"
             />
           </div>
@@ -492,7 +490,6 @@ export default function HotelDetailPage() {
                         <img
                           src="https://media.istockphoto.com/id/1051172208/photo/happy-woman-posing-looking-at-camera-in-winter-in-the-street.jpg?s=612x612&w=0&k=20&c=m1BxTjS6vlUZT8tOPunuNKMeGc0EEFHOnjWYyhP92N0="
                           alt="Reviewer"
-                          fill
                           className="object-cover w-full h-full"
                         />
                       </div>
@@ -530,7 +527,6 @@ export default function HotelDetailPage() {
                         <img
                           src="https://media.istockphoto.com/id/1051172208/photo/happy-woman-posing-looking-at-camera-in-winter-in-the-street.jpg?s=612x612&w=0&k=20&c=m1BxTjS6vlUZT8tOPunuNKMeGc0EEFHOnjWYyhP92N0="
                           alt="Reviewer"
-                          fill
                           className="object-cover w-full h-full"
                         />
                       </div>
@@ -574,8 +570,7 @@ export default function HotelDetailPage() {
                 <img
                   src="https://www.thestatesman.com/wp-content/uploads/2020/04/googl_ED.jpg"
                   alt="Map location"
-                  fill
-                  className="object-cover"
+                  className="object-cover w-full h-full"
                 />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <span className="text-lg font-medium">
@@ -662,33 +657,38 @@ export default function HotelDetailPage() {
             <div className="space-y-4 mb-6">
               <div>
                 <label className="text-sm font-medium mb-2 block">
-                  Check-in
+                  Number of Nights
                 </label>
                 <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <input
-                    type="date"
+                  <Moon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <select 
+                    value={nights} 
+                    onChange={(e) => setNights(Number(e.target.value))}
                     className="w-full pl-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-2 block">
-                  Check-out
-                </label>
-                <div className="relative">
-                  <Calendar className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <input
-                    type="date"
-                    className="w-full pl-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
-                  />
+                  >
+                    <option value={1}>1 Night</option>
+                    <option value={2}>2 Nights</option>
+                    <option value={3}>3 Nights</option>
+                    <option value={4}>4 Nights</option>
+                    <option value={5}>5 Nights</option>
+                    <option value={6}>6 Nights</option>
+                    <option value={7}>7 Nights</option>
+                    <option value={8}>8 Nights</option>
+                    <option value={9}>9 Nights</option>
+                    <option value={10}>10 Nights</option>
+                    <option value={14}>14 Nights</option>
+                  </select>
                 </div>
               </div>
               <div>
                 <label className="text-sm font-medium mb-2 block">Guests</label>
                 <div className="relative">
                   <Users className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <select className="w-full pl-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm">
+                  <select 
+                    value={guests} 
+                    onChange={(e) => setGuests(e.target.value)}
+                    className="w-full pl-10 rounded-md border border-gray-300 bg-white px-3 py-2 text-sm"
+                  >
                     <option>1 Adult</option>
                     <option>2 Adults</option>
                     <option>2 Adults, 1 Child</option>
@@ -700,16 +700,16 @@ export default function HotelDetailPage() {
 
             <div className="border-t border-b py-4 mb-4">
               <div className="flex justify-between mb-2">
-                <span className="text-sm">$299 x 5 nights</span>
-                <span className="text-sm">$1,495</span>
+                <span className="text-sm">${baseRate} x {nights} nights</span>
+                <span className="text-sm">${baseRate * nights}</span>
               </div>
               <div className="flex justify-between mb-2">
                 <span className="text-sm">Taxes & fees</span>
-                <span className="text-sm">$299</span>
+                <span className="text-sm">${taxesAndFees * nights}</span>
               </div>
               <div className="flex justify-between font-medium">
                 <span>Total</span>
-                <span>$1,794</span>
+                <span>${totalPrice}</span>
               </div>
             </div>
 

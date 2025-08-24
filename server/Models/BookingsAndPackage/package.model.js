@@ -117,8 +117,37 @@ const PackageSchema = new Schema(
         },
         roomType: { type: String, required: true },
         amenities: [String],
+
+
+
+
+
+
+
+
+
+
+
+
+
+        //remove checkin and checkout 
         checkIn: { type: Date, required: true },
         checkOut: { type: Date, required: true },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        
         cancellationPolicy: String,
 
       },

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Search,
   Filter,
@@ -10,10 +10,14 @@ import {
   Utensils,
   ParkingMeterIcon as Parking,
   ShowerHeadIcon as SwimmingPool,
+  Moon,
 } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function HotelsPage() {
+  const [nights, setNights] = useState(1);
+  const [guests, setGuests] = useState(2);
+
   return (
     <div className="container py-8 ">
       <div className="max-w-screen-xl mx-auto">
@@ -33,22 +37,49 @@ export default function HotelsPage() {
             className="w-full pl-10 py-2 border border-gray-300 rounded-lg"
           />
         </div>
-        <div className="flex-shrink-0 grid grid-cols-2 gap-4 md:w-1/3">
-          <input
-            type="date"
-            placeholder="Check-in"
-            className="w-full py-2 border border-gray-300 rounded-lg"
-          />
-          <input
-            type="date"
-            placeholder="Check-out"
-            className="w-full py-2 border border-gray-300 rounded-lg"
-          />
+        
+        <div className="relative flex-shrink-0 md:w-1/4">
+          <Moon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <select
+            value={nights}
+            onChange={(e) => setNights(Number(e.target.value))}
+            className="w-full pl-10 py-2 border border-gray-300 rounded-lg"
+          >
+            <option value={1}>1 Night</option>
+            <option value={2}>2 Nights</option>
+            <option value={3}>3 Nights</option>
+            <option value={4}>4 Nights</option>
+            <option value={5}>5 Nights</option>
+            <option value={6}>6 Nights</option>
+            <option value={7}>7 Nights</option>
+            <option value={8}>8 Nights</option>
+            <option value={9}>9 Nights</option>
+            <option value={10}>10 Nights</option>
+            <option value={14}>14 Nights</option>
+          </select>
         </div>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center bg-primary">
+        
+        <div className="relative flex-shrink-0 md:w-1/4">
+          <Users className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <select
+            value={guests}
+            onChange={(e) => setGuests(Number(e.target.value))}
+            className="w-full pl-10 py-2 border border-gray-300 rounded-lg"
+          >
+            <option value={1}>1 Guest</option>
+            <option value={2}>2 Guests</option>
+            <option value={3}>3 Guests</option>
+            <option value={4}>4 Guests</option>
+            <option value={5}>5 Guests</option>
+            <option value={6}>6 Guests</option>
+          </select>
+        </div>
+        
+        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center">
           <Search className="mr-2 h-4 w-4" /> Search Hotels
         </button>
       </div>
+      
       <div className="max-w-screen-xl mx-auto">
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Filters Sidebar */}
@@ -73,6 +104,25 @@ export default function HotelsPage() {
                 <div className="flex justify-between text-sm">
                   <span>$0</span>
                   <span>$1000+</span>
+                </div>
+              </div>
+
+              {/* Nights Range */}
+              <div className="mb-6">
+                <h4 className="text-sm font-medium mb-2">Number of Nights</h4>
+                <div className="space-y-2">
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 14].map((num) => (
+                    <div key={num} className="flex items-center">
+                      <input
+                        type="checkbox"
+                        id={`nights-${num}`}
+                        className="mr-2"
+                      />
+                      <label htmlFor={`nights-${num}`} className="text-sm">
+                        {num} Night{num !== 1 ? 's' : ''}
+                      </label>
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -176,7 +226,7 @@ export default function HotelsPage() {
                 </div>
               </div>
 
-              <button className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors bg-primary">
+              <button className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
                 Apply Filters
               </button>
             </div>
@@ -193,6 +243,8 @@ export default function HotelsPage() {
                   <option value="price-low">Price: Low to High</option>
                   <option value="price-high">Price: High to Low</option>
                   <option value="rating">Rating</option>
+                  <option value="nights-low">Nights: Low to High</option>
+                  <option value="nights-high">Nights: High to Low</option>
                 </select>
               </div>
             </div>
@@ -221,95 +273,117 @@ export default function HotelsPage() {
                     </span>
                     <span className="ml-2 text-sm">4.9</span>
                   </div>
-                  <p className="text-sm text-gray-600 mt-2">
+                  <div className="flex items-center text-sm text-gray-600 mt-2">
+                    <Moon className="h-4 w-4 mr-1" />
+                    <span>5 nights minimum stay</span>
+                  </div>
+                  <p className="text-sm text-gray-600">
                     Tropical paradise with stunning beaches and vibrant culture
                   </p>
                   <div className="flex justify-between items-center mt-4">
-                    <span className="text-lg font-bold">$250/night</span>
+                    <div>
+                      <span className="text-lg font-bold">$250/night</span>
+                      <p className="text-sm text-gray-500">Total: $1,250 for 5 nights</p>
+                    </div>
                     <Link
                       to="/hotels/1"
-                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors bg-primary"
+                      className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                     >
                       Book Now
                     </Link>
                   </div>
                 </div>
               </div>
-              <div className="bg-white flex rounded-lg border-1 border-gray-200 p-2 gap-4 grid-cols-5">
-                <img
-                  className="w-88 h-50 object-cover rounded-lg col-span-2"
-                  src="https://www.leisurekart.com/blog/wp-content/uploads/2024/04/Places-to-visit-in-Mumbai.jpg"
-                  alt="Grand Luxury Resort & Spa"
-                />
-                <div className="mt-4 space-y-2 col-span-3">
-                  <h3 className="text-xl font-bold">
-                    Grand Luxury Resort & Spa
-                  </h3>
-                  <p className="text-sm text-gray-600">Bali, Indonesia</p>
-                  <div className="flex items-center mt-2">
-                    <span className="text-yellow-500 flex">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star
-                          key={i}
-                          className="h-4 w-4 fill-yellow-500 text-yellow-500"
-                        />
-                      ))}
-                    </span>
-                    <span className="ml-2 text-sm">4.9</span>
-                  </div>
-                  <p className="text-sm text-gray-600 mt-2">
-                    Tropical paradise with stunning beaches and vibrant culture
-                  </p>
-                  <div className="flex justify-between items-center mt-4">
-                    <span className="text-lg font-bold">$250/night</span>
-                    <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors bg-primary">
-                      Book Now
-                    </button>
-                  </div>
-                </div>
-              </div>
-              <div className="bg-white flex rounded-lg border-1 border-gray-200 p-2 gap-4 grid-cols-5">
-                <img
-                  className="w-88 h-50 object-cover rounded-lg col-span-2"
-                  src="https://www.leisurekart.com/blog/wp-content/uploads/2024/04/Places-to-visit-in-Mumbai.jpg"
-                  alt="Grand Luxury Resort & Spa"
-                />
-                <div className="mt-4 space-y-2 col-span-3">
-                  <h3 className="text-xl font-bold">
-                    Grand Luxury Resort & Spa
-                  </h3>
-                  <p className="text-sm text-gray-600">Bali, Indonesia</p>
-                  <div className="flex items-center mt-2">
-                    <span className="text-yellow-500 flex">
-                      {Array.from({ length: 5 }).map((_, i) => (
-                        <Star
-                          key={i}
-                          className="h-4 w-4 fill-yellow-500 text-yellow-500"
-                        />
-                      ))}
-                    </span>
-                    <span className="ml-2 text-sm">4.9</span>
-                  </div>
-                  <p className="text-sm text-gray-600 mt-2">
-                    Tropical paradise with stunning beaches and vibrant culture
-                  </p>
-                  <div className="flex justify-between items-center mt-4">
-                    <span className="text-lg font-bold">$250/night</span>
-                    <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors bg-primary">
-                      Book Now
-                    </button>
-                  </div>
-                </div>
-              </div>
-
+              
               {/* Repeat for other hotels */}
+              <div className="bg-white flex rounded-lg border-1 border-gray-200 p-2 gap-4 grid-cols-5">
+                <img
+                  className="w-88 h-50 object-cover rounded-lg col-span-2"
+                  src="https://www.leisurekart.com/blog/wp-content/uploads/2024/04/Places-to-visit-in-Mumbai.jpg"
+                  alt="Grand Luxury Resort & Spa"
+                />
+                <div className="mt-4 space-y-2 col-span-3">
+                  <h3 className="text-xl font-bold">
+                    Grand Luxury Resort & Spa
+                  </h3>
+                  <p className="text-sm text-gray-600">Bali, Indonesia</p>
+                  <div className="flex items-center mt-2">
+                    <span className="text-yellow-500 flex">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star
+                          key={i}
+                          className="h-4 w-4 fill-yellow-500 text-yellow-500"
+                        />
+                      ))}
+                    </span>
+                    <span className="ml-2 text-sm">4.9</span>
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600 mt-2">
+                    <Moon className="h-4 w-4 mr-1" />
+                    <span>3 nights minimum stay</span>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Tropical paradise with stunning beaches and vibrant culture
+                  </p>
+                  <div className="flex justify-between items-center mt-4">
+                    <div>
+                      <span className="text-lg font-bold">$250/night</span>
+                      <p className="text-sm text-gray-500">Total: $750 for 3 nights</p>
+                    </div>
+                    <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                      Book Now
+                    </button>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-white flex rounded-lg border-1 border-gray-200 p-2 gap-4 grid-cols-5">
+                <img
+                  className="w-88 h-50 object-cover rounded-lg col-span-2"
+                  src="https://www.leisurekart.com/blog/wp-content/uploads/2024/04/Places-to-visit-in-Mumbai.jpg"
+                  alt="Grand Luxury Resort & Spa"
+                />
+                <div className="mt-4 space-y-2 col-span-3">
+                  <h3 className="text-xl font-bold">
+                    Grand Luxury Resort & Spa
+                  </h3>
+                  <p className="text-sm text-gray-600">Bali, Indonesia</p>
+                  <div className="flex items-center mt-2">
+                    <span className="text-yellow-500 flex">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Star
+                          key={i}
+                          className="h-4 w-4 fill-yellow-500 text-yellow-500"
+                        />
+                      ))}
+                    </span>
+                    <span className="ml-2 text-sm">4.9</span>
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600 mt-2">
+                    <Moon className="h-4 w-4 mr-1" />
+                    <span>7 nights minimum stay</span>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Tropical paradise with stunning beaches and vibrant culture
+                  </p>
+                  <div className="flex justify-between items-center mt-4">
+                    <div>
+                      <span className="text-lg font-bold">$250/night</span>
+                      <p className="text-sm text-gray-500">Total: $1,750 for 7 nights</p>
+                    </div>
+                    <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                      Book Now
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="mt-8 flex justify-center">
-              <button className="mx-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 bg-primary text-white">
+              <button className="mx-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100">
                 Previous
               </button>
-              <button className="mx-1 px-4 py-2 border border-gray-300 rounded-lg bg-primary text-white">
+              <button className="mx-1 px-4 py-2 border border-gray-300 rounded-lg bg-blue-600 text-white">
                 1
               </button>
               <button className="mx-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100">
@@ -318,7 +392,7 @@ export default function HotelsPage() {
               <button className="mx-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100">
                 3
               </button>
-              <button className="mx-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 bg-primary text-white">
+              <button className="mx-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100">
                 Next
               </button>
             </div>
