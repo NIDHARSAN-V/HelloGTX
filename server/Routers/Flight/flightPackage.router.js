@@ -15,7 +15,7 @@ router.get("/search", getFlightPackagesBySearch);
 router.get("/:id", getFlightPackageById);
 
 // Protected admin routes
-router.post("/", createFlightPackage);
+router.post("/", createFlightPackage); 
 router.put("/:id", updateFlightPackage);
 router.delete("/:id", deleteFlightPackage);
 

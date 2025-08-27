@@ -12,13 +12,14 @@ const HotelPackageList = () => {
     country: "",
     minPrice: "",
     maxPrice: "",
+    minNights: "",
+    maxNights: "",
     sort: "",
   });
   const navigate = useNavigate();
 
   useEffect(() => {
     fetchPackages();
-    fetchAllHotelPackages();
   }, [filters]);
 
   const fetchPackages = async () => {
@@ -37,18 +38,6 @@ const HotelPackageList = () => {
     } catch (error) {
       toast.error("Failed to fetch packages");
       setLoading(false);
-    }
-  };
-
-  const fetchAllHotelPackages = async () => {
-    try {
-      const response = await axios.get(
-        "http://localhost:8000/api/hotel-packages"
-      );
-      setPackages(response.data);
-    } catch (error) {
-      toast.error("Failed to fetch hotel packages");
-      console.error("Error fetching hotel packages:", error);
     }
   };
 
@@ -92,7 +81,7 @@ const HotelPackageList = () => {
       {/* Filters */}
       <div className="bg-white p-4 rounded-lg shadow-md mb-6">
         <h2 className="text-xl font-semibold mb-4">Filters</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-8 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Status
@@ -165,6 +154,32 @@ const HotelPackageList = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700">
+              Min Nights
+            </label>
+            <input
+              type="number"
+              name="minNights"
+              value={filters.minNights}
+              onChange={handleFilterChange}
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Max Nights
+            </label>
+            <input
+              type="number"
+              name="maxNights"
+              value={filters.maxNights}
+              onChange={handleFilterChange}
+              className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
               Sort By
             </label>
             <select
@@ -177,6 +192,8 @@ const HotelPackageList = () => {
               <option value="price_asc">Price: Low to High</option>
               <option value="price_desc">Price: High to Low</option>
               <option value="rating">Rating</option>
+              <option value="nights_asc">Nights: Low to High</option>
+              <option value="nights_desc">Nights: High to Low</option>
             </select>
           </div>
         </div>
@@ -190,7 +207,7 @@ const HotelPackageList = () => {
             className="bg-white rounded-lg shadow-md overflow-hidden"
           >
             <img
-              src={pkg.images[0]}
+              src={pkg.images && pkg.images[0]}
               alt={pkg.name}
               className="w-full h-48 object-cover"
             />
@@ -250,7 +267,7 @@ const HotelPackageList = () => {
                     d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                   />
                 </svg>
-                {pkg.location.city}, {pkg.location.country}
+                {pkg.location && pkg.location.city}, {pkg.location && pkg.location.country}
               </p>
 
               <div className="mt-4 grid grid-cols-2 gap-2">
@@ -263,16 +280,12 @@ const HotelPackageList = () => {
                   <p className="font-medium">{pkg.bedType}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Check In</p>
-                  <p className="font-medium">
-                    {new Date(pkg.checkIn).toLocaleDateString()}
-                  </p>
+                  <p className="text-sm text-gray-500">Nights</p>
+                  <p className="font-medium">{pkg.nights}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-500">Check Out</p>
-                  <p className="font-medium">
-                    {new Date(pkg.checkOut).toLocaleDateString()}
-                  </p>
+                  <p className="text-sm text-gray-500">Max Occupancy</p>
+                  <p className="font-medium">{pkg.maxOccupancy}</p>
                 </div>
               </div>
 
@@ -308,7 +321,7 @@ const HotelPackageList = () => {
                 View
               </button>
               <button
-                onClick={() => navigate(`/hotel-packages/edit/${pkg._id}`)}
+                onClick={() => navigate(`/admin/hotel-packages/edit/${pkg._id}`)}
                 className="px-3 py-1 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 text-sm"
               >
                 Edit

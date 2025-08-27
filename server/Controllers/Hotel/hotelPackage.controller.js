@@ -21,12 +21,9 @@ const createHotelPackage = async (req, res) => {
       packageData.slug = generateSlug(packageData.name);
     }
 
-    // Auto-calculate nights if not provided
-    if (!packageData.nights && packageData.checkIn && packageData.checkOut) {
-      const diffTime = Math.abs(
-        new Date(packageData.checkOut) - new Date(packageData.checkIn)
-      );
-      packageData.nights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    // Validate that nights is provided
+    if (!packageData.nights) {
+      return res.status(400).json({ error: "Number of nights is required" });
     }
 
     const newPackage = new HotelPackage(packageData);
@@ -44,7 +41,6 @@ const createHotelPackage = async (req, res) => {
 // @desc    Get all hotel packages
 // @route   GET /api/hotel-packages
 // @access  Public
-
 const getAllHotelPackages = async (req, res) => {
   try {
     const hotelPackages = await HotelPackage.find();
@@ -60,28 +56,38 @@ const getAllHotelPackages = async (req, res) => {
   }
 };
 
-// @desc    Get all hotel packages
-// @route   GET /api/hotel-packages
+// @desc    Get all hotel packages by search criteria
+// @route   GET /api/hotel-packages/search
 // @access  Public
-
 const getHotelPackagesBySearch = async (req, res) => {
   try {
-    const { status, city, country, minPrice, maxPrice, sort } = req.query;
+    const { status, city, country, minPrice, maxPrice, sort, minNights, maxNights } = req.query;
 
     const filter = {};
     if (status) filter.status = status;
     if (city) filter["location.city"] = new RegExp(city, "i");
     if (country) filter["location.country"] = new RegExp(country, "i");
+    
+    // Price filtering
     if (minPrice || maxPrice) {
       filter.totalPrice = {};
       if (minPrice) filter.totalPrice.$gte = Number(minPrice);
       if (maxPrice) filter.totalPrice.$lte = Number(maxPrice);
+    }
+    
+    // Nights filtering
+    if (minNights || maxNights) {
+      filter.nights = {};
+      if (minNights) filter.nights.$gte = Number(minNights);
+      if (maxNights) filter.nights.$lte = Number(maxNights);
     }
 
     let sortOption = { createdAt: -1 };
     if (sort === "price_asc") sortOption = { totalPrice: 1 };
     if (sort === "price_desc") sortOption = { totalPrice: -1 };
     if (sort === "rating") sortOption = { starRating: -1 };
+    if (sort === "nights_asc") sortOption = { nights: 1 };
+    if (sort === "nights_desc") sortOption = { nights: -1 };
 
     const packages = await HotelPackage.find(filter).sort(sortOption);
     res.status(200).json(packages);
@@ -118,19 +124,6 @@ const updateHotelPackage = async (req, res) => {
   try {
     const { id } = req.params;
     const updateData = req.body;
-
-    // Recalculate nights if checkIn or checkOut changed
-    if ((updateData.checkIn || updateData.checkOut) && !updateData.nights) {
-      const existingPackage = await HotelPackage.findById(id);
-      const checkIn = updateData.checkIn
-        ? new Date(updateData.checkIn)
-        : existingPackage.checkIn;
-      const checkOut = updateData.checkOut
-        ? new Date(updateData.checkOut)
-        : existingPackage.checkOut;
-      const diffTime = Math.abs(checkOut - checkIn);
-      updateData.nights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    }
 
     const updatedPackage = await HotelPackage.findByIdAndUpdate(
       id,
