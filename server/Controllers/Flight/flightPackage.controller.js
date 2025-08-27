@@ -157,6 +157,7 @@ const deleteFlightPackage = async (req, res) => {
   }
 };
 
+
 module.exports = {
   createFlightPackage,
   getAllFlightPackages,
