@@ -1,0 +1,15 @@
+//next 29/8 i need to continue and complete the query full along with DataBase  push -->add operation 
+ 
+
+ 30/8 --> complete the crud of it --> edit and delete 
+
+
+ 1/9 --> start with itenery creation 
+
+ 2/9 --> Integration of sending the data 
+
+ 3/9 --> status of the Lead 
+
+
+others -->  points quiz and ai others 
+

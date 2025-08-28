@@ -33,6 +33,8 @@ function NewQuery() {
     remarks: '',
     expectedClosureDate: '',
     expectedClosureAmount: '',
+
+    
     // Flight specific
     flightSelectionType: 'new', // 'new' or 'existing'
     selectedFlightPackage: null,
@@ -46,6 +48,8 @@ function NewQuery() {
     infants: 0,
     flightClass: 'Economy',
     preferredAirline: '',
+
+
     // Hotel specific
     hotelSelectionType: 'new', // 'new' or 'existing'
     selectedHotelPackage: null,
@@ -292,6 +296,12 @@ function NewQuery() {
       </>
     );
 
+
+
+
+
+
+
     const selectionTabs = (type) => (
       <div className="mb-6">
         <div className="flex border-b border-gray-200">
@@ -312,6 +322,20 @@ function NewQuery() {
         </div>
       </div>
     );
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     const flightFormFields = (
       <div className="space-y-6">
@@ -499,11 +523,205 @@ function NewQuery() {
               className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               min="0"
               step="0.01"
-            />
+              />
           </div>
         </div>
       </div>
     );
+    
+    
+    
+    
+    
+        
+    
+        const existingFlightPackages = (
+          <div>
+            {flightLoading ? (
+              <div className="flex justify-center items-center h-64">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+              </div>
+            ) : (
+              <div>
+                {/* Flight package filters */}
+                <div className="bg-white p-4 rounded-lg shadow-md mb-6">
+                  <h2 className="text-xl font-semibold mb-4">Filter Flight Packages</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Departure City
+                      </label>
+                      <input
+                        type="text"
+                        name="departureCity"
+                        value={flightFilters.departureCity}
+                        onChange={handleFlightFilterChange}
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      />
+                    </div>
+    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Arrival City
+                      </label>
+                      <input
+                        type="text"
+                        name="arrivalCity"
+                        value={flightFilters.arrivalCity}
+                        onChange={handleFlightFilterChange}
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      />
+                    </div>
+    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Min Price
+                      </label>
+                      <input
+                        type="number"
+                        name="minPrice"
+                        value={flightFilters.minPrice}
+                        onChange={handleFlightFilterChange}
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      />
+                    </div>
+    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        Sort By
+                      </label>
+                      <select
+                        name="sort"
+                        value={flightFilters.sort}
+                        onChange={handleFlightFilterChange}
+                        className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
+                      >
+                        <option value="">Default</option>
+                        <option value="price_asc">Price: Low to High</option>
+                        <option value="price_desc">Price: High to Low</option>
+                        <option value="duration">Duration</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+    
+                {/* Flight packages list */}
+                <div className="space-y-4">
+                  {flightPackages.length === 0 ? (
+                    <div className="text-center py-12">
+                      <p className="text-gray-500">
+                        No flight packages found matching your criteria
+                      </p>
+                    </div>
+                  ) : (
+                    flightPackages.map((flight) => (
+                      <div
+                        key={flight._id}
+                        className={`bg-white rounded-lg shadow-md overflow-hidden border-2 ${
+                          formData.selectedFlightPackage === flight._id ? 'border-blue-500' : 'border-transparent'
+                        }`}
+                      >
+                        <div className="p-4">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="text-lg font-bold text-gray-800">
+                                {flight.departure.city} ({flight.departure.airport}) → {flight.arrival.city} ({flight.arrival.airport})
+                              </h3>
+                              <p className="text-gray-600">
+                                {flight.airline} • {flight.flightNumber} • {flight.class.replace("_", " ")}
+                              </p>
+                            </div>
+                            <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
+                              Available
+                            </span>
+                          </div>
+    
+                          <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div className="space-y-2">
+                              <p className="font-medium">Departure</p>
+                              <p>{new Date(flight.departure.datetime).toLocaleString()}</p>
+                              <p>
+                                {flight.departure.airport} {flight.departure.terminal && (`Terminal ${flight.departure.terminal}`)}
+                              </p>
+                            </div>
+    
+                            <div className="text-center">
+                              <p className="font-medium">{formatDuration(flight.duration)}</p>
+                              <div className="relative pt-4">
+                                <div className="absolute inset-0 flex items-center" aria-hidden="true">
+                                  <div className="w-full border-t border-gray-300" />
+                                </div>
+                                <div className="relative flex justify-center">
+                                  <span className="px-2 bg-white text-sm text-gray-500">
+                                    {flight.stops > 0 ? `${flight.stops} stop${flight.stops > 1 ? 's' : ''}` : 'Non-stop'}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+    
+                            <div className="space-y-2">
+                              <p className="font-medium">Arrival</p>
+                              <p>{new Date(flight.arrival.datetime).toLocaleString()}</p>
+                              <p>
+                                {flight.arrival.airport} {flight.arrival.terminal && (`Terminal ${flight.arrival.terminal}`)}
+                              </p>
+                            </div>
+                          </div>
+    
+                          <div className="mt-4 flex justify-between items-center">
+                            <div>
+                              <p className="text-sm text-gray-500">Total Price</p>
+                              <p className="text-xl font-bold text-blue-600">
+                                {flight.currency} {flight.price?.toLocaleString() ?? "0"}
+                              </p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleFlightPackageSelect(flight)}
+                              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+                            >
+                              {formData.selectedFlightPackage === flight._id ? 'Selected' : 'Select'}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        );
+
+
+
+
+
+
+
+
+        const ThirdPartyFlight = (
+           <div>
+            Third Party Flight
+           </div>
+        )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     const hotelFormFields = (
       <div className="space-y-6">
@@ -663,163 +881,19 @@ function NewQuery() {
       </div>
     );
 
-    const existingFlightPackages = (
-      <div>
-        {flightLoading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-          </div>
-        ) : (
-          <div>
-            {/* Flight package filters */}
-            <div className="bg-white p-4 rounded-lg shadow-md mb-6">
-              <h2 className="text-xl font-semibold mb-4">Filter Flight Packages</h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Departure City
-                  </label>
-                  <input
-                    type="text"
-                    name="departureCity"
-                    value={flightFilters.departureCity}
-                    onChange={handleFlightFilterChange}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  />
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Arrival City
-                  </label>
-                  <input
-                    type="text"
-                    name="arrivalCity"
-                    value={flightFilters.arrivalCity}
-                    onChange={handleFlightFilterChange}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  />
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Min Price
-                  </label>
-                  <input
-                    type="number"
-                    name="minPrice"
-                    value={flightFilters.minPrice}
-                    onChange={handleFlightFilterChange}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  />
-                </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Sort By
-                  </label>
-                  <select
-                    name="sort"
-                    value={flightFilters.sort}
-                    onChange={handleFlightFilterChange}
-                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-                  >
-                    <option value="">Default</option>
-                    <option value="price_asc">Price: Low to High</option>
-                    <option value="price_desc">Price: High to Low</option>
-                    <option value="duration">Duration</option>
-                  </select>
-                </div>
-              </div>
-            </div>
 
-            {/* Flight packages list */}
-            <div className="space-y-4">
-              {flightPackages.length === 0 ? (
-                <div className="text-center py-12">
-                  <p className="text-gray-500">
-                    No flight packages found matching your criteria
-                  </p>
-                </div>
-              ) : (
-                flightPackages.map((flight) => (
-                  <div
-                    key={flight._id}
-                    className={`bg-white rounded-lg shadow-md overflow-hidden border-2 ${
-                      formData.selectedFlightPackage === flight._id ? 'border-blue-500' : 'border-transparent'
-                    }`}
-                  >
-                    <div className="p-4">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h3 className="text-lg font-bold text-gray-800">
-                            {flight.departure.city} ({flight.departure.airport}) → {flight.arrival.city} ({flight.arrival.airport})
-                          </h3>
-                          <p className="text-gray-600">
-                            {flight.airline} • {flight.flightNumber} • {flight.class.replace("_", " ")}
-                          </p>
-                        </div>
-                        <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
-                          Available
-                        </span>
-                      </div>
 
-                      <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="space-y-2">
-                          <p className="font-medium">Departure</p>
-                          <p>{new Date(flight.departure.datetime).toLocaleString()}</p>
-                          <p>
-                            {flight.departure.airport} {flight.departure.terminal && (`Terminal ${flight.departure.terminal}`)}
-                          </p>
-                        </div>
 
-                        <div className="text-center">
-                          <p className="font-medium">{formatDuration(flight.duration)}</p>
-                          <div className="relative pt-4">
-                            <div className="absolute inset-0 flex items-center" aria-hidden="true">
-                              <div className="w-full border-t border-gray-300" />
-                            </div>
-                            <div className="relative flex justify-center">
-                              <span className="px-2 bg-white text-sm text-gray-500">
-                                {flight.stops > 0 ? `${flight.stops} stop${flight.stops > 1 ? 's' : ''}` : 'Non-stop'}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
 
-                        <div className="space-y-2">
-                          <p className="font-medium">Arrival</p>
-                          <p>{new Date(flight.arrival.datetime).toLocaleString()}</p>
-                          <p>
-                            {flight.arrival.airport} {flight.arrival.terminal && (`Terminal ${flight.arrival.terminal}`)}
-                          </p>
-                        </div>
-                      </div>
 
-                      <div className="mt-4 flex justify-between items-center">
-                        <div>
-                          <p className="text-sm text-gray-500">Total Price</p>
-                          <p className="text-xl font-bold text-blue-600">
-                            {flight.currency} {flight.price?.toLocaleString() ?? "0"}
-                          </p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleFlightPackageSelect(flight)}
-                          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                        >
-                          {formData.selectedFlightPackage === flight._id ? 'Selected' : 'Select'}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    );
+
+
+
+
+
 
     const existingHotelPackages = (
       <div>
@@ -1039,6 +1113,24 @@ function NewQuery() {
         )}
       </div>
     );
+
+
+ const ThirdPartyHotel= (
+           <div>
+            Third Party Hotel
+           </div>
+        )
+
+
+
+
+
+
+
+
+
+
+
 
     const typeSpecificFields = () => {
       switch(currentType) {
@@ -1562,5 +1654,8 @@ function NewQuery() {
     </div>
   );
 }
+
+
+
 
 export default NewQuery;
