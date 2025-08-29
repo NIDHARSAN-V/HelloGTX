@@ -1,58 +1,103 @@
-const axios = require("axios");
+// server.js
 
-const headers = {
-    'x-rapidapi-key': 'ababbbfcb0msh91ba78839e7e291p124b79jsn76d7289b9344',
-    'x-rapidapi-host': 'sky-scrapper.p.rapidapi.com'
+const express = require("express");
+const axios = require("axios");
+const app = express();
+
+// --- Parameters for the /flightsFuture endpoint ---
+const futureParams = {
+    access_key: "12d73265c9c04994f3fe856f2d8876ab", // Replace with your actual access key
+    iataCode: "MAA",      // Airport code
+    type: "departure",    // 'departure' or 'arrival'
+    date: "2025-10-15"    // Future date
+    //filter by country/state then fetch the data,  
+
 };
 
-async function getCityIdByName(query) {
+
+
+app.get("/", async (req, res) => {
     try {
-        const response = await axios.get(
-            "https://sky-scrapper.p.rapidapi.com/api/v1/hotels/searchDestinationOrHotel",
-            {
-                params: {
-                    query, 
-                },
-                headers
-            }
-        );
+        console.log(`✈️ Fetching future flight schedules for ${futureParams.iataCode} on ${futureParams.date}...`);
 
-        const location = response.data.data[0];
-        console.log("📍 Location result:", location);
+        // Call AviationStack API
+        const response = await axios.get("http://api.aviationstack.com/v1/flightsFuture", {
+            params: futureParams
+        });
 
-        return location.entityId; 
-    } catch (err) {
-        console.error("❌ Error getting cityId:", err.response?.data || err.message);
+        const apiResponse = response.data;
+
+        let html = `
+        <html>
+        <head>
+            <title>Future Flight Schedules</title>
+            <style>
+                body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; }
+                h1 { color: #333; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+                th { background: #333; color: #fff; }
+                tr:nth-child(even) { background: #f2f2f2; }
+            </style>
+        </head>
+        <body>
+            <h1>✈️ Future Departures from ${futureParams.iataCode} on ${futureParams.date}</h1>
+        `;
+
+        if (Array.isArray(apiResponse.data) && apiResponse.data.length > 0) {
+            html += `
+                <table>
+                    <tr>
+                        <th>Flight</th>
+                        <th>Airline</th>
+                        <th>Destination</th>
+                        <th>Scheduled Departure</th>
+                    </tr>
+            `;
+
+            apiResponse.data.forEach(flight => {
+                const airlineName = flight.codeshared ? flight.codeshared.airline.name : flight.airline.name;
+                html += `
+                    <tr>
+                        <td>${flight.flight.iataNumber}</td>
+                        <td>${airlineName}</td>
+                        <td>${flight.arrival.iataCode}</td>
+                        <td>${flight.departure.scheduledTime}</td>
+                    </tr>
+                `;
+            });
+
+            html += `</table>`;
+        } else {
+            html += `<p>No future flight schedules were found for the specified airport and date.</p>`;
+        }
+
+        html += `</body></html>`;
+
+        res.send(html);
+
+    } catch (error) {
+        console.error("❌ Error fetching flight data:", error.message);
+
+        res.send(`
+            <html>
+            <body>
+                <h1>❌ Error fetching flight data</h1>
+                <p>${error.response?.data?.error?.message || error.message}</p>
+            </body>
+            </html>
+        `);
     }
-}
+});
 
-// Step 2: Get hotels from cityId
-async function getHotelsByCityId(cityId) {
-    try {
-        const response = await axios.get(
-            "https://sky-scrapper.p.rapidapi.com/api/v1/hotels/searchHotels",
-            {
-                params: {
-                    entityId: cityId,
-                    checkIin: "2025-10-01",
-                    checkout: "2025-10-05",
-                },
-                headers
-            }
-        );
 
-        const hotels = response.data;
-        console.log("🏨 Hotels result:", hotels)
-        return hotels;
-    } catch (err) {
-        console.error("❌ Error getting hotels:", err.response?.data || err.message);
-    }
-}
 
-// Step 3: Run for an Indian city
-(async () => {
-    const cityId = await getCityIdByName("chennai"); // 🇮🇳 Try Erode, Chennai, Mumbai, Delhi...
-    if (cityId) {
-        await getHotelsByCityId(cityId);
-    }
-})();
+
+
+const PORT = 3000;
+app.listen(PORT, () => {
+    console.log(`🚀 Server is running on http://localhost:${PORT}`);
+});
+
+
+
