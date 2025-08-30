@@ -251,16 +251,33 @@ function NewQuery() {
     }));
   };
 
+
+
+
+
+
   const handleSubmit = (e) => {
     e.preventDefault();
     if (activeTab < requirementTypes.length - 1) {
       setActiveTab(activeTab + 1);
     } else {
+
+      const response = axios.post("http://localhost:8000/api/employee/new-query", formData); 
+
+
+      //always with empid , custid , leadid
+
       console.log('Final form submission:', formData);
       // Submit to backend
       alert('Form submitted successfully!');
     }
   };
+
+
+
+
+
+
 
   const formatDuration = (minutes) => {
     const hours = Math.floor(minutes / 60);

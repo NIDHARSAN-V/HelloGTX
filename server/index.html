@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Flight Search</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; margin: 0; padding: 2rem; background-color: #f8f9fa; color: #333; }
+        .container { max-width: 800px; margin: 0 auto; background-color: #fff; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        h1, h2 { color: #007bff; text-align: center; }
+        h2 { border-top: 1px solid #eee; padding-top: 2rem; margin-top: 2rem; }
+        form { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+        .form-group { display: flex; flex-direction: column; }
+        label { margin-bottom: 0.5rem; font-weight: 600; }
+        input, select { padding: 0.75rem; border-radius: 5px; border: 1px solid #ccc; font-size: 1rem; background-color: #fff; }
+        select:disabled { background-color: #e9ecef; }
+        button { padding: 1rem; background-color: #007bff; color: white; border: none; border-radius: 5px; font-size: 1.1rem; cursor: pointer; transition: background-color 0.2s; }
+        button:hover { background-color: #0056b3; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✈️ Advanced Flight Search</h1>
+        <form action="/search" method="GET">
+
+            <h2>Departure</h2>
+            <div class="form-group">
+                <label for="departure_country">1. Select Country</label>
+                <select id="departure_country" name="departure_country" required>
+                    <option value="">Loading countries...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="departure_state">2. Select State / Region</label>
+                <select id="departure_state" name="departure_state" disabled required>
+                    <option value="">Select a country first</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="departure_airport">3. Select Airport</label>
+                <select id="departure_airport" name="departure_airport" disabled required>
+                    <option value="">Select a state first</option>
+                </select>
+            </div>
+
+            <h2>Destination</h2>
+            <div class="form-group">
+                <label for="destination_country">4. Select Country</label>
+                <select id="destination_country" name="destination_country" required>
+                    <option value="">Loading countries...</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="destination_state">5. Select State / Region</label>
+                <select id="destination_state" name="destination_state" disabled required>
+                    <option value="">Select a country first</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="destination_airport">6. Select Airport</label>
+                <select id="destination_airport" name="destination_airport" disabled required>
+                    <option value="">Select a state first</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="date">7. Select Date</label>
+                <input type="date" id="date" name="date" required>
+            </div>
+            
+            <button type="submit">Search Flights</button>
+        </form>
+    </div>
+
+    <script>
+        // Get references to all select elements
+        const depCountry = document.getElementById('departure_country');
+        const depState = document.getElementById('departure_state');
+        const depAirport = document.getElementById('departure_airport');
+        
+        const destCountry = document.getElementById('destination_country');
+        const destState = document.getElementById('destination_state');
+        const destAirport = document.getElementById('destination_airport');
+
+        // --- Reusable Functions ---
+
+        function populateSelect(selectElement, items, defaultOptionText) {
+            selectElement.innerHTML = `<option value="">${defaultOptionText}</option>`;
+            items.forEach(item => {
+                const option = document.createElement('option');
+                option.value = item.value;
+                option.textContent = item.name;
+                selectElement.appendChild(option);
+            });
+        }
+
+        async function fetchAndPopulateStates(countrySelect, stateSelect, airportSelect) {
+            const countryCode = countrySelect.value;
+            stateSelect.disabled = true;
+            airportSelect.disabled = true;
+            stateSelect.innerHTML = '<option value="">Loading states...</option>';
+            airportSelect.innerHTML = '<option value="">Select a state first</option>';
+
+            if (countryCode) {
+                try {
+                    const response = await fetch(`/api/states?country=${countryCode}`);
+                    const states = await response.json();
+                    populateSelect(stateSelect, states, 'Select a state/region');
+                    stateSelect.disabled = false;
+                } catch (error) {
+                    console.error('Failed to load states:', error);
+                }
+            }
+        }
+
+        async function fetchAndPopulateAirports(countrySelect, stateSelect, airportSelect) {
+            const countryCode = countrySelect.value;
+            const stateName = stateSelect.value;
+            airportSelect.disabled = true;
+            airportSelect.innerHTML = '<option value="">Loading airports...</option>';
+
+            if (stateName) {
+                try {
+                    const response = await fetch(`/api/airports?country=${countryCode}&state=${encodeURIComponent(stateName)}`);
+                    const airports = await response.json();
+                    populateSelect(airportSelect, airports, 'Select an airport');
+                    airportSelect.disabled = false;
+                } catch (error) {
+                    console.error('Failed to load airports:', error);
+                }
+            }
+        }
+
+        // --- Initial Page Load ---
+
+        window.addEventListener('load', async () => {
+            try {
+                const response = await fetch('/api/countries');
+                const countries = await response.json();
+                // Populate both country dropdowns at the same time
+                populateSelect(depCountry, countries, 'Select a country');
+                populateSelect(destCountry, countries, 'Select a country');
+            } catch (error) {
+                console.error('Failed to load countries:', error);
+            }
+        });
+
+        // --- Event Listeners ---
+
+        // Departure fields
+        depCountry.addEventListener('change', () => fetchAndPopulateStates(depCountry, depState, depAirport));
+        depState.addEventListener('change', () => fetchAndPopulateAirports(depCountry, depState, depAirport));
+        
+        // Destination fields
+        destCountry.addEventListener('change', () => fetchAndPopulateStates(destCountry, destState, destAirport));
+        destState.addEventListener('change', () => fetchAndPopulateAirports(destCountry, destState, destAirport));
+
+    </script>
+</body>
+</html>

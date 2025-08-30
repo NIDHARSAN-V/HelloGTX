@@ -2,6 +2,8 @@ const express = require("express");
 const { checkCustomerByEmail } = require("../../Controllers/Auth/auth.controller");
 const { registerNewCustomer, createNewLead, getLeadsfromEmployee } = require("../../Controllers/Lead/lead.controller");
 
+const {createNewQuery} = require("../../Controllers/Lead/query.controller");
+
 const router = express.Router();
 
 
@@ -18,6 +20,10 @@ router.get("/get-employee-lead/:employeeId" , getLeadsfromEmployee)
 //edit the particluart lead
 
 //delete lead
+
+
+
+router.post("/new-query"  , createNewQuery);
 
 
 
