@@ -5,12 +5,12 @@ const mongoose = require("mongoose");
 const LeadSchema = new mongoose.Schema({
   //mapped Queries[]
 
-  queryId : {
+  queryId : [{
      type: mongoose.Schema.Types.ObjectId, 
       ref: "Query", 
       index: true
-    
-  },
+
+  }],
 
 
   
