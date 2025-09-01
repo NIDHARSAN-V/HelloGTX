@@ -267,6 +267,16 @@ const editLeadsfromEmployee =async function(req,res)
 
 
 
+const getLeadDetail = async function(req,res)
+{
+   try {
+    
+   } catch (error) {
+    
+   }
+}
+
+
 
 
 
@@ -277,7 +287,8 @@ const editLeadsfromEmployee =async function(req,res)
 module.exports = {
 registerNewCustomer,
 createNewLead,
-getLeadsfromEmployee  
+getLeadsfromEmployee  ,
+getLeadDetail
 };
 
 

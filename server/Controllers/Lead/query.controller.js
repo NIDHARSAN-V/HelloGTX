@@ -21,23 +21,6 @@ const createNewQuery = async (req, res) => {
          console.log(req.body , "Request body in query controller")
         
 
-//     const { customerId, queryDetails } = req.body;
-
-//     // Validate input
-//     if (!customerId || !queryDetails) {
-//       return res.status(400).json({ message: "Invalid input" });
-//     }
-
-//     // Create a new query
-//     const newQuery = new Query({
-//       customer: customerId,
-//       details: queryDetails,
-//       status: "new"
-//     });
-
-//     await newQuery.save();
-
-//     res.status(201).json({ message: "Query created successfully", query: newQuery });
 
 
 

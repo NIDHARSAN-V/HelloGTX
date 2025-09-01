@@ -1,16 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-function NewQuery() {
+function NewQuery({ leadId, user, customer }) {
   // Customer profile data
-  const [customerData] = useState({
-    name: "Mr. Niðhar Sankala",
-    owner: "Gaurav Gupta",
-    contact: "91 9344686218",
-    type: "B2C",
-    email: "Niðharsankala8800@gmail.com",
-    activeSince: "19-Mar-25 01:37:38"
+
+  //  console.log(customer.user.firstName, "---------------------")
+   
+const [customerData, setCustomerData] = useState({
+    name: '',
+    owner: '',
+    contact: '',
+    type: '',
+    email: '',
+    activeSince: ''
   });
+
+  useEffect(() => {
+    if (customer) {
+      setCustomerData({
+        // Assuming 'name' is the full name from customer.user firstName + lastName
+        name: customer.user.firstName + ' ' + customer.user.lastName || '',
+
+        // owner, contact, type, activeSince directly on customer or fallback to empty string
+        owner:  customer.user.firstName + ' ' + customer.user.lastName || '',
+        contact: customer.user.phone || '',
+        type: customer.type || '',
+        email: customer.user ? customer.user.email || '' : '',
+        activeSince: customer.user.createdAt || ''
+      });
+    }
+  }, [customer]);
+
+   
+
+
+
+
+
+
+
+
+
 
   // Requirement types and active tab state
   const requirementTypes = [
@@ -82,6 +112,9 @@ function NewQuery() {
       processingTime: ''
     }
   });
+
+
+
 
   // Flight packages state
   const [flightPackages, setFlightPackages] = useState([]);
@@ -262,7 +295,7 @@ function NewQuery() {
       setActiveTab(activeTab + 1);
     } else {
 
-      const response = axios.post("http://localhost:8000/api/employee/new-query", formData); 
+      const response = axios.post("http://localhost:8000/api/employee/new-query", formData , leadId , customer , user); 
 
 
       //always with empid , custid , leadid

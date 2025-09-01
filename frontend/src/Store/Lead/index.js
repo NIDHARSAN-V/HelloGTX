@@ -57,6 +57,7 @@ export const createNewLead = createAsyncThunk(
         "http://localhost:8000/api/employee/create-lead",
         leadData
       );
+      
       return response.data; // The created lead object
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message);

@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { createNewLead, getLeadfromEmployee } from "../../Store/Lead";
 
 function LeadCreation({ customer: propCustomer }) {
   const location = useLocation();
   const { user } = useSelector((state) => state.auth);
   const customer = propCustomer || location.state;
-
+  
   const [leadStatus, setLeadStatus] = useState("new");
   const [leadSource, setLeadSource] = useState("");
   const [leads, setLeads] = useState([]);
@@ -18,7 +18,10 @@ function LeadCreation({ customer: propCustomer }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState("desc");
 
+
+  
   const dispatch = useDispatch();
+  const navigate  = useNavigate();
 
   const fetchLeads = async () => {
     if (!user?.employeeId) return;
@@ -271,13 +274,24 @@ function LeadCreation({ customer: propCustomer }) {
         </div>
       </div>
 
+
+
+
+
       {/* Lead Detail Modal - Remains the same as before */}
       {isDetailOpen && selectedLead && (
+
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-start">
                 <h2 className="text-2xl font-bold text-gray-800">
+
+                  <h1>
+                    {selectedLead._id}
+                  </h1>
+
+                  
                   {selectedLead.firstName} {selectedLead.lastName}
                 </h2>
                 <button 
@@ -381,6 +395,11 @@ function LeadCreation({ customer: propCustomer }) {
                 <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
                   Update Status
                 </button>
+
+
+                <button onClick={() => navigate('/lead/dashboard', { state: { leadId: selectedLead._id  , customer : customer}})}>
+                  Go to Dashboard
+                </button>
               </div>
             </div>
           </div>
@@ -389,5 +408,9 @@ function LeadCreation({ customer: propCustomer }) {
     </div>
   );
 }
+
+
+
+
 
 export default LeadCreation;

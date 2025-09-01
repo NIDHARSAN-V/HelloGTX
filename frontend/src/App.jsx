@@ -140,7 +140,9 @@ import FlightPackageForm from "./pages/flights/FlightPackageForm";
 import FlightPackageDetail from "./pages/flights/FlightPackageDetail";
 import Lead from "./pages/lead/Lead";
 import LeadCreation from "./pages/lead/LeadCreation";
-import NewQuery from "./pages/lead/NewQuery";
+import NewQuery from "./pages/lead/Query/NewQuery";
+import LeadDashboard from "./pages/lead/LeadDashBoard/LeadDashboard";
+
 
 const RootLayout = () => {
 
@@ -237,6 +239,10 @@ const RootLayout = () => {
             <Route path="/packages" element={<PackagesPage />} />
 
             <Route path="/leads/query" element={<NewQuery />} />
+
+
+
+            <Route path="/lead/dashboard" element={<LeadDashboard />} />
 
             {/* Protected routes - only accessible when authenticated */}
             <Route
