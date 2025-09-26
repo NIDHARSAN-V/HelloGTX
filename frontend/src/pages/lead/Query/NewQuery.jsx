@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useSelector } from 'react-redux';
 
 function NewQuery({ leadId, user, customer }) {
   // Customer profile data
 
   //  console.log(customer.user.firstName, "---------------------")
-   
+const employee = user
 const [customerData, setCustomerData] = useState({
     name: '',
     owner: '',
@@ -15,7 +16,20 @@ const [customerData, setCustomerData] = useState({
     activeSince: ''
   });
 
+
+  
+
+
+
+
+
+  
+
   useEffect(() => {
+      console.log('Lead ID:', leadId);
+console.log('Customer:', customer);
+console.log('Employee:', employee);
+
     if (customer) {
       setCustomerData({
         // Assuming 'name' is the full name from customer.user firstName + lastName
@@ -288,23 +302,37 @@ const [customerData, setCustomerData] = useState({
 
 
 
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (activeTab < requirementTypes.length - 1) {
-      setActiveTab(activeTab + 1);
-    } else {
+  if (activeTab < requirementTypes.length - 1) {
+    setActiveTab(activeTab + 1);
+  } else {
+    // Combine everything into one payload
+    const payload = {
+      formData,
+      leadId,
+      customer,
+      employee,
+    };
 
-      const response = axios.post("http://localhost:8000/api/employee/new-query", formData , leadId , customer , user); 
+    console.log(payload, 'Submitting payload');
 
+    try {
+      const response =  axios.post(
+        "http://localhost:8000/api/employee/new-query",
+        payload
+      );
 
-      //always with empid , custid , leadid
-
-      console.log('Final form submission:', formData);
-      // Submit to backend
+      console.log('Final form submission:', payload);
       alert('Form submitted successfully!');
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      alert('Failed to submit the form. Please try again.');
     }
-  };
+  }
+};
+
 
 
 
