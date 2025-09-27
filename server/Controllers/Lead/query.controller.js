@@ -402,6 +402,23 @@ const calculateFlightDuration = (formData) => {
   return durationMap[routeKey] || durationMap.default;
 };
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // Additional controller functions
 const getQueriesByLead = async (req, res) => {
   try {
@@ -410,6 +427,9 @@ const getQueriesByLead = async (req, res) => {
     const queries = await Query.find({ leadId })
       .populate('leadId')
       .sort({ createdAt: -1 });
+
+
+    console.log( "Queries fetched for lead:", leadId , queries);
 
     res.json({
       message: "Queries retrieved successfully",
@@ -421,6 +441,27 @@ const getQueriesByLead = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 const updateQueryStatus = async (req, res) => {
   try {

@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import NewQuery from '../Query/NewQuery';
+import QueryList from '../Query/QueryList';   // ✅ import QueryList
 
 const LeadDashboard = () => {
   const location = useLocation();
@@ -20,13 +21,10 @@ const LeadDashboard = () => {
     if (leadId) {
       const fetchLeadDetails = async () => {
         try {
-
-
-          const response = await axios.get(`http://localhost:8000/api/employee/get-lead-details/${leadId}`);
+          const response = await axios.get(
+            `http://localhost:8000/api/employee/get-lead-details/${leadId}`
+          );
           console.log(response.data);
-          
-
-
         } catch (error) {
           console.error('Failed to fetch lead details:', error);
         }
@@ -35,12 +33,6 @@ const LeadDashboard = () => {
       fetchLeadDetails();
     }
   }, [leadId]);
-
-
-
-
-
-
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-100">
@@ -67,16 +59,19 @@ const LeadDashboard = () => {
             }`}
             onClick={() => setActiveSection('query')}
           >
-            Query
+            New Query
           </li>
+
+          {/* ✅ changed from CCCCC 1 to Query List */}
           <li
             className={`hover:bg-gray-700 p-2 rounded cursor-pointer ${
-              activeSection === 'cccc1' ? 'bg-gray-700' : ''
+              activeSection === 'queryList' ? 'bg-gray-700' : ''
             }`}
-            onClick={() => setActiveSection('cccc1')}
+            onClick={() => setActiveSection('queryList')}
           >
-            CCCCC 1
+            Query List
           </li>
+
           <li
             className={`hover:bg-gray-700 p-2 rounded cursor-pointer ${
               activeSection === 'cccc2' ? 'bg-gray-700' : ''
@@ -119,17 +114,15 @@ const LeadDashboard = () => {
         </div>
 
         {/* Dynamic Sections */}
-       {/* Dynamic Sections */}
-{activeSection === 'query' && (
-  <NewQuery leadId={leadId} user={user} customer={customer} />
-)}
-
-        {activeSection === 'cccc1' && (
-          <div>
-            <h2 className="text-2xl font-semibold text-gray-800 mb-4">Section CCCCC 1</h2>
-            <p className="text-gray-600">This is content for CCCCC 1.</p>
-          </div>
+        {activeSection === 'query' && (
+          <NewQuery leadId={leadId} user={user} customer={customer} />
         )}
+
+        {/* ✅ Render QueryList when menu item is clicked */}
+        {activeSection === 'queryList' && (
+          <QueryList leadId={leadId} user={user} customer={customer} />
+        )}
+
         {activeSection === 'cccc2' && (
           <div>
             <h2 className="text-2xl font-semibold text-gray-800 mb-4">Section CCCCC 2</h2>
