@@ -43,6 +43,14 @@
 const Query = require("../../Models/Query/queryPackage.model");
 const Lead = require("../../Models/Leads/lead.model");
 
+
+
+
+
+
+
+
+
 const createNewQuery = async (req, res) => {
   try {
     console.log(req.body, "Request body in query controller");
@@ -121,7 +129,28 @@ const createNewQuery = async (req, res) => {
   }
 };
 
-// Helper function to map form data to your schema
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 const mapFormDataToQuerySchema = (formData, leadId, customer, employee) => {
   const customerName = `${customer.user.firstName} ${customer.user.lastName}`;
   const currentDate = new Date();
@@ -149,7 +178,7 @@ const mapFormDataToQuerySchema = (formData, leadId, customer, employee) => {
       mainImage: "https://via.placeholder.com/800x600?text=Travel+Package",
       gallery: []
     },
-    tags: finalTags, // ✅ FIXED: Now uses properly filtered tags
+    tags: finalTags,
     offStatus: "active",
     createdAt: currentDate,
     updatedAt: currentDate
@@ -158,25 +187,68 @@ const mapFormDataToQuerySchema = (formData, leadId, customer, employee) => {
   // Add pricing (required field)
   const pricing = mapPricing(formData, queryType.toLowerCase());
   
-  // Add type-specific data
-  if (formData.includes && formData.includes.includes('Flights')) {
+  // FIXED: Better logic to determine what type of query this is
+  const hasFlightData = formData.sourceCity && formData.destinationCity;
+  const hasHotelData = formData.goingTo || formData.hotelDetails;
+  const isPackageQuery = formData.goingFrom && formData.goingTo && formData.inclusions;
+  
+  console.log('Query Analysis:', {
+    queryType,
+    hasFlightData,
+    hasHotelData,
+    isPackageQuery,
+    inclusions: formData.inclusions
+  });
+
+  // FIXED: Handle Package queries (which can include flights)
+  if (isPackageQuery) {
+    const packageData = {
+      ...baseQuery,
+      includes: mapPackageIncludes(formData),
+      pricing: pricing
+    };
+
+    // FIXED: Only add flights if Flights is included in inclusions
+    if (formData.includes?.includes('Flights') || formData.inclusions?.includes('Flights')) {
+      packageData.flights = mapFlightData(formData);
+      console.log('Added flight data to package');
+    }
+
+    // FIXED: Only add hotels if Hotels is included in inclusions
+    if (formData.includes?.includes('Hotels') || formData.inclusions?.includes('Hotels')) {
+      packageData.hotels = mapHotelData(formData);
+      console.log('Added hotel data to package');
+    }
+
+    // FIXED: Only add visas if Visa Assistance is included in inclusions
+    if (formData.includes?.includes('Visa Assistance') || formData.inclusions?.includes('Visa Assistance')) {
+      packageData.visas = mapVisaData(formData);
+      console.log('Added visa data to package');
+    }
+
+    return packageData;
+  }
+
+  // Handle standalone Flight queries
+  if (hasFlightData && queryType === 'Flight') {
     return {
       ...baseQuery,
       includes: { 
         flights: true, 
-        hotels: formData.includes.includes('Hotels'), 
-        visas: formData.includes.includes('Visa Assistance'), 
-        meals: mapMealPlan(formData), 
-        transfers: formData.includes.includes('Transfers'), 
-        activities: formData.includes.includes('Sightseeing'), 
-        insurance: formData.includes.includes('Insurance') 
+        hotels: false, 
+        visas: false, 
+        meals: { breakfast: false, lunch: false, dinner: false }, 
+        transfers: false, 
+        activities: false, 
+        insurance: false 
       },
       flights: mapFlightData(formData),
       pricing: pricing
     };
   }
   
-  if (formData.hotelSelectionType) {
+  // Handle standalone Hotel queries
+  if (hasHotelData && queryType === 'Hotel') {
     return {
       ...baseQuery,
       includes: { 
@@ -193,24 +265,65 @@ const mapFormDataToQuerySchema = (formData, leadId, customer, employee) => {
     };
   }
 
-  // Default package type
+  // Default fallback - Custom query
   return {
     ...baseQuery,
-    includes: mapPackageIncludes(formData),
-    flights: formData.includes?.includes('Flights') ? mapFlightData(formData) : [],
-    hotels: formData.includes?.includes('Hotels') ? mapHotelData(formData) : [],
-    visas: formData.includes?.includes('Visa Assistance') ? mapVisaData(formData) : [],
+    includes: {
+      flights: false,
+      hotels: false,
+      visas: false,
+      meals: { breakfast: false, lunch: false, dinner: false },
+      transfers: false,
+      activities: false,
+      insurance: false
+    },
     pricing: pricing
   };
 };
 
+
+
+
+
+
+
+
+
+
+
+
+
+
 // Helper functions
 const determineQueryType = (formData) => {
-  if (formData.flightSelectionType) return 'Flight';
-  if (formData.hotelSelectionType) return 'Hotel';
-  if (formData.goingFrom && formData.goingTo) return 'Package';
+  // Check if it's a package first
+  if (formData.goingFrom && formData.goingTo && formData.inclusions) {
+    return 'Package';
+  }
+  
+  // Check for flight-specific data
+  if (formData.flightSelectionType || (formData.sourceCity && formData.destinationCity)) {
+    return 'Flight';
+  }
+  
+  // Check for hotel-specific data
+  if (formData.hotelSelectionType || formData.goingTo) {
+    return 'Hotel';
+  }
+  
+  // Check for other specific types
+  if (formData.transferDetails?.pickup) return 'Transfer';
+  if (formData.visaDetails?.country) return 'Visa';
+  
   return 'Custom';
 };
+
+
+
+
+
+
+
 
 const generateDescription = (formData, queryType, customerName) => {
   let description = `Custom ${queryType.toLowerCase()} package for ${customerName}`;
@@ -239,47 +352,86 @@ const generateDescription = (formData, queryType, customerName) => {
   return description;
 };
 
+
+
+
+
+
+
+
+
 const generateSlug = (customerName, queryType, date) => {
   const baseSlug = `${customerName.toLowerCase().replace(/\s+/g, '-')}-${queryType.toLowerCase()}-${date.getTime()}`;
   return baseSlug.substring(0, 100);
 };
 
+
+
+
+
+
+
+
+
+
 const mapFlightData = (formData) => {
-  const departureDate = formData.departureDate ? new Date(formData.departureDate) : new Date();
-  const arrivalDate = formData.returnDate ? new Date(formData.returnDate) : new Date(departureDate.getTime() + 2 * 60 * 60 * 1000);
-  
-  return [{
-    airline: formData.preferredAirline || "To be determined",
-    flightNumber: formData.flightNumber || "TBD-" + Math.random().toString(36).substr(2, 4).toUpperCase(),
-    departure: {
-      airport: formData.sourceCity || "To be determined",
-      terminal: "TBD",
-      datetime: departureDate,
-      city: formData.sourceCity || "To be determined"
-    },
-    arrival: {
-      airport: formData.destinationCity || "To be determined",
-      terminal: "TBD",
-      datetime: arrivalDate,
-      city: formData.destinationCity || "To be determined"
-    },
-    duration: calculateFlightDuration(formData),
-    cabinClass: formData.flightClass || "economy",
-    baggage: {
-      carryOn: {
-        allowed: true,
-        weight: 7,
-        dimensions: "55x40x20 cm"
+  try {
+    const departureDate = formData.departureDate ? 
+      new Date(formData.departureDate) : 
+      new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // Default: 7 days from now
+    
+    const arrivalDate = formData.returnDate ? 
+      new Date(formData.returnDate) : 
+      new Date(departureDate.getTime() + 2 * 60 * 60 * 1000); // Default: 2 hours after departure
+    
+    const flightData = [{
+      airline: formData.preferredAirline || "To be determined",
+      flightNumber: formData.flightNumber || "TBD-" + Math.random().toString(36).substr(2, 4).toUpperCase(),
+      departure: {
+        airport: formData.sourceCity || formData.goingFrom || "To be determined",
+        terminal: "TBD",
+        datetime: departureDate,
+        city: formData.sourceCity || formData.goingFrom || "To be determined"
       },
-      checked: {
-        allowed: true,
-        pieces: 1,
-        weight: 20
-      }
-    },
-    refundable: false
-  }];
+      arrival: {
+        airport: formData.destinationCity || formData.goingTo || "To be determined",
+        terminal: "TBD",
+        datetime: arrivalDate,
+        city: formData.destinationCity || formData.goingTo || "To be determined"
+      },
+      duration: calculateFlightDuration(formData),
+      cabinClass: (formData.flightClass || "economy").toLowerCase(),
+      baggage: {
+        carryOn: {
+          allowed: true,
+          weight: 7,
+          dimensions: "55x40x20 cm"
+        },
+        checked: {
+          allowed: true,
+          pieces: 1,
+          weight: 20
+        }
+      },
+      refundable: false
+    }];
+
+    console.log('Mapped flight data:', flightData);
+    return flightData;
+  } catch (error) {
+    console.error('Error mapping flight data:', error);
+    return [];
+  }
 };
+
+
+
+
+
+
+
+
+
 
 const mapHotelData = (formData) => {
   const checkIn = formData.hotelDetails?.checkIn ? new Date(formData.hotelDetails.checkIn) : new Date();
@@ -302,6 +454,14 @@ const mapHotelData = (formData) => {
   }];
 };
 
+
+
+
+
+
+
+
+
 const mapVisaData = (formData) => {
   return [{
     country: formData.visaDetails?.country || "To be determined",
@@ -311,22 +471,42 @@ const mapVisaData = (formData) => {
   }];
 };
 
+
+
+
+
+
+
+
+
+
 const mapPackageIncludes = (formData) => {
-  const includes = formData.inclusions || [];
+  // Handle both possible field names
+  const inclusions = formData.inclusions || formData.includes || [];
+  
+  console.log('Mapping package includes:', inclusions);
+  
   return {
-    flights: includes.includes('Flights'),
-    hotels: includes.includes('Hotels'),
-    visas: includes.includes('Visa Assistance'),
+    flights: inclusions.includes('Flights'),
+    hotels: inclusions.includes('Hotels'),
+    visas: inclusions.includes('Visa Assistance'),
     meals: {
-      breakfast: includes.includes('Meals'),
-      lunch: includes.includes('Meals'),
-      dinner: includes.includes('Meals')
+      breakfast: inclusions.includes('Meals'),
+      lunch: inclusions.includes('Meals'),
+      dinner: inclusions.includes('Meals')
     },
-    transfers: includes.includes('Transfers'),
-    activities: includes.includes('Sightseeing'),
-    insurance: includes.includes('Insurance')
+    transfers: inclusions.includes('Transfers'),
+    activities: inclusions.includes('Sightseeing'),
+    insurance: inclusions.includes('Insurance')
   };
 };
+
+
+
+
+
+
+
 
 const mapMealPlan = (formData) => {
   const mealPlan = formData.hotelDetails?.mealPlan;
@@ -336,6 +516,14 @@ const mapMealPlan = (formData) => {
     dinner: mealPlan === 'full_board' || mealPlan === 'all_inclusive'
   };
 };
+
+
+
+
+
+
+
+
 
 const mapPricing = (formData, type) => {
   const basePrice = parseFloat(formData.expectedClosureAmount) || 1000;
@@ -392,17 +580,35 @@ const mapPricing = (formData, type) => {
   };
 };
 
+
+
+
+
+
+
+
+
 const calculateFlightDuration = (formData) => {
-  const routeKey = `${formData.sourceCity}-${formData.destinationCity}`.toLowerCase();
-  const durationMap = {
-    'delhi-mumbai': 120,
-    'mumbai-dubai': 180,
-    'default': 150
-  };
-  return durationMap[routeKey] || durationMap.default;
+  try {
+    if (formData.departureDate && formData.returnDate) {
+      const depDate = new Date(formData.departureDate);
+      const arrDate = new Date(formData.returnDate);
+      return Math.round((arrDate - depDate) / (1000 * 60)); // duration in minutes
+    }
+    
+    // Default durations based on route type
+    const routeKey = `${formData.sourceCity || formData.goingFrom}-${formData.destinationCity || formData.goingTo}`.toLowerCase();
+    const durationMap = {
+      'delhi-mumbai': 120,
+      'mumbai-dubai': 180,
+      'default': 150
+    };
+    return durationMap[routeKey] || durationMap.default;
+  } catch (error) {
+    console.error('Error calculating flight duration:', error);
+    return 150; // default 2.5 hours
+  }
 };
-
-
 
 
 
@@ -452,7 +658,102 @@ const getQueriesByLead = async (req, res) => {
 
 
 
+const editQuery = async function(req, res) {
+  try {
+    console.log("Edit query request body:", req.body);
 
+    const { queryId } = req.params;
+    const { formData, leadId, customer, employee } = req.body;
+
+    // Validate required fields
+    if (!queryId || !leadId || !customer || !employee) {
+      return res.status(400).json({
+        message: "Missing required fields: queryId, leadId, customer, or employee"
+      });
+    }
+
+    // Check if query exists
+    const existingQuery = await Query.findById(queryId);
+    if (!existingQuery) {
+      return res.status(404).json({ message: "Query not found" });
+    }
+
+    // Check if lead exists
+    const lead = await Lead.findById(leadId);
+    if (!lead) {
+      return res.status(404).json({ message: "Lead not found" });
+    }
+
+    // Map form data to your Query schema structure
+    const updatedQueryData = mapFormDataToQuerySchema(formData, leadId, customer, employee);
+    
+    // Preserve the original creation date and add update timestamp
+    updatedQueryData.createdAt = existingQuery.createdAt;
+    updatedQueryData.updatedAt = new Date();
+    
+    // Preserve the original ID and slug to avoid duplication issues
+    updatedQueryData._id = existingQuery._id;
+    updatedQueryData.slug = existingQuery.slug; // Keep original slug to maintain URL consistency
+
+    // Update the query
+    const updatedQuery = await Query.findByIdAndUpdate(
+      queryId,
+      updatedQueryData,
+      { 
+        new: true, 
+        runValidators: true 
+      }
+    );
+
+    // Update the lead's updatedAt timestamp
+    await Lead.findByIdAndUpdate(leadId, {
+      $set: { 
+        updatedAt: new Date()
+      }
+    });
+
+    // Add status history entry for the lead
+    await Lead.findByIdAndUpdate(leadId, {
+      $push: {
+        statusHistory: {
+          status: 'follow_up', // or keep existing status
+          changedBy: employee.id || employee._id,
+          timestamp: new Date(),
+          notes: `Query updated: ${updatedQueryData.name}`
+        }
+      }
+    });
+
+    console.log('Query updated successfully:', updatedQuery._id);
+
+    res.status(200).json({
+      message: "Query updated successfully",
+      query: updatedQuery,
+      leadUpdated: true
+    });
+
+  } catch (error) {
+    console.error("Error editing query:", error);
+    
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({
+        message: "Validation error",
+        errors: Object.values(error.errors).map(err => err.message)
+      });
+    }
+    
+    if (error.code === 11000) {
+      return res.status(400).json({
+        message: "Duplicate entry found"
+      });
+    }
+
+    res.status(500).json({ 
+      message: "Internal server error",
+      error: error.message 
+    });
+  }
+};
 
 
 
@@ -498,8 +799,15 @@ const updateQueryStatus = async (req, res) => {
   }
 };
 
+
+
+
+
+
+
 module.exports = {
   createNewQuery,
   getQueriesByLead,
-  updateQueryStatus
+  updateQueryStatus,
+  editQuery
 };

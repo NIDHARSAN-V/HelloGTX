@@ -3,8 +3,10 @@ import axios from 'axios';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 function EditQuery() {
+
+
   const navigate = useNavigate();
-  const employee = JSON.parse(localStorage.getItem('user'));
+
   
   const location = useLocation();
   const { query, customer } = location.state || {};
@@ -13,7 +15,11 @@ function EditQuery() {
     console.log(query)
   }, []);
 
-  
+
+
+
+
+
 
   // Customer profile data
   const [customerData, setCustomerData] = useState({
@@ -24,6 +30,12 @@ function EditQuery() {
     email: '',
     activeSince: ''
   });
+
+
+
+
+
+
 
   // Requirement types and active tab state
   const requirementTypes = [
@@ -96,6 +108,7 @@ function EditQuery() {
     }
   });
 
+
   // Flight packages state
   const [flightPackages, setFlightPackages] = useState([]);
   const [flightLoading, setFlightLoading] = useState(false);
@@ -128,58 +141,62 @@ function EditQuery() {
 
   // Initialize form data from query prop
   useEffect(() => {
-    if (query) {
-      console.log('Initializing form with query data:', query);
-      
-      setFormData(prev => ({
-        ...prev,
-        name: query.name || '',
-        description: query.description || '',
-        queryType: query.queryType || 'FIT',
-        goingFrom: query.goingFrom || '',
-        goingTo: query.goingTo || '',
-        specificDate: query.specificDate || '',
-        noOfDays: query.noOfDays || '',
-        travellers: query.travellers || 2,
-        priceRange: query.priceRange || '',
-        inclusions: query.includes ? getInclusionsFromQuery(query.includes) : [],
-        themes: query.tags || [],
-        hotelPreference: query.hotelPreference || '3',
-        foodPreferences: query.foodPreferences || [],
-        remarks: query.remarks || '',
-        expectedClosureDate: query.expectedClosureDate || '',
-        expectedClosureAmount: query.expectedClosureAmount || '',
-        
-        // Flight data
-        flightType: query.flights?.[0]?.flightType || 'oneway',
-        sourceCity: query.flights?.[0]?.departure?.city || '',
-        destinationCity: query.flights?.[0]?.arrival?.city || '',
-        departureDate: query.flights?.[0]?.departure?.datetime ? 
-          new Date(query.flights[0].departure.datetime).toISOString().split('T')[0] : '',
-        returnDate: query.flights?.[0]?.arrival?.datetime ? 
-          new Date(query.flights[0].arrival.datetime).toISOString().split('T')[0] : '',
-        adults: query.leadId?.travelers?.adults || 1,
+  if (query) {
+    console.log('Initializing form with query data:', query);
+
+    setFormData(prev => ({
+      ...prev,
+      name: query.name || '',
+      description: query.description || '',
+      queryType: query.queryType || 'FIT',
+      goingFrom: query.goingFrom || '',
+      goingTo: query.goingTo || '',
+      specificDate: query.specificDate || '',
+      noOfDays: query.noOfDays || '',
+      travellers: query.travellers || 2,
+      priceRange: query.priceRange || '',
+      inclusions: query.includes ? getInclusionsFromQuery(query.includes) : [],
+      themes: query.tags || [],
+      hotelPreference: query.hotelPreference || '3',
+      foodPreferences: query.foodPreferences || [],
+      remarks: query.remarks || '',
+      expectedClosureDate: query.expectedClosureDate || '',
+
+      // Set expectedClosureAmount from pricing only
+      expectedClosureAmount: query.pricing?.totalPrice || '',
+
+      // Flight data
+      flightType: query.flights?.[0]?.flightType || 'oneway',
+      sourceCity: query.flights?.[0]?.departure?.city || '',
+      destinationCity: query.flights?.[0]?.arrival?.city || '',
+      departureDate: query.flights?.[0]?.departure?.datetime
+        ? new Date(query.flights[0].departure.datetime).toISOString().split('T')[0]
+        : '',
+      returnDate: query.flights?.[0]?.arrival?.datetime
+        ? new Date(query.flights[0].arrival.datetime).toISOString().split('T')[0]
+        : '',
+      adults: query.leadId?.travelers?.adults || 1,
+      children: query.leadId?.travelers?.children || 0,
+      infants: query.leadId?.travelers?.infants || 0,
+      flightClass: query.flights?.[0]?.cabinClass || 'Economy',
+      preferredAirline: query.flights?.[0]?.airline || '',
+
+      // Hotel data
+      hotelDetails: {
+        checkIn: query.hotels?.[0]?.checkIn
+          ? new Date(query.hotels[0].checkIn).toISOString().split('T')[0]
+          : '',
+        checkOut: query.hotels?.[0]?.checkOut
+          ? new Date(query.hotels[0].checkOut).toISOString().split('T')[0]
+          : '',
+        roomType: query.hotels?.[0]?.roomType || 'Standard',
+        adults: query.leadId?.travelers?.adults || 2,
         children: query.leadId?.travelers?.children || 0,
-        infants: query.leadId?.travelers?.infants || 0,
-        flightClass: query.flights?.[0]?.cabinClass || 'Economy',
-        preferredAirline: query.flights?.[0]?.airline || '',
-        
-        // Hotel data
-        hotelDetails: {
-          checkIn: query.hotels?.[0]?.checkIn ? 
-            new Date(query.hotels[0].checkIn).toISOString().split('T')[0] : '',
-          checkOut: query.hotels?.[0]?.checkOut ? 
-            new Date(query.hotels[0].checkOut).toISOString().split('T')[0] : '',
-          roomType: query.hotels?.[0]?.roomType || 'Standard',
-          adults: query.leadId?.travelers?.adults || 2,
-          children: query.leadId?.travelers?.children || 0,
-          mealPlan: query.hotels?.[0]?.mealPlan || 'breakfast'
-        },
-        
-        expectedClosureAmount: query.pricing?.totalPrice || ''
-      }));
-    }
-  }, [query]);
+        mealPlan: query.hotels?.[0]?.mealPlan || 'breakfast'
+      }
+    }));
+  }
+}, [query]);
 
   // Helper function to extract inclusions from query
   const getInclusionsFromQuery = (includes) => {
@@ -194,19 +211,30 @@ function EditQuery() {
     return inclusions;
   };
 
+
+
+
+
   // Initialize customer data
   useEffect(() => {
+    console.log(customer)
     if (customer) {
       setCustomerData({
-        name: `${customer.firstName || ''} ${customer.lastName || ''}`.trim(),
-        owner: `${customer.firstName || ''} ${customer.lastName || ''}`.trim(),
-        contact: customer.phone || '',
+        name: `${customer.user.firstName || ''} ${customer.user.lastName || ''}`.trim(),
+        owner: `${customer.user.firstName || ''} ${customer.user.lastName || ''}`.trim(),
+        contact: customer.user.phone || '',
         type: customer.type || '',
-        email: customer.email || '',
-        activeSince: customer.createdAt ? new Date(customer.createdAt).toLocaleDateString() : ''
+        email: customer.user.email || '',
+        activeSince: customer.user.createdAt ? new Date(customer.createdAt).toLocaleDateString() : ''
       });
     }
-  }, [customer]);
+  }, []);
+
+
+
+
+
+
 
   // Fetch flight packages when flight tab is active
   useEffect(() => {
@@ -353,7 +381,7 @@ function EditQuery() {
       setActiveTab(activeTab + 1);
     } else {
       const payload = {
-        queryId: query._id,
+     
         formData: formData,
         leadId: query.leadId?._id || query.leadId,
         customer: customer,
@@ -371,6 +399,8 @@ function EditQuery() {
         console.log('Query updated successfully:', response.data);
         alert('Query updated successfully!');
         navigate('/query/edit-query');
+
+        
       } catch (error) {
         console.error('Error updating query:', error);
         alert('Failed to update the query. Please try again.');
@@ -1741,9 +1771,7 @@ function EditQuery() {
               <p className="text-sm opacity-90">Editing: {query?.name || 'Unnamed Query'}</p>
               <p className="text-xs opacity-80 mt-1">Query ID: {query?._id || 'N/A'}</p>
             </div>
-            <div className="bg-blue-500 text-xs px-3 py-1 rounded-full">
-              {customerData.type || 'Customer'}
-            </div>
+         
           </div>
           <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>

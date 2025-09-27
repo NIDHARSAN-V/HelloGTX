@@ -29,7 +29,8 @@ router.get("/get-lead/:leadId" , getLeadDetail);
 
 router.post("/new-query"  , createNewQuery);
 router.get("/get-queries/:leadId"  ,getQueriesByLead); 
-
+// In your routes file
+router.put('/edit-query/:queryId', editQuery);
 
 
 
