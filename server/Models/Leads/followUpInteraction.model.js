@@ -1,14 +1,8 @@
 const InteractionSchema = new mongoose.Schema({
-    // Reference
-    leadId: { 
+   
+    queryId: { 
       type: mongoose.Schema.Types.ObjectId, 
-      ref: "Lead", 
-      required: true,
-      index: true
-    },
-    agentId: { 
-      type: mongoose.Schema.Types.ObjectId, 
-      ref: "Employee", 
+      ref: "Query", 
       required: true,
       index: true
     },
