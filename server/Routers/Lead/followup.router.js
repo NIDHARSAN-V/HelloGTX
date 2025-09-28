@@ -7,7 +7,8 @@ const {
   updateFollowUp,
   deleteFollowUp,
   markFollowUpCompleted,
-  getPendingFollowUps
+  getPendingFollowUps,
+  findFollowupByEmployeeId
 } = require('../../Controllers/Lead/followup.controller');
 
 // ======================
@@ -23,8 +24,11 @@ router.get('/query/:queryId/followups', getFollowUpsByQuery);
 // Get pending follow-ups for a query
 router.get('/query/:queryId/followups/pending', getPendingFollowUps);
 
+
 // Get single follow-up by ID
 router.get('/followup/:interactionId', getFollowUpById);
+
+
 
 // Update a follow-up
 router.put('/followup/:interactionId', updateFollowUp);
@@ -34,5 +38,8 @@ router.delete('/followup/:interactionId', deleteFollowUp);
 
 // Mark follow-up as completed
 router.patch('/followup/:interactionId/complete', markFollowUpCompleted);
+
+
+router.get('/employee/:employeeId/followups/pending', findFollowupByEmployeeId)
 
 module.exports = router;

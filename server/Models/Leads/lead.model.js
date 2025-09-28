@@ -12,9 +12,6 @@ const LeadSchema = new mongoose.Schema({
 
   }],
 
-
-  
-
   //assignments
 
 

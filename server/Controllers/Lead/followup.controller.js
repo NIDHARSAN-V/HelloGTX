@@ -18,7 +18,7 @@ const createFollowUp = async (req, res) => {
       callDetails,
       emailDetails,
       whatsappDetails,
-      employee 
+      employeeId
     } = req.body;
 
     // Validate required fields
@@ -47,7 +47,8 @@ const createFollowUp = async (req, res) => {
       emailDetails: type === 'email' ? emailDetails : undefined,
       whatsappDetails: type === 'whatsapp' ? whatsappDetails : undefined,
       keywords: extractKeywords(summary),
-      pointsEarned: calculatePoints(type, summary)
+      pointsEarned: calculatePoints(type, summary),
+      assignedTo: employeeId || null
     });
 
     const savedInteraction = await newInteraction.save();
@@ -189,6 +190,9 @@ const updateFollowUp = async (req, res) => {
       return res.status(404).json({ message: "Follow-up not found" });
     }
 
+
+
+
     // Prepare update data
     const updateData = {
       type: type || existingInteraction.type,
@@ -302,7 +306,9 @@ const deleteFollowUp = async (req, res) => {
 // 6. MARK FOLLOW-UP AS COMPLETED
 // ======================
 const markFollowUpCompleted = async (req, res) => {
+    console.log("Marking follow-up as completed...*******************************");
   try {
+    
     const { interactionId } = req.params;
     const { notes, employee } = req.body;
 
@@ -347,6 +353,10 @@ const markFollowUpCompleted = async (req, res) => {
 // ======================
 // 7. GET PENDING FOLLOW-UPS
 // ======================
+
+
+
+
 const getPendingFollowUps = async (req, res) => {
   try {
     const { queryId } = req.params;
@@ -416,6 +426,27 @@ const calculatePoints = (type, summary) => {
   return points;
 };
 
+
+
+const findFollowupByEmployeeId = async (employeeId) => {
+  try {
+    const followUps = await Interaction.find({ 
+      employeeId,
+      "followUpDetails": { $exists: true, $ne: null },
+      "followUpDetails.status": false 
+    });
+    return followUps;
+  } catch (error) {
+    console.error("Error finding follow-ups by employee ID:", error);
+    throw error;
+  }
+};
+
+
+
+
+
+
 module.exports = {
   createFollowUp,
   getFollowUpsByQuery,
@@ -423,5 +454,6 @@ module.exports = {
   updateFollowUp,
   deleteFollowUp,
   markFollowUpCompleted,
-  getPendingFollowUps
+  getPendingFollowUps,
+  findFollowupByEmployeeId
 };

@@ -38,6 +38,7 @@ function LeadCreation({ customer: propCustomer }) {
     }
     setLoadingLeads(false);
   };
+  
 
   useEffect(() => {
     fetchLeads();
@@ -157,6 +158,17 @@ function LeadCreation({ customer: propCustomer }) {
             Create Lead
           </button>
         </div>
+
+
+
+        <div>
+          <h2 className="text-2xl font-semibold text-gray-800 mb-4">ToDo List</h2>
+          <div>
+
+          </div>
+        </div>
+
+
 
         {/* Leads List */}
         <div className="w-full lg:w-2/3">

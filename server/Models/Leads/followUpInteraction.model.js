@@ -8,6 +8,13 @@ const InteractionSchema = new mongoose.Schema({
       index: true
     },
 
+
+    assignedTo: { 
+      type: mongoose.Schema.Types.ObjectId, 
+      ref: "Employee",
+      index: true
+    },
+
     
   
     // Interaction Details
@@ -24,6 +31,8 @@ const InteractionSchema = new mongoose.Schema({
       ],
       required: true
     },
+
+    
 
     
     direction: { 

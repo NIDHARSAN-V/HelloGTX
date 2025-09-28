@@ -5,8 +5,11 @@ import { useNavigate } from "react-router-dom";
 // Follow-up Interaction Component
 function FollowUpInteraction({ query, onClose, user }) {
   const [interactions, setInteractions] = useState([]);
+  const [pendingFollowUps, setPendingFollowUps] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
+  const [editingInteraction, setEditingInteraction] = useState(null);
+  const [activeTab, setActiveTab] = useState("all"); // "all", "pending"
   const [newInteraction, setNewInteraction] = useState({
     type: "outbound_call",
     direction: "outbound",
@@ -27,13 +30,19 @@ function FollowUpInteraction({ query, onClose, user }) {
 
   // Fetch interactions for this query
   useEffect(() => {
+
+
+    console.log(user , "User in FollowUpInteraction");
     const fetchInteractions = async () => {
       try {
         setLoading(true);
-        const { data } = await axios.get(
-          `http://localhost:8000/api/followup/query/${query._id}/followups`
-        );
-        setInteractions(data.interactions || []);
+        const [allResponse, pendingResponse] = await Promise.all([
+          axios.get(`http://localhost:8000/api/followup/query/${query._id}/followups`),
+          axios.get(`http://localhost:8000/api/followup/query/${query._id}/followups/pending`)
+        ]);
+        
+        setInteractions(allResponse.data.interactions || []);
+        setPendingFollowUps(pendingResponse.data.pendingFollowUps || []);
       } catch (error) {
         console.error("Error fetching interactions:", error);
       } finally {
@@ -50,56 +59,160 @@ function FollowUpInteraction({ query, onClose, user }) {
   const handleAddInteraction = async (e) => {
     e.preventDefault();
     try {
+      console.log(user.employeeId , "***Employee ID in FollowUpInteraction***");
       const response = await axios.post(
         `http://localhost:8000/api/followup/query/${query._id}/followup`,
         {
           ...newInteraction,
-          employee: { id: user?.id || user?._id }
+          employeeId:user.employeeId
         }
       );
       
       setInteractions(prev => [response.data.interaction, ...prev]);
+      if (response.data.interaction.requiresFollowUp && !response.data.interaction.followUpDetails.completed) {
+        setPendingFollowUps(prev => [response.data.interaction, ...prev]);
+      }
+      
       setShowAddForm(false);
-      setNewInteraction({
-        type: "outbound_call",
-        direction: "outbound",
-        summary: "",
-        sentiment: "neutral",
-        requiresFollowUp: false,
-        followUpDetails: {
-          scheduledAt: "",
-          priority: "medium",
-          notes: ""
-        },
-        callDetails: {
-          duration: "",
-          fromNumber: "",
-          toNumber: ""
-        }
-      });
+      resetForm();
     } catch (error) {
       console.error("Error adding interaction:", error);
       alert("Error adding follow-up. Please try again.");
     }
   };
 
+  // Handle updating interaction
+  const handleUpdateInteraction = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.put(
+        `http://localhost:8000/api/followup/followup/${editingInteraction._id}`,
+        {
+          ...editingInteraction,
+          employee: { id: user?.id || user?._id }
+        }
+      );
+      
+      setInteractions(prev => 
+        prev.map(interaction => 
+          interaction._id === editingInteraction._id ? response.data.interaction : interaction
+        )
+      );
+      
+      setPendingFollowUps(prev => 
+        prev.filter(interaction => 
+          interaction._id !== editingInteraction._id || 
+          (response.data.interaction.requiresFollowUp && !response.data.interaction.followUpDetails.completed)
+        )
+      );
+      
+      if (response.data.interaction.requiresFollowUp && !response.data.interaction.followUpDetails.completed) {
+        setPendingFollowUps(prev => [response.data.interaction, ...prev.filter(i => i._id !== editingInteraction._id)]);
+      }
+      
+      setEditingInteraction(null);
+    } catch (error) {
+      console.error("Error updating interaction:", error);
+      alert("Error updating follow-up. Please try again.");
+    }
+  };
+
+  // Handle deleting interaction
+  const handleDeleteInteraction = async (interactionId) => {
+    if (!window.confirm("Are you sure you want to delete this interaction?")) {
+      return;
+    }
+
+    try {
+      await axios.delete(`http://localhost:8000/api/followup/followup/${interactionId}`);
+      
+      setInteractions(prev => prev.filter(interaction => interaction._id !== interactionId));
+      setPendingFollowUps(prev => prev.filter(interaction => interaction._id !== interactionId));
+      
+      alert("Interaction deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting interaction:", error);
+      alert("Error deleting follow-up. Please try again.");
+    }
+  };
+
+  // Handle marking follow-up as completed
+  const handleMarkCompleted = async (interactionId, notes = "") => {
+    try {
+      const response = await axios.patch(
+        `http://localhost:8000/api/followup/followup/${interactionId}/complete`,
+        { notes, employee: { id: user?.id || user?._id } }
+      );
+      
+      setInteractions(prev => 
+        prev.map(interaction => 
+          interaction._id === interactionId ? response.data.interaction : interaction
+        )
+      );
+      
+      setPendingFollowUps(prev => 
+        prev.filter(interaction => interaction._id !== interactionId)
+      );
+      
+      alert("Follow-up marked as completed!");
+    } catch (error) {
+      console.error("Error marking follow-up as completed:", error);
+      alert("Error marking follow-up as completed. Please try again.");
+    }
+  };
+
+  // Reset form
+  const resetForm = () => {
+    setNewInteraction({
+      type: "outbound_call",
+      direction: "outbound",
+      summary: "",
+      sentiment: "neutral",
+      requiresFollowUp: false,
+      followUpDetails: {
+        scheduledAt: "",
+        priority: "medium",
+        notes: ""
+      },
+      callDetails: {
+        duration: "",
+        fromNumber: "",
+        toNumber: ""
+      }
+    });
+  };
+
   // Handle input changes
-  const handleInputChange = (path, value) => {
+  const handleInputChange = (path, value, isEditing = false) => {
+    const setter = isEditing ? setEditingInteraction : setNewInteraction;
+    const data = isEditing ? editingInteraction : newInteraction;
+
     if (path.includes('.')) {
       const [parent, child] = path.split('.');
-      setNewInteraction(prev => ({
-        ...prev,
+      setter({
+        ...data,
         [parent]: {
-          ...prev[parent],
+          ...data[parent],
           [child]: value
         }
-      }));
+      });
     } else {
-      setNewInteraction(prev => ({
-        ...prev,
+      setter({
+        ...data,
         [path]: value
-      }));
+      });
     }
+  };
+
+  // Start editing an interaction
+  const startEditing = (interaction) => {
+    setEditingInteraction({...interaction});
+    setShowAddForm(false);
+  };
+
+  // Cancel editing
+  const cancelEditing = () => {
+    setEditingInteraction(null);
   };
 
   // Format date for display
@@ -141,9 +254,22 @@ function FollowUpInteraction({ query, onClose, user }) {
     }
   };
 
+  // Get priority color
+  const getPriorityColor = (priority) => {
+    switch (priority) {
+      case 'high': return 'bg-red-100 text-red-800';
+      case 'medium': return 'bg-yellow-100 text-yellow-800';
+      case 'low': return 'bg-green-100 text-green-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  // Get display data based on active tab
+  const displayData = activeTab === "pending" ? pendingFollowUps : interactions;
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="bg-teal-500 text-white p-6">
           <div className="flex justify-between items-center">
@@ -162,30 +288,72 @@ function FollowUpInteraction({ query, onClose, user }) {
 
         {/* Content */}
         <div className="p-6 overflow-y-auto max-h-[70vh]">
-          {/* Add New Interaction Button */}
-          <div className="mb-6">
+          {/* Stats and Actions */}
+          <div className="flex justify-between items-center mb-6">
+            <div className="flex space-x-4">
+              <div className="bg-blue-50 px-3 py-2 rounded-lg">
+                <span className="text-blue-600 font-semibold">Total: {interactions.length}</span>
+              </div>
+              <div className="bg-orange-50 px-3 py-2 rounded-lg">
+                <span className="text-orange-600 font-semibold">Pending: {pendingFollowUps.length}</span>
+              </div>
+            </div>
+            
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setShowAddForm(!showAddForm)}
+                className="bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition duration-200"
+              >
+                <span>+</span>
+                <span>Add New</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex border-b mb-4">
             <button
-              onClick={() => setShowAddForm(!showAddForm)}
-              className="bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition duration-200"
+              onClick={() => setActiveTab("all")}
+              className={`px-4 py-2 font-medium ${
+                activeTab === "all" 
+                  ? "border-b-2 border-teal-500 text-teal-600" 
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
             >
-              <span>+</span>
-              <span>Add New Follow-up</span>
+              All Interactions
+            </button>
+            <button
+              onClick={() => setActiveTab("pending")}
+              className={`px-4 py-2 font-medium ${
+                activeTab === "pending" 
+                  ? "border-b-2 border-orange-500 text-orange-600" 
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Pending Follow-ups
+              {pendingFollowUps.length > 0 && (
+                <span className="ml-2 bg-orange-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  {pendingFollowUps.length}
+                </span>
+              )}
             </button>
           </div>
 
-          {/* Add Interaction Form */}
-          {showAddForm && (
+          {/* Add/Edit Interaction Form */}
+          {(showAddForm || editingInteraction) && (
             <div className="bg-gray-50 p-4 rounded-lg mb-6 border">
-              <h3 className="text-lg font-semibold mb-4">Add New Interaction</h3>
-              <form onSubmit={handleAddInteraction} className="space-y-4">
+              <h3 className="text-lg font-semibold mb-4">
+                {editingInteraction ? "Edit Interaction" : "Add New Interaction"}
+              </h3>
+              <form onSubmit={editingInteraction ? handleUpdateInteraction : handleAddInteraction} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Type
                     </label>
                     <select
-                      value={newInteraction.type}
-                      onChange={(e) => handleInputChange('type', e.target.value)}
+                      value={editingInteraction ? editingInteraction.type : newInteraction.type}
+                      onChange={(e) => handleInputChange('type', e.target.value, !!editingInteraction)}
                       className="w-full p-2 border rounded-lg"
                       required
                     >
@@ -204,8 +372,8 @@ function FollowUpInteraction({ query, onClose, user }) {
                       Sentiment
                     </label>
                     <select
-                      value={newInteraction.sentiment}
-                      onChange={(e) => handleInputChange('sentiment', e.target.value)}
+                      value={editingInteraction ? editingInteraction.sentiment : newInteraction.sentiment}
+                      onChange={(e) => handleInputChange('sentiment', e.target.value, !!editingInteraction)}
                       className="w-full p-2 border rounded-lg"
                     >
                       <option value="positive">Positive</option>
@@ -220,8 +388,8 @@ function FollowUpInteraction({ query, onClose, user }) {
                     Summary
                   </label>
                   <textarea
-                    value={newInteraction.summary}
-                    onChange={(e) => handleInputChange('summary', e.target.value)}
+                    value={editingInteraction ? editingInteraction.summary : newInteraction.summary}
+                    onChange={(e) => handleInputChange('summary', e.target.value, !!editingInteraction)}
                     className="w-full p-2 border rounded-lg"
                     rows="3"
                     placeholder="Enter interaction summary..."
@@ -230,7 +398,7 @@ function FollowUpInteraction({ query, onClose, user }) {
                 </div>
 
                 {/* Call-specific fields */}
-                {newInteraction.type.includes('call') && (
+                {(editingInteraction ? editingInteraction.type : newInteraction.type).includes('call') && (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -238,8 +406,8 @@ function FollowUpInteraction({ query, onClose, user }) {
                       </label>
                       <input
                         type="number"
-                        value={newInteraction.callDetails.duration}
-                        onChange={(e) => handleInputChange('callDetails.duration', e.target.value)}
+                        value={editingInteraction ? editingInteraction.callDetails?.duration : newInteraction.callDetails.duration}
+                        onChange={(e) => handleInputChange('callDetails.duration', e.target.value, !!editingInteraction)}
                         className="w-full p-2 border rounded-lg"
                         placeholder="300"
                       />
@@ -250,8 +418,8 @@ function FollowUpInteraction({ query, onClose, user }) {
                       </label>
                       <input
                         type="text"
-                        value={newInteraction.callDetails.fromNumber}
-                        onChange={(e) => handleInputChange('callDetails.fromNumber', e.target.value)}
+                        value={editingInteraction ? editingInteraction.callDetails?.fromNumber : newInteraction.callDetails.fromNumber}
+                        onChange={(e) => handleInputChange('callDetails.fromNumber', e.target.value, !!editingInteraction)}
                         className="w-full p-2 border rounded-lg"
                         placeholder="+1234567890"
                       />
@@ -262,8 +430,8 @@ function FollowUpInteraction({ query, onClose, user }) {
                       </label>
                       <input
                         type="text"
-                        value={newInteraction.callDetails.toNumber}
-                        onChange={(e) => handleInputChange('callDetails.toNumber', e.target.value)}
+                        value={editingInteraction ? editingInteraction.callDetails?.toNumber : newInteraction.callDetails.toNumber}
+                        onChange={(e) => handleInputChange('callDetails.toNumber', e.target.value, !!editingInteraction)}
                         className="w-full p-2 border rounded-lg"
                         placeholder="+0987654321"
                       />
@@ -276,8 +444,8 @@ function FollowUpInteraction({ query, onClose, user }) {
                   <input
                     type="checkbox"
                     id="requiresFollowUp"
-                    checked={newInteraction.requiresFollowUp}
-                    onChange={(e) => handleInputChange('requiresFollowUp', e.target.checked)}
+                    checked={editingInteraction ? editingInteraction.requiresFollowUp : newInteraction.requiresFollowUp}
+                    onChange={(e) => handleInputChange('requiresFollowUp', e.target.checked, !!editingInteraction)}
                     className="rounded"
                   />
                   <label htmlFor="requiresFollowUp" className="text-sm font-medium text-gray-700">
@@ -285,7 +453,7 @@ function FollowUpInteraction({ query, onClose, user }) {
                   </label>
                 </div>
 
-                {newInteraction.requiresFollowUp && (
+                {(editingInteraction ? editingInteraction.requiresFollowUp : newInteraction.requiresFollowUp) && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -293,8 +461,8 @@ function FollowUpInteraction({ query, onClose, user }) {
                       </label>
                       <input
                         type="datetime-local"
-                        value={newInteraction.followUpDetails.scheduledAt}
-                        onChange={(e) => handleInputChange('followUpDetails.scheduledAt', e.target.value)}
+                        value={editingInteraction ? editingInteraction.followUpDetails?.scheduledAt?.slice(0, 16) : newInteraction.followUpDetails.scheduledAt}
+                        onChange={(e) => handleInputChange('followUpDetails.scheduledAt', e.target.value, !!editingInteraction)}
                         className="w-full p-2 border rounded-lg"
                       />
                     </div>
@@ -303,8 +471,8 @@ function FollowUpInteraction({ query, onClose, user }) {
                         Priority
                       </label>
                       <select
-                        value={newInteraction.followUpDetails.priority}
-                        onChange={(e) => handleInputChange('followUpDetails.priority', e.target.value)}
+                        value={editingInteraction ? editingInteraction.followUpDetails?.priority : newInteraction.followUpDetails.priority}
+                        onChange={(e) => handleInputChange('followUpDetails.priority', e.target.value, !!editingInteraction)}
                         className="w-full p-2 border rounded-lg"
                       >
                         <option value="low">Low</option>
@@ -312,13 +480,25 @@ function FollowUpInteraction({ query, onClose, user }) {
                         <option value="high">High</option>
                       </select>
                     </div>
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Follow-up Notes
+                      </label>
+                      <textarea
+                        value={editingInteraction ? editingInteraction.followUpDetails?.notes : newInteraction.followUpDetails.notes}
+                        onChange={(e) => handleInputChange('followUpDetails.notes', e.target.value, !!editingInteraction)}
+                        className="w-full p-2 border rounded-lg"
+                        rows="2"
+                        placeholder="Additional notes for follow-up..."
+                      />
+                    </div>
                   </div>
                 )}
 
                 <div className="flex justify-end space-x-3">
                   <button
                     type="button"
-                    onClick={() => setShowAddForm(false)}
+                    onClick={editingInteraction ? cancelEditing : () => setShowAddForm(false)}
                     className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
                   >
                     Cancel
@@ -327,7 +507,7 @@ function FollowUpInteraction({ query, onClose, user }) {
                     type="submit"
                     className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600"
                   >
-                    Add Interaction
+                    {editingInteraction ? "Update Interaction" : "Add Interaction"}
                   </button>
                 </div>
               </form>
@@ -339,14 +519,21 @@ function FollowUpInteraction({ query, onClose, user }) {
             <div className="flex justify-center items-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500"></div>
             </div>
-          ) : interactions.length === 0 ? (
+          ) : displayData.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
-              <p className="text-lg">No follow-up interactions yet</p>
-              <p className="text-sm mt-2">Add your first interaction to track customer communications</p>
+              <p className="text-lg">
+                {activeTab === "pending" ? "No pending follow-ups" : "No follow-up interactions yet"}
+              </p>
+              <p className="text-sm mt-2">
+                {activeTab === "pending" 
+                  ? "All follow-ups are completed!" 
+                  : "Add your first interaction to track customer communications"
+                }
+              </p>
             </div>
           ) : (
             <div className="space-y-4">
-              {interactions.map((interaction) => (
+              {displayData.map((interaction) => (
                 <div key={interaction._id} className="border rounded-lg p-4 bg-white shadow-sm">
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex items-center space-x-3">
@@ -360,15 +547,22 @@ function FollowUpInteraction({ query, onClose, user }) {
                         </p>
                       </div>
                     </div>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getSentimentColor(interaction.sentiment)}`}>
-                      {interaction.sentiment}
-                    </span>
+                    <div className="flex items-center space-x-2">
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getSentimentColor(interaction.sentiment)}`}>
+                        {interaction.sentiment}
+                      </span>
+                      {interaction.pointsEarned > 0 && (
+                        <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded-full text-xs font-medium">
+                          {interaction.pointsEarned} pts
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   <p className="text-gray-700 mb-3">{interaction.summary}</p>
 
                   {/* Interaction Details */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
                     {interaction.callDetails?.duration && (
                       <p><strong>Duration:</strong> {interaction.callDetails.duration} seconds</p>
                     )}
@@ -378,29 +572,22 @@ function FollowUpInteraction({ query, onClose, user }) {
                     {interaction.callDetails?.toNumber && (
                       <p><strong>To:</strong> {interaction.callDetails.toNumber}</p>
                     )}
-                    {interaction.pointsEarned > 0 && (
-                      <p><strong>Points:</strong> {interaction.pointsEarned}</p>
-                    )}
                   </div>
 
                   {/* Follow-up Details */}
                   {interaction.requiresFollowUp && interaction.followUpDetails && (
                     <div className="mt-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <span className="text-yellow-600">⏰</span>
-                        <h5 className="font-semibold text-yellow-800">Follow-up Required</h5>
+                      <div className="flex justify-between items-center mb-2">
+                        <div className="flex items-center space-x-2">
+                          <span className="text-yellow-600">⏰</span>
+                          <h5 className="font-semibold text-yellow-800">Follow-up Required</h5>
+                        </div>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(interaction.followUpDetails.priority)}`}>
+                          {interaction.followUpDetails.priority} priority
+                        </span>
                       </div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
                         <p><strong>Scheduled:</strong> {formatDateTime(interaction.followUpDetails.scheduledAt)}</p>
-                        <p><strong>Priority:</strong> 
-                          <span className={`ml-1 px-2 py-1 rounded-full text-xs ${
-                            interaction.followUpDetails.priority === 'high' ? 'bg-red-100 text-red-800' :
-                            interaction.followUpDetails.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-green-100 text-green-800'
-                          }`}>
-                            {interaction.followUpDetails.priority}
-                          </span>
-                        </p>
                         {interaction.followUpDetails.notes && (
                           <p className="md:col-span-2"><strong>Notes:</strong> {interaction.followUpDetails.notes}</p>
                         )}
@@ -415,6 +602,35 @@ function FollowUpInteraction({ query, onClose, user }) {
                       </div>
                     </div>
                   )}
+
+                  {/* Action Buttons */}
+                  <div className="flex justify-end space-x-2 mt-4 pt-3 border-t">
+                    {interaction.requiresFollowUp && interaction.followUpDetails && !interaction.followUpDetails.completed && (
+                      <button
+                        onClick={() => {
+                          const notes = prompt("Enter completion notes (optional):");
+                          if (notes !== null) {
+                            handleMarkCompleted(interaction._id, notes);
+                          }
+                        }}
+                        className="px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600"
+                      >
+                        Mark Completed
+                      </button>
+                    )}
+                    <button
+                      onClick={() => startEditing(interaction)}
+                      className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDeleteInteraction(interaction._id)}
+                      className="px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
+                    >
+                      Delete
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -425,7 +641,7 @@ function FollowUpInteraction({ query, onClose, user }) {
         <div className="bg-gray-50 px-6 py-4 border-t">
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">
-              {interactions.length} interaction{interactions.length !== 1 ? 's' : ''}
+              Showing {displayData.length} of {interactions.length} interactions
             </span>
             <button
               onClick={onClose}
@@ -440,7 +656,38 @@ function FollowUpInteraction({ query, onClose, user }) {
   );
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function QueryList({ leadId, customer, user }) {
+
   const [queries, setQueries] = useState([]);
   const [selectedQuery, setSelectedQuery] = useState(null);
   const [showFollowUp, setShowFollowUp] = useState(false);
@@ -637,15 +884,26 @@ function QueryList({ leadId, customer, user }) {
                   {/* ---------- Action Header ---------- */}
                   <div className="flex justify-between items-center bg-white p-4 rounded-lg shadow">
                     <h3 className="text-lg font-semibold text-gray-800">Query Details</h3>
-                    <button
-                      onClick={() => handleEditQuery(q)}
-                      className="bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-lg transition duration-200 flex items-center space-x-2"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                      <span>Edit Complete Query</span>
-                    </button>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleViewFollowUps(q)}
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition duration-200 flex items-center space-x-2"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                        </svg>
+                        <span>Manage Follow-ups</span>
+                      </button>
+                      <button
+                        onClick={() => handleEditQuery(q)}
+                        className="bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-lg transition duration-200 flex items-center space-x-2"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        <span>Edit Complete Query</span>
+                      </button>
+                    </div>
                   </div>
 
                   {/* ---------- Main Image ---------- */}
