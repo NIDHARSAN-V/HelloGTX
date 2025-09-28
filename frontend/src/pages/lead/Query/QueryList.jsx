@@ -2,9 +2,449 @@ import axios from "axios";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+// Follow-up Interaction Component
+function FollowUpInteraction({ query, onClose, user }) {
+  const [interactions, setInteractions] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newInteraction, setNewInteraction] = useState({
+    type: "outbound_call",
+    direction: "outbound",
+    summary: "",
+    sentiment: "neutral",
+    requiresFollowUp: false,
+    followUpDetails: {
+      scheduledAt: "",
+      priority: "medium",
+      notes: ""
+    },
+    callDetails: {
+      duration: "",
+      fromNumber: "",
+      toNumber: ""
+    }
+  });
+
+  // Fetch interactions for this query
+  useEffect(() => {
+    const fetchInteractions = async () => {
+      try {
+        setLoading(true);
+        const { data } = await axios.get(
+          `http://localhost:8000/api/followup/query/${query._id}/followups`
+        );
+        setInteractions(data.interactions || []);
+      } catch (error) {
+        console.error("Error fetching interactions:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (query?._id) {
+      fetchInteractions();
+    }
+  }, [query]);
+
+  // Handle adding new interaction
+  const handleAddInteraction = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post(
+        `http://localhost:8000/api/followup/query/${query._id}/followup`,
+        {
+          ...newInteraction,
+          employee: { id: user?.id || user?._id }
+        }
+      );
+      
+      setInteractions(prev => [response.data.interaction, ...prev]);
+      setShowAddForm(false);
+      setNewInteraction({
+        type: "outbound_call",
+        direction: "outbound",
+        summary: "",
+        sentiment: "neutral",
+        requiresFollowUp: false,
+        followUpDetails: {
+          scheduledAt: "",
+          priority: "medium",
+          notes: ""
+        },
+        callDetails: {
+          duration: "",
+          fromNumber: "",
+          toNumber: ""
+        }
+      });
+    } catch (error) {
+      console.error("Error adding interaction:", error);
+      alert("Error adding follow-up. Please try again.");
+    }
+  };
+
+  // Handle input changes
+  const handleInputChange = (path, value) => {
+    if (path.includes('.')) {
+      const [parent, child] = path.split('.');
+      setNewInteraction(prev => ({
+        ...prev,
+        [parent]: {
+          ...prev[parent],
+          [child]: value
+        }
+      }));
+    } else {
+      setNewInteraction(prev => ({
+        ...prev,
+        [path]: value
+      }));
+    }
+  };
+
+  // Format date for display
+  const formatDateTime = (dateString) => {
+    if (!dateString) return "N/A";
+    try {
+      return new Date(dateString).toLocaleString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    } catch (error) {
+      return "N/A";
+    }
+  };
+
+  // Get sentiment color
+  const getSentimentColor = (sentiment) => {
+    switch (sentiment) {
+      case 'positive': return 'text-green-600 bg-green-100';
+      case 'negative': return 'text-red-600 bg-red-100';
+      default: return 'text-gray-600 bg-gray-100';
+    }
+  };
+
+  // Get type icon
+  const getTypeIcon = (type) => {
+    switch (type) {
+      case 'inbound_call': return '📞 In';
+      case 'outbound_call': return '📞 Out';
+      case 'email': return '📧 Email';
+      case 'whatsapp': return '💬 WhatsApp';
+      case 'sms': return '💬 SMS';
+      case 'meeting': return '👥 Meeting';
+      case 'chat': return '💬 Chat';
+      default: return '📝 Note';
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+        {/* Header */}
+        <div className="bg-teal-500 text-white p-6">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-2xl font-bold">Follow-up Interactions</h2>
+              <p className="text-teal-100 mt-1">Query: {query?.name}</p>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-white hover:text-teal-200 text-2xl font-bold"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 overflow-y-auto max-h-[70vh]">
+          {/* Add New Interaction Button */}
+          <div className="mb-6">
+            <button
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 transition duration-200"
+            >
+              <span>+</span>
+              <span>Add New Follow-up</span>
+            </button>
+          </div>
+
+          {/* Add Interaction Form */}
+          {showAddForm && (
+            <div className="bg-gray-50 p-4 rounded-lg mb-6 border">
+              <h3 className="text-lg font-semibold mb-4">Add New Interaction</h3>
+              <form onSubmit={handleAddInteraction} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Type
+                    </label>
+                    <select
+                      value={newInteraction.type}
+                      onChange={(e) => handleInputChange('type', e.target.value)}
+                      className="w-full p-2 border rounded-lg"
+                      required
+                    >
+                      <option value="outbound_call">Outbound Call</option>
+                      <option value="inbound_call">Inbound Call</option>
+                      <option value="email">Email</option>
+                      <option value="whatsapp">WhatsApp</option>
+                      <option value="sms">SMS</option>
+                      <option value="meeting">Meeting</option>
+                      <option value="chat">Chat</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Sentiment
+                    </label>
+                    <select
+                      value={newInteraction.sentiment}
+                      onChange={(e) => handleInputChange('sentiment', e.target.value)}
+                      className="w-full p-2 border rounded-lg"
+                    >
+                      <option value="positive">Positive</option>
+                      <option value="neutral">Neutral</option>
+                      <option value="negative">Negative</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Summary
+                  </label>
+                  <textarea
+                    value={newInteraction.summary}
+                    onChange={(e) => handleInputChange('summary', e.target.value)}
+                    className="w-full p-2 border rounded-lg"
+                    rows="3"
+                    placeholder="Enter interaction summary..."
+                    required
+                  />
+                </div>
+
+                {/* Call-specific fields */}
+                {newInteraction.type.includes('call') && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Duration (seconds)
+                      </label>
+                      <input
+                        type="number"
+                        value={newInteraction.callDetails.duration}
+                        onChange={(e) => handleInputChange('callDetails.duration', e.target.value)}
+                        className="w-full p-2 border rounded-lg"
+                        placeholder="300"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        From Number
+                      </label>
+                      <input
+                        type="text"
+                        value={newInteraction.callDetails.fromNumber}
+                        onChange={(e) => handleInputChange('callDetails.fromNumber', e.target.value)}
+                        className="w-full p-2 border rounded-lg"
+                        placeholder="+1234567890"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        To Number
+                      </label>
+                      <input
+                        type="text"
+                        value={newInteraction.callDetails.toNumber}
+                        onChange={(e) => handleInputChange('callDetails.toNumber', e.target.value)}
+                        className="w-full p-2 border rounded-lg"
+                        placeholder="+0987654321"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Follow-up details */}
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    id="requiresFollowUp"
+                    checked={newInteraction.requiresFollowUp}
+                    onChange={(e) => handleInputChange('requiresFollowUp', e.target.checked)}
+                    className="rounded"
+                  />
+                  <label htmlFor="requiresFollowUp" className="text-sm font-medium text-gray-700">
+                    Requires Follow-up
+                  </label>
+                </div>
+
+                {newInteraction.requiresFollowUp && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Scheduled Date & Time
+                      </label>
+                      <input
+                        type="datetime-local"
+                        value={newInteraction.followUpDetails.scheduledAt}
+                        onChange={(e) => handleInputChange('followUpDetails.scheduledAt', e.target.value)}
+                        className="w-full p-2 border rounded-lg"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        Priority
+                      </label>
+                      <select
+                        value={newInteraction.followUpDetails.priority}
+                        onChange={(e) => handleInputChange('followUpDetails.priority', e.target.value)}
+                        className="w-full p-2 border rounded-lg"
+                      >
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddForm(false)}
+                    className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 bg-teal-500 text-white rounded-lg hover:bg-teal-600"
+                  >
+                    Add Interaction
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
+
+          {/* Interactions List */}
+          {loading ? (
+            <div className="flex justify-center items-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-teal-500"></div>
+            </div>
+          ) : interactions.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <p className="text-lg">No follow-up interactions yet</p>
+              <p className="text-sm mt-2">Add your first interaction to track customer communications</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {interactions.map((interaction) => (
+                <div key={interaction._id} className="border rounded-lg p-4 bg-white shadow-sm">
+                  <div className="flex justify-between items-start mb-3">
+                    <div className="flex items-center space-x-3">
+                      <span className="text-lg">{getTypeIcon(interaction.type)}</span>
+                      <div>
+                        <h4 className="font-semibold text-gray-800 capitalize">
+                          {interaction.type.replace('_', ' ')}
+                        </h4>
+                        <p className="text-sm text-gray-500">
+                          {formatDateTime(interaction.createdAt)}
+                        </p>
+                      </div>
+                    </div>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getSentimentColor(interaction.sentiment)}`}>
+                      {interaction.sentiment}
+                    </span>
+                  </div>
+
+                  <p className="text-gray-700 mb-3">{interaction.summary}</p>
+
+                  {/* Interaction Details */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+                    {interaction.callDetails?.duration && (
+                      <p><strong>Duration:</strong> {interaction.callDetails.duration} seconds</p>
+                    )}
+                    {interaction.callDetails?.fromNumber && (
+                      <p><strong>From:</strong> {interaction.callDetails.fromNumber}</p>
+                    )}
+                    {interaction.callDetails?.toNumber && (
+                      <p><strong>To:</strong> {interaction.callDetails.toNumber}</p>
+                    )}
+                    {interaction.pointsEarned > 0 && (
+                      <p><strong>Points:</strong> {interaction.pointsEarned}</p>
+                    )}
+                  </div>
+
+                  {/* Follow-up Details */}
+                  {interaction.requiresFollowUp && interaction.followUpDetails && (
+                    <div className="mt-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                      <div className="flex items-center space-x-2 mb-2">
+                        <span className="text-yellow-600">⏰</span>
+                        <h5 className="font-semibold text-yellow-800">Follow-up Required</h5>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                        <p><strong>Scheduled:</strong> {formatDateTime(interaction.followUpDetails.scheduledAt)}</p>
+                        <p><strong>Priority:</strong> 
+                          <span className={`ml-1 px-2 py-1 rounded-full text-xs ${
+                            interaction.followUpDetails.priority === 'high' ? 'bg-red-100 text-red-800' :
+                            interaction.followUpDetails.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                            'bg-green-100 text-green-800'
+                          }`}>
+                            {interaction.followUpDetails.priority}
+                          </span>
+                        </p>
+                        {interaction.followUpDetails.notes && (
+                          <p className="md:col-span-2"><strong>Notes:</strong> {interaction.followUpDetails.notes}</p>
+                        )}
+                        <p><strong>Status:</strong> 
+                          <span className={`ml-1 px-2 py-1 rounded-full text-xs ${
+                            interaction.followUpDetails.completed ? 
+                            'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
+                          }`}>
+                            {interaction.followUpDetails.completed ? 'Completed' : 'Pending'}
+                          </span>
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="bg-gray-50 px-6 py-4 border-t">
+          <div className="flex justify-between items-center">
+            <span className="text-sm text-gray-600">
+              {interactions.length} interaction{interactions.length !== 1 ? 's' : ''}
+            </span>
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition duration-200"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function QueryList({ leadId, customer, user }) {
   const [queries, setQueries] = useState([]);
   const [selectedQuery, setSelectedQuery] = useState(null);
+  const [showFollowUp, setShowFollowUp] = useState(false);
+  const [selectedQueryForFollowUp, setSelectedQueryForFollowUp] = useState(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -71,6 +511,18 @@ function QueryList({ leadId, customer, user }) {
     });
   };
 
+  // Handle view follow-ups
+  const handleViewFollowUps = (query) => {
+    setSelectedQueryForFollowUp(query);
+    setShowFollowUp(true);
+  };
+
+  // Handle close follow-up modal
+  const handleCloseFollowUp = () => {
+    setShowFollowUp(false);
+    setSelectedQueryForFollowUp(null);
+  };
+
   if (loading) {
     return (
       <div className="container mx-auto p-4">
@@ -83,6 +535,15 @@ function QueryList({ leadId, customer, user }) {
 
   return (
     <div className="container mx-auto p-4">
+      {/* Follow-up Interaction Modal */}
+      {showFollowUp && selectedQueryForFollowUp && (
+        <FollowUpInteraction 
+          query={selectedQueryForFollowUp} 
+          onClose={handleCloseFollowUp}
+          user={user}
+        />
+      )}
+
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold text-gray-800 text-center md:text-left">
           Queries for {getSafe(customer, 'firstName', 'Customer')} {getSafe(customer, 'lastName', '')}
@@ -131,17 +592,37 @@ function QueryList({ leadId, customer, user }) {
                 </div>
               </button>
               
-              {/* Edit Button */}
-              <button
-                onClick={() => handleEditQuery(q)}
-                className="ml-4 bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-lg transition duration-200 flex items-center space-x-2"
-                title="Edit Query"
-              >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-                <span>Edit</span>
-              </button>
+              {/* Action Buttons */}
+              <div className="flex space-x-2 ml-4">
+                {/* Follow-up Button */}
+                <button
+                  onClick={() => handleViewFollowUps(q)}
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition duration-200 flex items-center space-x-2"
+                  title="View Follow-ups"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                  </svg>
+                  <span>Follow-ups</span>
+                  {hasItems(q.followupId) && (
+                    <span className="bg-blue-700 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {q.followupId.length}
+                    </span>
+                  )}
+                </button>
+
+                {/* Edit Button */}
+                <button
+                  onClick={() => handleEditQuery(q)}
+                  className="bg-teal-500 hover:bg-teal-600 text-white px-4 py-2 rounded-lg transition duration-200 flex items-center space-x-2"
+                  title="Edit Query"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  <span>Edit</span>
+                </button>
+              </div>
             </div>
 
             {/* ---------- Sliding Query Details ---------- */}
