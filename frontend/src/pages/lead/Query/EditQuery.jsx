@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 
 function EditQuery() {
 
@@ -10,6 +11,8 @@ function EditQuery() {
   
   const location = useLocation();
   const { query, customer } = location.state || {};
+  
+  const {user} = useSelector((state) => state.auth);
 
   useEffect(() => {
     console.log(query)
@@ -385,14 +388,14 @@ function EditQuery() {
         formData: formData,
         leadId: query.leadId?._id || query.leadId,
         customer: customer,
-        employee: employee
+        employee: user
       };
 
       console.log('Submitting edit payload:', payload);
 
       try {
         const response = await axios.put(
-          "http://localhost:8000/api/employee/edit-query",
+          `http://localhost:8000/api/employee/edit-query/${query._id}`,
           payload
         );
 

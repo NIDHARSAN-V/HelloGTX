@@ -659,8 +659,8 @@ const getQueriesByLead = async (req, res) => {
 
 
 const editQuery = async function(req, res) {
+  console.log("Edit query request body:", req.body);
   try {
-    console.log("Edit query request body:", req.body);
 
     const { queryId } = req.params;
     const { formData, leadId, customer, employee } = req.body;
@@ -754,6 +754,11 @@ const editQuery = async function(req, res) {
     });
   }
 };
+
+
+
+
+
 
 
 
