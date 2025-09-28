@@ -53,6 +53,9 @@ const createFollowUp = async (req, res) => {
 
     const savedInteraction = await newInteraction.save();
 
+
+    
+
     // Add interaction reference to query's followupId array
     await Query.findByIdAndUpdate(
       queryId,
