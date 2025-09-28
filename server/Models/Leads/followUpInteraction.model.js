@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const InteractionSchema = new mongoose.Schema({
    
     queryId: { 
@@ -6,6 +7,8 @@ const InteractionSchema = new mongoose.Schema({
       required: true,
       index: true
     },
+
+    
   
     // Interaction Details
     type: { 
@@ -21,6 +24,8 @@ const InteractionSchema = new mongoose.Schema({
       ],
       required: true
     },
+
+    
     direction: { 
       type: String, 
       enum: ["inbound", "outbound"],
@@ -89,7 +94,9 @@ const InteractionSchema = new mongoose.Schema({
     timestamps: true
   });
   
-  // Indexes
-  InteractionSchema.index({ leadId: 1, createdAt: -1 });
-  InteractionSchema.index({ agentId: 1, type: 1 });
-  InteractionSchema.index({ "followUpDetails.scheduledAt": 1 });
+  
+
+
+
+const Interaction = mongoose.model("Interaction", InteractionSchema);
+module.exports = Interaction;

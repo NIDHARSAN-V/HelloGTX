@@ -15,6 +15,7 @@ const package_router = require('./Routers/Package/package.router');  // Import t
 const admin_router = require("./Routers/Admin/admin.router copy");  // Import the admin router
 const hotel_router = require('./Routers/Hotel/hotelPackage.router');  // Import the hotel router
 const flight_router = require('./Routers/Flight/flightPackage.router');  // Import the flight router
+const followup_router = require('./Routers/Lead/followup.router');
 
 const employee_router = require('./Routers/Lead/lead.router');
 
@@ -61,6 +62,8 @@ app.use('/api/flight-packages', flight_router);
 app.use('/api/admin', admin_router);
 
 app.use('/api/employee' , employee_router );
+
+app.use('/api/followup' , followup_router );
 
 
 app.listen(PORT, () => console.log(`Server is now running on port ${PORT}`));
