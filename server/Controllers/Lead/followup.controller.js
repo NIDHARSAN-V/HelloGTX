@@ -1,7 +1,7 @@
 const Interaction = require("../../Models/Leads/followUpInteraction.model");
 const Query = require("../../Models/Query/queryPackage.model");
 const Lead = require("../../Models/Leads/lead.model");
-
+const mongoose = require("mongoose");
 // ======================
 // 1. CREATE NEW FOLLOW-UP
 // ======================
@@ -72,7 +72,7 @@ const createFollowUp = async (req, res) => {
         $push: {
           statusHistory: {
             status: 'follow_up',
-            changedBy: employee?.id || 'system',
+            changedBy: employeeId || 'system',
             timestamp: new Date(),
             notes: `New follow-up created: ${summary}`
           }
@@ -428,19 +428,34 @@ const calculatePoints = (type, summary) => {
 
 
 
-const findFollowupByEmployeeId = async (employeeId) => {
+
+
+const findFollowupByEmployeeId = async (req, res) => {
   try {
+    const { employeeId } = req.params;
+
+    if (!employeeId || !mongoose.Types.ObjectId.isValid(employeeId)) {
+      return res.status(400).json({ error: "Invalid or missing employeeId" });
+    }
+
+    console.log("Finding follow-ups for employee ID:", employeeId);
+
     const followUps = await Interaction.find({ 
-      employeeId,
-      "followUpDetails": { $exists: true, $ne: null },
-      "followUpDetails.status": false 
+      assignedTo: employeeId,
+      followUpDetails: { $exists: true, $ne: null },
+      "followUpDetails.completed": false
     });
-    return followUps;
+
+    console.log("Follow-ups found:", followUps.length);
+
+    return res.status(200).json(followUps);
+
   } catch (error) {
     console.error("Error finding follow-ups by employee ID:", error);
-    throw error;
+    return res.status(500).json({ error: "Internal server error" });
   }
 };
+
 
 
 

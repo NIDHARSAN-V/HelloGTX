@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { createNewLead, getLeadfromEmployee } from "../../Store/Lead";
+import axios from "axios";
 
 function LeadCreation({ customer: propCustomer }) {
   const location = useLocation();
@@ -17,6 +18,14 @@ function LeadCreation({ customer: propCustomer }) {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortOrder, setSortOrder] = useState("desc");
+  const [followUps, setFollowUps] = useState([]);
+
+
+const priorityStyles = {
+  high: "bg-red-100 text-red-700",
+  medium: "bg-yellow-100 text-yellow-700",
+  low: "bg-green-100 text-green-700",
+};
 
 
   
@@ -38,12 +47,35 @@ function LeadCreation({ customer: propCustomer }) {
     }
     setLoadingLeads(false);
   };
+
+
+
+// useEffect(() => {
+//     console.log(user?.employeeId , "***Employee ID in LeadCreation***");
+//     const response = axios.get(`http://localhost:8000/api/followup/employee/${user?.employeeId}/followups/pending`);
+
+//   }, [user?.employeeId]);
   
 
   useEffect(() => {
     fetchLeads();
     // eslint-disable-next-line
+     axios
+    .get(`http://localhost:8000/api/followup/employee/${user?.employeeId}/followups/pending`)
+    .then((response) => {
+      console.log(response.data, "***Pending FollowUps***");
+      setFollowUps(response.data);
+    })
+    .catch((error) => {
+      console.error("Error fetching follow-ups:", error);
+    });
   }, [user?.employeeId]);
+
+
+
+
+
+
 
   // Search and sort leads
   useEffect(() => {
@@ -102,6 +134,17 @@ function LeadCreation({ customer: propCustomer }) {
   const toggleSortOrder = () => {
     setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
   };
+  const [filter, setFilter] = useState("all");
+
+ const filteredFollowUps =
+    filter === "all"
+      ? followUps
+      : followUps.filter(
+          (item) =>
+            item.followUpDetails?.priority?.toLowerCase() === filter.toLowerCase()
+        );
+
+
 
   return (
     <div className="container mx-auto p-4 ">
@@ -161,13 +204,79 @@ function LeadCreation({ customer: propCustomer }) {
 
 
 
-        <div>
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4">ToDo List</h2>
-          <div>
+     <div className="w-full px-6 py-6 bg-gray-50 min-h-screen">
+      <div className="max-w-7xl mx-auto">
+        {/* Title */}
+        <div className="flex flex-col md:flex-row items-center justify-between mb-6">
+          <h2 className="text-3xl font-bold text-gray-800 mb-4 md:mb-0">📋 ToDo List</h2>
 
+          {/* Filters */}
+          <div className="flex gap-2">
+            {["all", "high", "medium", "low"].map((p) => (
+              <button
+                key={p}
+                onClick={() => setFilter(p)}
+                className={`px-4 py-2 rounded-full text-sm font-medium capitalize transition duration-200 ${
+                  filter === p
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-200 text-gray-800 hover:bg-blue-100"
+                }`}
+              >
+                {p}
+              </button>
+            ))}
           </div>
         </div>
 
+        {/* Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {filteredFollowUps.length === 0 ? (
+            <div className="col-span-full text-center text-gray-500 mt-10">
+              No follow-ups found for this priority.
+            </div>
+          ) : (
+            filteredFollowUps.map((item) => (
+              <div
+                key={item._id}
+                className="p-6 bg-white rounded-lg border border-gray-200 shadow-md hover:shadow-lg transition transform hover:scale-[1.01]"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-lg font-semibold text-gray-800 capitalize">
+                    {item.type.replace("_", " ")}
+                  </h3>
+                  <span
+                    className={`text-xs px-3 py-1 rounded-full font-medium ${
+                      priorityStyles[item.followUpDetails?.priority] || "bg-gray-200 text-gray-600"
+                    }`}
+                  >
+                    {item.followUpDetails?.priority || "N/A"}
+                  </span>
+                </div>
+
+                <div className="space-y-1 text-sm text-gray-700">
+                  <p>
+                    <span className="font-semibold text-gray-800">Summary:</span>{" "}
+                    {item.summary}
+                  </p>
+                  <p>
+                    <span className="font-semibold text-gray-800">Sentiment:</span>{" "}
+                    <span className="capitalize">{item.sentiment}</span>
+                  </p>
+                  <p>
+                    <span className="font-semibold text-gray-800">Scheduled At:</span>{" "}
+                    {new Date(item.followUpDetails?.scheduledAt).toLocaleString()}
+                  </p>
+                  <p>
+                    <span className="font-semibold text-gray-800">Notes:</span>{" "}
+                    {item.followUpDetails?.notes}
+                  </p>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
 
 
         {/* Leads List */}
