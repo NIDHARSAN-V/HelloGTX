@@ -239,11 +239,44 @@ const RootLayout = () => {
             <Route path="/flights" element={<FlightsPage />} />
             <Route path="/packages" element={<PackagesPage />} />
 
+
+
+
+
+
+
+{user && user.role=== "employee" && (
+  <>
+
+
             <Route path="/leads/query" element={<NewQuery />} />
 
             <Route path="/query/edit-query" element={<EditQuery/>} />
 
             <Route path="/lead/dashboard" element={<LeadDashboard />} />
+
+            
+            <Route path="/lead" element={<Lead/>}/>
+            <Route path="/leads/create" element={<LeadCreation/>}/>
+
+</>)}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
             {/* Protected routes - only accessible when authenticated */}
             <Route
@@ -272,8 +305,6 @@ const RootLayout = () => {
 
 
 
-            <Route path="/lead" element={<Lead/>}/>
-            <Route path="/leads/create" element={<LeadCreation/>}/>
 
             
 
