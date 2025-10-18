@@ -1,0 +1,248 @@
+[33mcommit 04dab4cd26bc814b782f8260c3a283109675f850[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmaster[m[33m, [m[1;31morigin/master[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Sat Oct 18 11:36:23 2025 +0530
+
+    itenery sending data backedn success next --> add the html
+
+[33mcommit cd5eadaaf447c94692243302a6ca2635a7a0c4be[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Sat Oct 18 11:35:08 2025 +0530
+
+    itenery sending data backedn success next --> add the html
+
+[33mcommit e751a37fda3e326ad9aabfe1574f2fd04e8d099e[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Sat Oct 18 11:11:41 2025 +0530
+
+    itenery sending data backedn success next --> add the service with html templates
+
+[33mcommit 249eb683d4502fddb4694f4901b6b530f9b3f3f0[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Fri Oct 17 14:22:13 2025 +0530
+
+    Before services works fine ....
+
+[33mcommit c2cd1119d30b3d896d7c2d2fd688439287dd38d9[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Tue Sep 30 22:08:50 2025 +0530
+
+    completed upto query filling datas , netx -----> set remainder for employees
+
+[33mcommit 9fc2a7c0ca4f016d10ef74458c9599d83943c201[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Mon Sep 29 02:55:35 2025 +0530
+
+    todolist completed
+
+[33mcommit 0e0f5807331075675eb89d3658874371bd9ba215[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Mon Sep 29 02:54:53 2025 +0530
+
+    follow up and todo completed
+
+[33mcommit 0c91ca2a5324d9dc5082dd3565473c0a80aa84ba[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Mon Sep 29 02:06:19 2025 +0530
+
+    Starting with Todo of employee from followupdetails
+
+[33mcommit 5c5d3e899530717c930eed132421fd55e6585679[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Sun Sep 28 16:40:34 2025 +0530
+
+    completed ui followup  --> check working
+
+[33mcommit f4681518e86aeda1cbeaabea8df105af2d31292c[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Sun Sep 28 16:28:12 2025 +0530
+
+    done followup controller and router
+
+[33mcommit 6b71f30f3f73a822b480134d4fa6ed9384dcb26f[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Sun Sep 28 09:46:33 2025 +0530
+
+    Edit Query Works
+
+[33mcommit c0f08ec2e3a523ef09cc8943c654ea58cf2b5503[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Sun Sep 28 08:34:31 2025 +0530
+
+    Edit Query Works
+
+[33mcommit 4c1c699096fb6a902b1b74c54f043bd080485be3[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Sat Sep 27 23:23:07 2025 +0530
+
+    after the edit frontend partial completed
+
+[33mcommit db63edde847fdf49a59b3abc64f76febcabc1de7[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Sat Sep 27 22:17:32 2025 +0530
+
+    Query Creation before flight update
+
+[33mcommit 2bb739151aa900b192062c1c73a9dd4baca41638[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Sat Sep 27 14:35:23 2025 +0530
+
+    QueryListing done --partially
+
+[33mcommit a84edb60ede9d8a908f1481a00828cc5f525709d[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Fri Sep 26 22:51:58 2025 +0530
+
+    Working Query - partially
+
+[33mcommit 03ad0c9ec8cb38cfd31e0a1347e9da3608bb00c2[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Mon Sep 1 14:53:02 2025 +0530
+
+    Query Edited --> need to put the bacckend for query
+
+[33mcommit d7e07f7fe9817df87c86df412c5066b58229f27f[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Sat Aug 30 23:12:25 2025 +0530
+
+    Slightly Model of Lead and Employee Edited
+
+[33mcommit b51da9248a4637f41fd68039eb57179dc04690de[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Sat Aug 30 23:07:46 2025 +0530
+
+    queryCreation data sent to server ---> complete API call with Redux
+
+[33mcommit f75d368fc5e1bfc1001af746cccdaa6bf08bcb49[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Fri Aug 29 11:20:32 2025 +0530
+
+    Extrenal API Flight
+
+[33mcommit 8ef9a0ba070095112a54650be12c2d423acefb89[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Thu Aug 28 20:51:05 2025 +0530
+
+    Third party layout sample UI added
+
+[33mcommit 19c8b5b367aae18ab475eab91773d7e4db6ad368[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Thu Aug 28 20:35:53 2025 +0530
+
+    Spacing in NewQuery Page and Plan in temp.txt
+
+[33mcommit 9d943841685e3a6b48efc2e145dd621941edd05d[m
+Merge: 52f11c4 240490c
+Author: Ragu162004 <ragu16102004@gmail.com>
+Date:   Wed Aug 27 19:55:13 2025 +0530
+
+    Merge branch 'master' of https://github.com/NIDHARSAN-V/HelloGTX
+
+[33mcommit 52f11c4df829542d3858bcd73b5f8d5663accf36[m
+Author: Ragu162004 <ragu16102004@gmail.com>
+Date:   Wed Aug 27 19:55:02 2025 +0530
+
+    tried the another api for hotels/flight in test.js
+
+[33mcommit 240490c916c5d1470f9dbebd075f02f67c9ca009[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Mon Aug 25 23:30:49 2025 +0530
+
+    temp
+
+[33mcommit 858e4b26b03e68805cd5c96af304613d6e0974b7[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Sun Aug 24 22:23:33 2025 +0530
+
+    Hotel check In and Out updated ---> small chnages in backend model in querySchema
+
+[33mcommit 3254461f6a9a53f5d5ee7796d39602971ae51811[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Sun Aug 17 09:57:53 2025 +0530
+
+    Hotel need to be changed wihtout checIN and checkOut
+
+[33mcommit 3006556dece221d09402e88768c3231bfd77f0ca[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Sat Aug 16 22:38:16 2025 +0530
+
+    New Query flight functionlaity added ---next hotel proces son ds
+
+[33mcommit 507943f591ba21f45a5703c59dd14f8e27728661[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Sat Aug 16 21:34:48 2025 +0530
+
+    Befoere starting newQuery edits
+
+[33mcommit 745687b05b1885b766306e855ec6876149c67c15[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Thu Aug 14 00:24:03 2025 +0530
+
+    Query UI updated --- next query schema update
+
+[33mcommit 703bd0e2e8e161a10f95355d96061eb219d06b67[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Wed Aug 13 16:25:38 2025 +0530
+
+    Query Page started (UI started)
+
+[33mcommit 176dd65a3494a7670b6b1dac99e1a1510355d3eb[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Tue Aug 12 23:09:02 2025 +0530
+
+    completed lead creation and get leads
+
+[33mcommit 0b00dd886618e9af0802107a10629d94ad1724fb[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Tue Aug 12 16:57:29 2025 +0530
+
+    Lead created and mapped with the employee ----- next get leads on employee
+
+[33mcommit 41db7f236860edf88a4349366c0b59879672b4d1[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Mon Aug 11 23:43:34 2025 +0530
+
+    Emp and cust data passed for lead creation perfectly ---- next on creating lead and relevent api calls
+
+[33mcommit 18eb5adc3159c6daf23754dd002a462e3fd4e4d4[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Fri Aug 8 10:45:36 2025 +0530
+
+    temp
+
+[33mcommit 71733aca39109e04f86582003e364393640c94a9[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Thu Aug 7 16:17:36 2025 +0530
+
+    added new customer feature in lead creation ---- still lead creation pending
+
+[33mcommit 6cba8d230648b3fb831192bb1e8d098884e2763d[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Thu Aug 7 11:46:02 2025 +0530
+
+    mail based customer existence check completed
+
+[33mcommit af5059d30c424dfeaca2ec94ab34fff7a9dd718e[m
+Merge: e727982 b368cd6
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Tue Aug 5 21:13:55 2025 +0530
+
+    before vig-feature
+
+[33mcommit e7279829b79ffd7f4a0c104f7841272e132cd588[m
+Author: NIDHARSAN-V <nidharsanv.22cse@kongu.edu>
+Date:   Thu Jul 31 12:34:45 2025 +0530
+
+    Going to Start Lead
+
+[33mcommit b368cd642e4db75cfa52bd64fb1c2572f9daa2fd[m[33m ([m[1;31morigin/vignesh-feature[m[33m)[m
+Merge: 83d8e89 7eea783
+Author: vignesh60 <vigneshg.22cse@kongu.edu>
+Date:   Wed Jul 30 00:38:58 2025 +0530
+
+    Merge branch 'master' of https://github.com/NIDHARSAN-V/HelloGTX
+
+[33mcommit 83d8e8989bc15bcd29985f24c2122147cf95c04d[m
+Author: vignesh60 <vigneshg.22cse@kongu.edu>
+Date:   Wed Jul 30 00:37:28 2025 +0530
+
+    flight-hotel-packages-up

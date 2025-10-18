@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
-import { createNewLead, getLeadfromEmployee } from "../../Store/Lead";
+import { checkCustomerByEmail, createNewLead, getLeadfromEmployee } from "../../Store/Lead";
 import axios from "axios";
 
 function LeadCreation({ customer: propCustomer }) {
   const location = useLocation();
   const { user } = useSelector((state) => state.auth);
-  const customer = propCustomer || location.state;
+  const customer = propCustomer || location.state
   
   const [leadStatus, setLeadStatus] = useState("new");
   const [leadSource, setLeadSource] = useState("");
