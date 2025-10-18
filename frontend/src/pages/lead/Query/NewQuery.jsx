@@ -338,180 +338,702 @@ function NewQuery({ leadId, user, customer }) {
   };
 
 
-  
-  const handleSendItinerary = async () => {
-  setSendingItinerary(true);
-  try {
-    const selectedItems = Object.entries(itinerarySelections)
-      .filter(([_, data]) => data.selected)
-      .map(([type, data]) => ({
-        type,
-        withAmount: data.withAmount
-      }));
 
-    // Extract relevant data for each requirement type
-    const itineraryData = {};
 
-    if (itinerarySelections.Package?.selected) {
-      itineraryData.package = {
-        queryType: formData.queryType,
-        goingFrom: formData.goingFrom,
-        goingTo: formData.goingTo,
-        specificDate: formData.specificDate,
-        noOfDays: formData.noOfDays,
-        travellers: formData.travellers,
-        priceRange: formData.priceRange,
-        inclusions: formData.inclusions,
-        themes: formData.themes,
-        hotelPreference: formData.hotelPreference,
-        foodPreferences: formData.foodPreferences,
-        remarks: formData.remarks,
-        expectedClosureDate: formData.expectedClosureDate,
-        expectedClosureAmount: itinerarySelections.Package.withAmount ? formData.expectedClosureAmount : undefined
-      };
-    }
 
-    if (itinerarySelections.Flight?.selected) {
-      itineraryData.flight = {
-        selectionType: formData.flightSelectionType,
-        selectedFlightPackage: formData.selectedFlightPackage,
-        flightType: formData.flightType,
-        sourceCity: formData.sourceCity,
-        destinationCity: formData.destinationCity,
-        departureDate: formData.departureDate,
-        returnDate: formData.returnDate,
-        adults: formData.adults,
-        children: formData.children,
-        infants: formData.infants,
-        flightClass: formData.flightClass,
-        preferredAirline: formData.preferredAirline,
-        remarks: formData.remarks,
-        expectedClosureDate: formData.expectedClosureDate,
-        expectedClosureAmount: itinerarySelections.Flight.withAmount ? formData.expectedClosureAmount : undefined,
-        // Third party flight details
-        thirdPartyDetails: formData.flightSelectionType === 'thirdParty' ? {
-          pnr: formData.thirdPartyFlightDetails.pnr,
-          supplier: formData.thirdPartyFlightDetails.supplier,
-          cost: formData.thirdPartyFlightDetails.cost
-        } : undefined
-      };
-    }
 
-    if (itinerarySelections.Hotel?.selected) {
-      itineraryData.hotel = {
-        selectionType: formData.hotelSelectionType,
-        selectedHotelPackage: formData.selectedHotelPackage,
-        location: formData.goingTo,
-        hotelPreference: formData.hotelPreference,
-        hotelDetails: {
-          checkIn: formData.hotelDetails.checkIn,
-          checkOut: formData.hotelDetails.checkOut,
-          roomType: formData.hotelDetails.roomType,
-          adults: formData.hotelDetails.adults,
-          children: formData.hotelDetails.children,
-          mealPlan: formData.hotelDetails.mealPlan
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   const handleSendItinerary = async () => {
+    setSendingItinerary(true);
+    try {
+      const selectedItems = Object.entries(itinerarySelections)
+        .filter(([_, data]) => data.selected)
+        .map(([type, data]) => ({
+          type,
+          withAmount: data.withAmount
+        }));
+
+      // Extract relevant data for each requirement type (same as before)
+      const itineraryData = {};
+      
+      if (itinerarySelections.Package?.selected) {
+        itineraryData.package = {
+          queryType: formData.queryType,
+          goingFrom: formData.goingFrom,
+          goingTo: formData.goingTo,
+          specificDate: formData.specificDate,
+          noOfDays: formData.noOfDays,
+          travellers: formData.travellers,
+          priceRange: formData.priceRange,
+          inclusions: formData.inclusions,
+          themes: formData.themes,
+          hotelPreference: formData.hotelPreference,
+          foodPreferences: formData.foodPreferences,
+          remarks: formData.remarks,
+          expectedClosureDate: formData.expectedClosureDate,
+          expectedClosureAmount: itinerarySelections.Package.withAmount ? formData.expectedClosureAmount : undefined
+        };
+      }
+
+      if (itinerarySelections.Flight?.selected) {
+        itineraryData.flight = {
+          selectionType: formData.flightSelectionType,
+          selectedFlightPackage: formData.selectedFlightPackage,
+          flightType: formData.flightType,
+          sourceCity: formData.sourceCity,
+          destinationCity: formData.destinationCity,
+          departureDate: formData.departureDate,
+          returnDate: formData.returnDate,
+          adults: formData.adults,
+          children: formData.children,
+          infants: formData.infants,
+          flightClass: formData.flightClass,
+          preferredAirline: formData.preferredAirline,
+          remarks: formData.remarks,
+          expectedClosureDate: formData.expectedClosureDate,
+          expectedClosureAmount: itinerarySelections.Flight.withAmount ? formData.expectedClosureAmount : undefined,
+          thirdPartyDetails: formData.flightSelectionType === 'thirdParty' ? {
+            pnr: formData.thirdPartyFlightDetails.pnr,
+            supplier: formData.thirdPartyFlightDetails.supplier,
+            cost: formData.thirdPartyFlightDetails.cost
+          } : undefined
+        };
+      }
+
+      if (itinerarySelections.Hotel?.selected) {
+        itineraryData.hotel = {
+          selectionType: formData.hotelSelectionType,
+          selectedHotelPackage: formData.selectedHotelPackage,
+          location: formData.goingTo,
+          hotelPreference: formData.hotelPreference,
+          hotelDetails: {
+            checkIn: formData.hotelDetails.checkIn,
+            checkOut: formData.hotelDetails.checkOut,
+            roomType: formData.hotelDetails.roomType,
+            adults: formData.hotelDetails.adults,
+            children: formData.hotelDetails.children,
+            mealPlan: formData.hotelDetails.mealPlan
+          },
+          remarks: formData.remarks,
+          expectedClosureDate: formData.expectedClosureDate,
+          expectedClosureAmount: itinerarySelections.Hotel.withAmount ? formData.expectedClosureAmount : undefined,
+          thirdPartyDetails: formData.hotelSelectionType === 'thirdParty' ? {
+            confirmationNumber: formData.thirdPartyHotelDetails.confirmationNumber,
+            supplier: formData.thirdPartyHotelDetails.supplier,
+            cost: formData.thirdPartyHotelDetails.cost
+          } : undefined
+        };
+      }
+
+      // Add other requirement types similarly...
+      if (itinerarySelections.Transfer?.selected) {
+        itineraryData.transfer = {
+          pickup: formData.transferDetails.pickup,
+          dropoff: formData.transferDetails.dropoff,
+          vehicleType: formData.transferDetails.vehicleType,
+          remarks: formData.remarks,
+          expectedClosureDate: formData.expectedClosureDate,
+          expectedClosureAmount: itinerarySelections.Transfer.withAmount ? formData.expectedClosureAmount : undefined
+        };
+      }
+
+      if (itinerarySelections.Visa?.selected) {
+        itineraryData.visa = {
+          country: formData.visaDetails.country,
+          type: formData.visaDetails.type,
+          processingTime: formData.visaDetails.processingTime,
+          remarks: formData.remarks,
+          expectedClosureDate: formData.expectedClosureDate,
+          expectedClosureAmount: itinerarySelections.Visa.withAmount ? formData.expectedClosureAmount : undefined
+        };
+      }
+
+      // Generate HTML content for the itinerary
+      const htmlContent = generateItineraryHTML({
+        customerName: customerData.name,
+        customerEmail: customerData.email,
+        customerContact: customerData.contact,
+        queryDate: new Date().toLocaleDateString(),
+        generatedDate: new Date().toLocaleString(),
+        employeeEmail: employee.email,
+        employeeName: employee.name || 'Travel Consultant',
+        ...itineraryData,
+        selectedItems
+      });
+
+      const payload = {
+        leadId,
+        customer: {
+          id: customer?._id,
+          name: customerData.name,
+          email: customerData.email,
+          contact: customerData.contact
         },
-        remarks: formData.remarks,
-        expectedClosureDate: formData.expectedClosureDate,
-        expectedClosureAmount: itinerarySelections.Hotel.withAmount ? formData.expectedClosureAmount : undefined,
-        // Third party hotel details
-        thirdPartyDetails: formData.hotelSelectionType === 'thirdParty' ? {
-          confirmationNumber: formData.thirdPartyHotelDetails.confirmationNumber,
-          supplier: formData.thirdPartyHotelDetails.supplier,
-          cost: formData.thirdPartyHotelDetails.cost
-        } : undefined
+        employee: {
+          id: employee.employeeId,
+          email: employee.email,
+          name: employee.name || 'Travel Consultant'
+        },
+        selectedItems,
+        data: itineraryData,
+        htmlContent: htmlContent,
+        to_mail: customerData.email,
+        from_mail: employee.email
       };
+
+      console.log('Sending itinerary to backend:', payload);
+
+      // Send to your backend endpoint that handles EmailJS
+      const response = await axios.post(
+        "http://localhost:8000/api/service/itinerary/query/send",
+        payload
+      );
+
+      if (response.data.success) {
+        console.log('Itinerary sent successfully:', response.data);
+        alert('Itinerary sent successfully!');
+        handleCloseItineraryModal();
+      } else {
+        throw new Error(response.data.message);
+      }
+    } catch (error) {
+      console.error('Error sending itinerary:', error);
+      alert('Failed to send itinerary. Please try again.');
+    } finally {
+      setSendingItinerary(false);
     }
+  };
 
-    if (itinerarySelections.Transfer?.selected) {
-      itineraryData.transfer = {
-        pickup: formData.transferDetails.pickup,
-        dropoff: formData.transferDetails.dropoff,
-        vehicleType: formData.transferDetails.vehicleType,
-        remarks: formData.remarks,
-        expectedClosureDate: formData.expectedClosureDate,
-        expectedClosureAmount: itinerarySelections.Transfer.withAmount ? formData.expectedClosureAmount : undefined
-      };
-    }
+  // Generate HTML content for the itinerary
+  const generateItineraryHTML = (data) => {
+    return `
+    <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Travel Itinerary - ${data.customerName} | Travel CRM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+        
+        body { 
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; 
+            line-height: 1.6; 
+            color: #2D3748; 
+            background: linear-gradient(135deg, #f8fafc 0%, #edf2f7 100%);
+            padding: 30px; 
+            min-height: 100vh;
+        }
+        
+        .container { 
+            max-width: 1000px; 
+            margin: 0 auto; 
+            background: white; 
+            box-shadow: 
+                0 4px 6px -1px rgba(0, 0, 0, 0.1), 
+                0 2px 4px -1px rgba(0, 0, 0, 0.06),
+                0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            border-radius: 16px; 
+            overflow: hidden; 
+            position: relative;
+        }
+        
+        /* Header with sophisticated gradient */
+        .header { 
+            background: linear-gradient(135deg, #FF6B35 0%, #F7931E 50%, #FFA048 100%);
+            color: white; 
+            padding: 40px 35px; 
+            text-align: center; 
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+            opacity: 0.3;
+        }
+        
+        .header h1 { 
+            font-size: 2.5em; 
+            margin-bottom: 8px; 
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        
+        .header .subtitle { 
+            font-size: 1.15em; 
+            opacity: 0.9; 
+            font-weight: 400;
+            letter-spacing: 0.2px;
+        }
+        
+        .crm-badge {
+            position: absolute;
+            top: 25px;
+            right: 25px;
+            background: rgba(255,255,255,0.15);
+            backdrop-filter: blur(10px);
+            padding: 8px 16px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 600;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        /* Customer Info Section */
+        .customer-info { 
+            background: #f8fafc; 
+            padding: 30px 35px; 
+            border-bottom: 1px solid #e2e8f0; 
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        
+        .info-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+            border-left: 4px solid #FF6B35;
+        }
+        
+        .info-label { 
+            font-weight: 600; 
+            color: #718096; 
+            font-size: 0.85em; 
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 6px;
+        }
+        
+        .info-value { 
+            color: #2D3748; 
+            font-size: 1.1em; 
+            font-weight: 500;
+        }
+        
+        /* Itinerary Sections */
+        .itinerary-section { 
+            padding: 30px 35px; 
+            border-bottom: 1px solid #e2e8f0; 
+        }
+        
+        .itinerary-section:last-of-type {
+            border-bottom: none;
+        }
+        
+        .section-title { 
+            color: #2D3748; 
+            font-size: 1.3em; 
+            margin-bottom: 20px; 
+            padding-bottom: 12px; 
+            border-bottom: 2px solid #e2e8f0;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            letter-spacing: -0.3px;
+        }
+        
+        .section-icon {
+            margin-right: 12px;
+            background: #FFF5EB;
+            padding: 10px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+        }
+        
+        /* Enhanced Tables */
+        .details-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-bottom: 20px;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+        }
+        
+        .details-table th {
+            background: linear-gradient(135deg, #FFF5EB 0%, #FFEDD5 100%);
+            text-align: left;
+            padding: 16px 20px;
+            font-weight: 600;
+            color: #DD6B20;
+            border-bottom: 1px solid #FBD38D;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .details-table td {
+            padding: 16px 20px;
+            border-bottom: 1px solid #edf2f7;
+            font-weight: 500;
+        }
+        
+        .details-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .details-table tr:nth-child(even) {
+            background-color: #fafafa;
+        }
+        
+        .details-table tr:hover {
+            background-color: #f7fafc;
+        }
+        
+        /* Amount Section */
+        .amount-section { 
+            background: linear-gradient(135deg, #f0fff4 0%, #e6fffa 100%); 
+            padding: 20px 25px; 
+            border-radius: 12px; 
+            margin-top: 20px; 
+            border-left: 4px solid #38A169;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.05);
+        }
+        
+        .amount-label { 
+            font-weight: 600; 
+            color: #22543D; 
+            font-size: 1em;
+        }
+        
+        .amount-value { 
+            font-weight: 700; 
+            color: #22543D; 
+            font-size: 1.4em;
+            letter-spacing: -0.5px;
+        }
+        
+        /* Footer */
+        .footer { 
+            background: linear-gradient(135deg, #2D3748 0%, #4A5568 100%); 
+            color: white; 
+            padding: 40px 35px; 
+            text-align: center; 
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.05' fill-rule='evenodd'/%3E%3C/svg%3E");
+        }
+        
+        .footer-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .contact-info { 
+            margin-top: 12px; 
+            opacity: 0.8;
+            font-size: 0.95em;
+            line-height: 1.7;
+        }
+        
+        .travel-crm-logo {
+            font-weight: 700;
+            color: #F6AD55;
+            font-size: 1.2em;
+            letter-spacing: 0.5px;
+        }
+        
+        .footer-divider {
+            height: 1px;
+            background: rgba(255,255,255,0.2);
+            margin: 25px 0;
+        }
+            .button{
+               background-color: #FF6B35;
+               color: white;
+               padding: 10px 20px;
+                text-decoration: none;
+                border-radius: 5px;
+                font-weight: 600;
 
-    if (itinerarySelections.Visa?.selected) {
-      itineraryData.visa = {
-        country: formData.visaDetails.country,
-        type: formData.visaDetails.type,
-        processingTime: formData.visaDetails.processingTime,
-        remarks: formData.remarks,
-        expectedClosureDate: formData.expectedClosureDate,
-        expectedClosureAmount: itinerarySelections.Visa.withAmount ? formData.expectedClosureAmount : undefined
-      };
-    }
+            }
 
-    if (itinerarySelections.Sightseeing?.selected) {
-      itineraryData.sightseeing = {
-        remarks: formData.remarks,
-        expectedClosureDate: formData.expectedClosureDate,
-        expectedClosureAmount: itinerarySelections.Sightseeing.withAmount ? formData.expectedClosureAmount : undefined
-      };
-    }
+            .button a{
+             text-decoration: none;
+             color: white;
+             padding: 10px 20px;
+             border-radius: 5px;
+             font-weight: 600;
+            }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+            
+            .container {
+                border-radius: 12px;
+            }
+            
+            .header, .customer-info, .itinerary-section {
+                padding: 25px 20px;
+            }
+            
+            .footer {
+                padding: 30px 20px;
+            }
+            
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .crm-badge {
+                position: static;
+                display: inline-block;
+                margin-top: 15px;
+            }
+            
+            .details-table {
+                display: block;
+                overflow-x: auto;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+        }
+        
+        /* Print Styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .container {
+                box-shadow: none;
+                border-radius: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Travel Itinerary</h1>
+            <div class="subtitle">Your Personalized Travel Plan</div>
+            <div class="crm-badge">Travel CRM</div>
+        </div>
+        
+        <div class="customer-info">
+            <div class="info-grid">
+                <div class="info-card">
+                    <div class="info-label">CUSTOMER NAME</div>
+                    <div class="info-value">${data.customerName}</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">EMAIL</div>
+                    <div class="info-value">${data.customerEmail}</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">CONTACT</div>
+                    <div class="info-value">${data.customerContact}</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">QUERY DATE</div>
+                    <div class="info-value">${data.queryDate}</div>
+                </div>
+            </div>
+        </div>
+        
+        ${data.package ? `
+        <div class="itinerary-section">
+            <div class="section-title"><span class="section-icon">📦</span> Package Details</div>
+            <table class="details-table">
+                <tr>
+                    <th>From</th>
+                    <th>To</th>
+                    <th>Travel Date</th>
+                    <th>Duration</th>
+                    <th>Travellers</th>
+                </tr>
+                <tr>
+                    <td>${data.package.goingFrom}</td>
+                    <td>${data.package.goingTo}</td>
+                    <td>${data.package.specificDate}</td>
+                    <td>${data.package.noOfDays} days</td>
+                    <td>${data.package.travellers} persons</td>
+                </tr>
+            </table>
+            ${data.package.expectedClosureAmount ? `
+            <div class="amount-section">
+                <div class="amount-label">Expected Closure Amount</div>
+                <div class="amount-value">$${data.package.expectedClosureAmount}</div>
+            </div>` : ''}
+        </div>` : ''}
+        
+        ${data.flight ? `
+        <div class="itinerary-section">
+            <div class="section-title"><span class="section-icon">✈️</span> Flight Details</div>
+            <table class="details-table">
+                <tr>
+                    <th>Route</th>
+                    <th>Departure</th>
+                    <th>Passengers</th>
+                    <th>Class</th>
+                </tr>
+                <tr>
+                    <td>${data.flight.sourceCity} → ${data.flight.destinationCity}</td>
+                    <td>${data.flight.departureDate}</td>
+                    <td>${data.flight.adults} Adults, ${data.flight.children} Children, ${data.flight.infants} Infants</td>
+                    <td>${data.flight.flightClass}</td>
+                </tr>
+            </table>
+            ${data.flight.expectedClosureAmount ? `
+            <div class="amount-section">
+                <div class="amount-label">Expected Closure Amount</div>
+                <div class="amount-value">$${data.flight.expectedClosureAmount}</div>
+            </div>` : ''}
+        </div>` : ''}
+        
+        ${data.hotel ? `
+        <div class="itinerary-section">
+            <div class="section-title"><span class="section-icon">🏨</span> Hotel Details</div>
+            <table class="details-table">
+                <tr>
+                    <th>Location</th>
+                    <th>Check-in</th>
+                    <th>Check-out</th>
+                    <th>Guests</th>
+                </tr>
+                <tr>
+                    <td>${data.hotel.location}</td>
+                    <td>${data.hotel.hotelDetails.checkIn}</td>
+                    <td>${data.hotel.hotelDetails.checkOut}</td>
+                    <td>${data.hotel.hotelDetails.adults} Adults, ${data.hotel.hotelDetails.children} Children</td>
+                </tr>
+            </table>
+            ${data.hotel.expectedClosureAmount ? `
+            <div class="amount-section">
+                <div class="amount-label">Expected Closure Amount</div>
+                <div class="amount-value">$${data.hotel.expectedClosureAmount}</div>
+            </div>` : ''}
+        </div>` : ''}
+        
+        ${data.transfer ? `
+        <div class="itinerary-section">
+            <div class="section-title"><span class="section-icon">🚗</span> Transfer Details</div>
+            <table class="details-table">
+                <tr>
+                    <th>Pickup</th>
+                    <th>Dropoff</th>
+                    <th>Vehicle Type</th>
+                </tr>
+                <tr>
+                    <td>${data.transfer.pickup}</td>
+                    <td>${data.transfer.dropoff}</td>
+                    <td>${data.transfer.vehicleType}</td>
+                </tr>
+            </table>
+            ${data.transfer.expectedClosureAmount ? `
+            <div class="amount-section">
+                <div class="amount-label">Expected Closure Amount</div>
+                <div class="amount-value">$${data.transfer.expectedClosureAmount}</div>
+            </div>` : ''}
+        </div>` : ''}
+        
+        ${data.visa ? `
+        <div class="itinerary-section">
+            <div class="section-title"><span class="section-icon">🛂</span> Visa Details</div>
+            <table class="details-table">
+                <tr>
+                    <th>Country</th>
+                    <th>Visa Type</th>
+                    <th>Processing Time</th>
+                </tr>
+                <tr>
+                    <td>${data.visa.country}</td>
+                    <td>${data.visa.type}</td>
+                    <td>${data.visa.processingTime}</td>
+                </tr>
+            </table>
+            ${data.visa.expectedClosureAmount ? `
+            <div class="amount-section">
+                <div class="amount-label">Expected Closure Amount</div>
+                <div class="amount-value">$${data.visa.expectedClosureAmount}</div>
+            </div>` : ''}
+        </div>` : ''}
+        
+        <div class="footer">
+            <div class="footer-content">
+                <div>Thank you for choosing our travel services!</div>
+                <div class="contact-info">
+                    For any queries, please contact ${data.employeeName} at ${data.employeeEmail}
+                </div>
+                <div class="contact-info">
+                    Generated on ${data.generatedDate}
+                </div>
+                <div class="footer-divider"></div>
+                <div class="contact-info">
+                    <span class="travel-crm-logo">Travel CRM</span> - Professional Travel Management Solutions
+                </div>
+            </div>
+        </div>
+        <button class="button"> <a href="http://localhost:5173">Visit Travel CRM</a> </button>
+    </div>
+</body>
+</html>
+`;
+  };
 
-    if (itinerarySelections.Miscellaneous?.selected) {
-      itineraryData.miscellaneous = {
-        remarks: formData.remarks,
-        expectedClosureDate: formData.expectedClosureDate,
-        expectedClosureAmount: itinerarySelections.Miscellaneous.withAmount ? formData.expectedClosureAmount : undefined
-      };
-    }
 
-    if (itinerarySelections['Company Formation']?.selected) {
-      itineraryData.companyFormation = {
-        remarks: formData.remarks,
-        expectedClosureDate: formData.expectedClosureDate,
-        expectedClosureAmount: itinerarySelections['Company Formation']?.withAmount ? formData.expectedClosureAmount : undefined
-      };
-    }
 
-    if (itinerarySelections.Forex?.selected) {
-      itineraryData.forex = {
-        remarks: formData.remarks,
-        expectedClosureDate: formData.expectedClosureDate,
-        expectedClosureAmount: itinerarySelections.Forex.withAmount ? formData.expectedClosureAmount : undefined
-      };
-    }
 
-    const payload = {
-      leadId,
-      customer: {
-        id: customer?._id,
-        name: customerData.name,
-        email: customerData.email,
-        contact: customerData.contact
-      },
-      employee: {
-        id: employee.employeeId,
-        email: employee.email
-      },
-      selectedItems,
-      data: itineraryData,
-      to_mail: customerData.email,
-      from_mail: employee.email
-    };
 
-    console.log('Sending itinerary payload:', payload);
 
-    const response = await axios.post(
-      "http://localhost:8000/api/service/itinerary/query/send",
-      payload
-    );
 
-    console.log('Itinerary sent successfully:', response.data);
-    alert('Itinerary sent successfully!');
-    handleCloseItineraryModal();
-  } catch (error) {
-    console.error('Error sending itinerary:', error);
-    alert('Failed to send itinerary. Please try again.');
-  } finally {
-    setSendingItinerary(false);
-  }
-};
+
+
+
+
 
   const formatDuration = (minutes) => {
     const hours = Math.floor(minutes / 60);

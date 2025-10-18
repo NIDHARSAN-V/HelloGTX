@@ -8,7 +8,7 @@ const CustomerProfileRouter = require("./Routers/Profile/customer.profile.router
 const package_router = require('./Routers/Package/package.router');  // Import the package router
 // const admin_router = require('./Routers/Admin/admin.router');  // Import the admin router
 
-
+require('dotenv').config();
 
 
 
