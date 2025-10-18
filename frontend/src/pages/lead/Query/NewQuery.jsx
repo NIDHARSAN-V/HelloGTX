@@ -337,6 +337,8 @@ function NewQuery({ leadId, user, customer }) {
     }));
   };
 
+
+  
   const handleSendItinerary = async () => {
   setSendingItinerary(true);
   try {
@@ -2081,6 +2083,8 @@ function NewQuery({ leadId, user, customer }) {
 
       {/* Send Itinerary Modal */}
       <SendItineraryModal />
+
+
     </div>
   );
 }
