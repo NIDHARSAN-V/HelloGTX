@@ -78,7 +78,7 @@ const LeadDashboard = () => {
             }`}
             onClick={() => setActiveSection('cccc2')}
           >
-            CCCCC 2
+            Template Itenery
           </li>
           <li
             className={`hover:bg-gray-700 p-2 rounded cursor-pointer ${

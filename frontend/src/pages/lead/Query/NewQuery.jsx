@@ -4,10 +4,8 @@ import { useSelector } from 'react-redux';
 
 function NewQuery({ leadId, user, customer }) {
   // Customer profile data
-
-  //  console.log(customer.user.firstName, "---------------------")
-const employee = user
-const [customerData, setCustomerData] = useState({
+  const employee = user;
+  const [customerData, setCustomerData] = useState({
     name: '',
     owner: '',
     contact: '',
@@ -16,27 +14,15 @@ const [customerData, setCustomerData] = useState({
     activeSince: ''
   });
 
-
-  
-
-
-
-
-
-  
-
   useEffect(() => {
-      console.log('Lead ID:', leadId);
-console.log('Customer:', customer);
-console.log('Employee:', employee);
+    console.log('Lead ID:', leadId);
+    console.log('Customer:', customer);
+    console.log('Employee:', employee);
 
     if (customer) {
       setCustomerData({
-        // Assuming 'name' is the full name from customer.user firstName + lastName
         name: customer.user.firstName + ' ' + customer.user.lastName || '',
-
-        // owner, contact, type, activeSince directly on customer or fallback to empty string
-        owner:  customer.user.firstName + ' ' + customer.user.lastName || '',
+        owner: customer.user.firstName + ' ' + customer.user.lastName || '',
         contact: customer.user.phone || '',
         type: customer.type || '',
         email: customer.user ? customer.user.email || '' : '',
@@ -45,23 +31,18 @@ console.log('Employee:', employee);
     }
   }, [customer]);
 
-   
-
-
-
-
-
-
-
-
-
-
   // Requirement types and active tab state
   const requirementTypes = [
     'Package', 'Flight', 'Transfer', 'Visa', 'Hotel',
     'Sightseeing', 'Miscellaneous', 'Company Formation', 'Forex'
   ];
   const [activeTab, setActiveTab] = useState(0);
+  
+  // Send Itinerary Modal State
+  const [showItineraryModal, setShowItineraryModal] = useState(false);
+  const [itinerarySelections, setItinerarySelections] = useState({});
+  const [sendingItinerary, setSendingItinerary] = useState(false);
+
   const [formData, setFormData] = useState({
     queryType: 'FIT',
     goingFrom: '',
@@ -78,7 +59,7 @@ console.log('Employee:', employee);
     expectedClosureDate: '',
     expectedClosureAmount: '',
     // Flight specific
-    flightSelectionType: 'new', // 'new', 'existing', or 'thirdParty'
+    flightSelectionType: 'new',
     selectedFlightPackage: null,
     flightType: 'oneway',
     sourceCity: '',
@@ -91,7 +72,7 @@ console.log('Employee:', employee);
     flightClass: 'Economy',
     preferredAirline: '',
     // Hotel specific
-    hotelSelectionType: 'new', // 'new', 'existing', or 'thirdParty'
+    hotelSelectionType: 'new',
     selectedHotelPackage: null,
     hotelDetails: {
       checkIn: '',
@@ -127,9 +108,6 @@ console.log('Employee:', employee);
     }
   });
 
-
-
-
   // Flight packages state
   const [flightPackages, setFlightPackages] = useState([]);
   const [flightLoading, setFlightLoading] = useState(false);
@@ -160,6 +138,18 @@ console.log('Employee:', employee);
   const mealPlanOptions = ['breakfast', 'half_board', 'full_board', 'all_inclusive'];
   const roomTypeOptions = ['Standard', 'Deluxe', 'Suite', 'Executive', 'Family'];
 
+  // Initialize itinerary selections based on requirement types
+  useEffect(() => {
+    const initialSelections = {};
+    requirementTypes.forEach(type => {
+      initialSelections[type] = {
+        selected: false,
+        withAmount: false
+      };
+    });
+    setItinerarySelections(initialSelections);
+  }, []);
+
   // Fetch flight packages when flight tab is active
   useEffect(() => {
     if (requirementTypes[activeTab] === 'Flight' && formData.flightSelectionType === 'existing') {
@@ -187,7 +177,7 @@ console.log('Employee:', employee);
       setFlightLoading(false);
     } catch (error) {
       console.error("Failed to fetch flight packages", error);
-      setFlightPackages([]); // Set to empty array on error
+      setFlightPackages([]);
       setFlightLoading(false);
     }
   };
@@ -205,7 +195,7 @@ console.log('Employee:', employee);
       setHotelLoading(false);
     } catch (error) {
       console.error("Failed to fetch hotel packages", error);
-      setHotelPackages([]); // Set to empty array on error
+      setHotelPackages([]);
       setHotelLoading(false);
     }
   };
@@ -298,47 +288,226 @@ console.log('Employee:', employee);
     }));
   };
 
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
+    if (activeTab < requirementTypes.length - 1) {
+      setActiveTab(activeTab + 1);
+    } else {
+      const payload = {
+        formData,
+        leadId,
+        customer,
+        employee,
+      };
 
+      console.log(payload, 'Submitting payload');
 
+      try {
+        const response = await axios.post(
+          "http://localhost:8000/api/employee/new-query",
+          payload
+        );
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+        console.log('Final form submission:', payload);
+        alert('Form submitted successfully!');
+      } catch (error) {
+        console.error('Error submitting form:', error);
+        alert('Failed to submit the form. Please try again.');
+      }
+    }
+  };
 
-  if (activeTab < requirementTypes.length - 1) {
-    setActiveTab(activeTab + 1);
-  } else {
-    // Combine everything into one payload
+  // Itinerary Modal Handlers
+  const handleOpenItineraryModal = () => {
+    setShowItineraryModal(true);
+  };
+
+  const handleCloseItineraryModal = () => {
+    setShowItineraryModal(false);
+  };
+
+  const handleItinerarySelectionChange = (requirementType, field, value) => {
+    setItinerarySelections(prev => ({
+      ...prev,
+      [requirementType]: {
+        ...prev[requirementType],
+        [field]: value
+      }
+    }));
+  };
+
+  const handleSendItinerary = async () => {
+  setSendingItinerary(true);
+  try {
+    const selectedItems = Object.entries(itinerarySelections)
+      .filter(([_, data]) => data.selected)
+      .map(([type, data]) => ({
+        type,
+        withAmount: data.withAmount
+      }));
+
+    // Extract relevant data for each requirement type
+    const itineraryData = {};
+
+    if (itinerarySelections.Package?.selected) {
+      itineraryData.package = {
+        queryType: formData.queryType,
+        goingFrom: formData.goingFrom,
+        goingTo: formData.goingTo,
+        specificDate: formData.specificDate,
+        noOfDays: formData.noOfDays,
+        travellers: formData.travellers,
+        priceRange: formData.priceRange,
+        inclusions: formData.inclusions,
+        themes: formData.themes,
+        hotelPreference: formData.hotelPreference,
+        foodPreferences: formData.foodPreferences,
+        remarks: formData.remarks,
+        expectedClosureDate: formData.expectedClosureDate,
+        expectedClosureAmount: itinerarySelections.Package.withAmount ? formData.expectedClosureAmount : undefined
+      };
+    }
+
+    if (itinerarySelections.Flight?.selected) {
+      itineraryData.flight = {
+        selectionType: formData.flightSelectionType,
+        selectedFlightPackage: formData.selectedFlightPackage,
+        flightType: formData.flightType,
+        sourceCity: formData.sourceCity,
+        destinationCity: formData.destinationCity,
+        departureDate: formData.departureDate,
+        returnDate: formData.returnDate,
+        adults: formData.adults,
+        children: formData.children,
+        infants: formData.infants,
+        flightClass: formData.flightClass,
+        preferredAirline: formData.preferredAirline,
+        remarks: formData.remarks,
+        expectedClosureDate: formData.expectedClosureDate,
+        expectedClosureAmount: itinerarySelections.Flight.withAmount ? formData.expectedClosureAmount : undefined,
+        // Third party flight details
+        thirdPartyDetails: formData.flightSelectionType === 'thirdParty' ? {
+          pnr: formData.thirdPartyFlightDetails.pnr,
+          supplier: formData.thirdPartyFlightDetails.supplier,
+          cost: formData.thirdPartyFlightDetails.cost
+        } : undefined
+      };
+    }
+
+    if (itinerarySelections.Hotel?.selected) {
+      itineraryData.hotel = {
+        selectionType: formData.hotelSelectionType,
+        selectedHotelPackage: formData.selectedHotelPackage,
+        location: formData.goingTo,
+        hotelPreference: formData.hotelPreference,
+        hotelDetails: {
+          checkIn: formData.hotelDetails.checkIn,
+          checkOut: formData.hotelDetails.checkOut,
+          roomType: formData.hotelDetails.roomType,
+          adults: formData.hotelDetails.adults,
+          children: formData.hotelDetails.children,
+          mealPlan: formData.hotelDetails.mealPlan
+        },
+        remarks: formData.remarks,
+        expectedClosureDate: formData.expectedClosureDate,
+        expectedClosureAmount: itinerarySelections.Hotel.withAmount ? formData.expectedClosureAmount : undefined,
+        // Third party hotel details
+        thirdPartyDetails: formData.hotelSelectionType === 'thirdParty' ? {
+          confirmationNumber: formData.thirdPartyHotelDetails.confirmationNumber,
+          supplier: formData.thirdPartyHotelDetails.supplier,
+          cost: formData.thirdPartyHotelDetails.cost
+        } : undefined
+      };
+    }
+
+    if (itinerarySelections.Transfer?.selected) {
+      itineraryData.transfer = {
+        pickup: formData.transferDetails.pickup,
+        dropoff: formData.transferDetails.dropoff,
+        vehicleType: formData.transferDetails.vehicleType,
+        remarks: formData.remarks,
+        expectedClosureDate: formData.expectedClosureDate,
+        expectedClosureAmount: itinerarySelections.Transfer.withAmount ? formData.expectedClosureAmount : undefined
+      };
+    }
+
+    if (itinerarySelections.Visa?.selected) {
+      itineraryData.visa = {
+        country: formData.visaDetails.country,
+        type: formData.visaDetails.type,
+        processingTime: formData.visaDetails.processingTime,
+        remarks: formData.remarks,
+        expectedClosureDate: formData.expectedClosureDate,
+        expectedClosureAmount: itinerarySelections.Visa.withAmount ? formData.expectedClosureAmount : undefined
+      };
+    }
+
+    if (itinerarySelections.Sightseeing?.selected) {
+      itineraryData.sightseeing = {
+        remarks: formData.remarks,
+        expectedClosureDate: formData.expectedClosureDate,
+        expectedClosureAmount: itinerarySelections.Sightseeing.withAmount ? formData.expectedClosureAmount : undefined
+      };
+    }
+
+    if (itinerarySelections.Miscellaneous?.selected) {
+      itineraryData.miscellaneous = {
+        remarks: formData.remarks,
+        expectedClosureDate: formData.expectedClosureDate,
+        expectedClosureAmount: itinerarySelections.Miscellaneous.withAmount ? formData.expectedClosureAmount : undefined
+      };
+    }
+
+    if (itinerarySelections['Company Formation']?.selected) {
+      itineraryData.companyFormation = {
+        remarks: formData.remarks,
+        expectedClosureDate: formData.expectedClosureDate,
+        expectedClosureAmount: itinerarySelections['Company Formation']?.withAmount ? formData.expectedClosureAmount : undefined
+      };
+    }
+
+    if (itinerarySelections.Forex?.selected) {
+      itineraryData.forex = {
+        remarks: formData.remarks,
+        expectedClosureDate: formData.expectedClosureDate,
+        expectedClosureAmount: itinerarySelections.Forex.withAmount ? formData.expectedClosureAmount : undefined
+      };
+    }
+
     const payload = {
-      formData,
       leadId,
-      customer,
-      employee,
+      customer: {
+        id: customer?._id,
+        name: customerData.name,
+        email: customerData.email,
+        contact: customerData.contact
+      },
+      employee: {
+        id: employee?._id,
+        name: employee?.name || employee?.username
+      },
+      selectedItems,
+      data: itineraryData
     };
 
-    console.log(payload, 'Submitting payload');
+    console.log('Sending itinerary payload:', payload);
 
-    try {
-      const response =  axios.post(
-        "http://localhost:8000/api/employee/new-query",
-        payload
-      );
+    const response = await axios.post(
+      "http://localhost:8000/api/service/itinerary/query/send",
+      payload
+    );
 
-      console.log('Final form submission:', payload);
-      alert('Form submitted successfully!');
-    } catch (error) {
-      console.error('Error submitting form:', error);
-      alert('Failed to submit the form. Please try again.');
-    }
+    console.log('Itinerary sent successfully:', response.data);
+    alert('Itinerary sent successfully!');
+    handleCloseItineraryModal();
+  } catch (error) {
+    console.error('Error sending itinerary:', error);
+    alert('Failed to send itinerary. Please try again.');
+  } finally {
+    setSendingItinerary(false);
   }
 };
-
-
-
-
-
-
-
 
   const formatDuration = (minutes) => {
     const hours = Math.floor(minutes / 60);
@@ -350,6 +519,106 @@ const handleSubmit = async (e) => {
     if (!dateString) return '';
     const options = { year: 'numeric', month: 'short', day: 'numeric' };
     return new Date(dateString).toLocaleDateString(undefined, options);
+  };
+
+  // Send Itinerary Modal Component
+  const SendItineraryModal = () => {
+    if (!showItineraryModal) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div className="p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Send Itinerary</h3>
+              <button
+                onClick={handleCloseItineraryModal}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <p className="text-sm text-gray-600 mb-6">
+              Select the requirement types you want to include in the itinerary:
+            </p>
+
+            <div className="space-y-4">
+              {requirementTypes.map((type) => (
+                <div key={type} className="border border-gray-200 rounded-lg p-4">
+                  <div className="flex items-center justify-between">
+                    <label className="flex items-center space-x-3">
+                      <input
+                        type="checkbox"
+                        checked={itinerarySelections[type]?.selected || false}
+                        onChange={(e) => handleItinerarySelectionChange(type, 'selected', e.target.checked)}
+                        className="h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
+                      />
+                      <span className="text-sm font-medium text-gray-700">{type}</span>
+                    </label>
+                  </div>
+                  
+                  {itinerarySelections[type]?.selected && (
+                    <div className="mt-3 ml-7 space-y-2">
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          name={`${type}-amount`}
+                          checked={itinerarySelections[type]?.withAmount === true}
+                          onChange={() => handleItinerarySelectionChange(type, 'withAmount', true)}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-sm text-gray-700">With Amount</span>
+                      </label>
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="radio"
+                          name={`${type}-amount`}
+                          checked={itinerarySelections[type]?.withAmount === false}
+                          onChange={() => handleItinerarySelectionChange(type, 'withAmount', false)}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                        />
+                        <span className="text-sm text-gray-700">Without Amount</span>
+                      </label>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-end space-x-3 mt-6 pt-4 border-t border-gray-200">
+              <button
+                type="button"
+                onClick={handleCloseItineraryModal}
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSendItinerary}
+                disabled={sendingItinerary || !Object.values(itinerarySelections).some(item => item.selected)}
+                className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {sendingItinerary ? (
+                  <span className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Sending...
+                  </span>
+                ) : (
+                  'Send Itinerary'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   };
 
   const renderFormFields = () => {
@@ -1778,23 +2047,40 @@ const handleSubmit = async (e) => {
                 Previous
               </button>
               
-              <button
-                type="submit"
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-              >
-                {activeTab < requirementTypes.length - 1 ? (
-                  <>
-                    Save & Continue
-                    <svg className="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                    </svg>
-                  </>
-                ) : 'Submit Query'}
-              </button>
+              <div className="flex space-x-3">
+                {/* Send Itinerary Button */}
+                <button
+                  type="button"
+                  onClick={handleOpenItineraryModal}
+                  className="inline-flex items-center px-4 py-2 border border-green-600 text-sm font-medium rounded-md shadow-sm text-green-600 bg-white hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                >
+                  <svg className="-ml-1 mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                  Send Itinerary
+                </button>
+
+                <button
+                  type="submit"
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  {activeTab < requirementTypes.length - 1 ? (
+                    <>
+                      Save & Continue
+                      <svg className="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </>
+                  ) : 'Submit Query'}
+                </button>
+              </div>
             </div>
           </form>
         </div>
       </div>
+
+      {/* Send Itinerary Modal */}
+      <SendItineraryModal />
     </div>
   );
 }

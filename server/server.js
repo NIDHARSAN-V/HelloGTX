@@ -18,7 +18,7 @@ const flight_router = require('./Routers/Flight/flightPackage.router');  // Impo
 const followup_router = require('./Routers/Lead/followup.router');
 
 const employee_router = require('./Routers/Lead/lead.router');
-
+const service_router = require("./Routers/Service/service.router");
 require("dotenv").config();  // Load environment variables from .env file
 mongoose
   .connect(process.env.MONGO_URI)
@@ -65,5 +65,6 @@ app.use('/api/employee' , employee_router );
 
 app.use('/api/followup' , followup_router );
 
+app.use('/api/service' , service_router)
 
 app.listen(PORT, () => console.log(`Server is now running on port ${PORT}`));
