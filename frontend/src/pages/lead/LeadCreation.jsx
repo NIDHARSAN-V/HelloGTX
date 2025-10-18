@@ -4,10 +4,14 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { checkCustomerByEmail, createNewLead, getLeadfromEmployee } from "../../Store/Lead";
 import axios from "axios";
 
-function LeadCreation({ customer: propCustomer }) {
+function LeadCreation({ }) {
   const location = useLocation();
   const { user } = useSelector((state) => state.auth);
-  const customer = propCustomer || location.state
+  // const customer = propCustomer || location.state
+  const [customer, setCustomerData] = useState(null);
+
+
+
   
   const [leadStatus, setLeadStatus] = useState("new");
   const [leadSource, setLeadSource] = useState("");
@@ -21,6 +25,8 @@ function LeadCreation({ customer: propCustomer }) {
   const [followUps, setFollowUps] = useState([]);
   const [filter, setFilter] = useState("all");
   const [isCreatingLead, setIsCreatingLead] = useState(false);
+  // const customerData = useState(null);
+
 
   const priorityStyles = {
     high: "bg-red-100 text-red-700 border border-red-200",
@@ -119,6 +125,23 @@ function LeadCreation({ customer: propCustomer }) {
       setIsCreatingLead(false);
     }
   };
+
+
+
+const handlecustomerdata = async (email) => {
+  const res = await dispatch(checkCustomerByEmail({ email: email.toString() }));
+  console.log("*-*-*-*-*-*-customer", res.payload);
+  
+  const customerData = res.payload?.customer;
+  setCustomerData(customerData);
+
+  return customerData; // ✅ return it for navigation
+};
+
+
+
+
+
 
   const handleLeadClick = (lead) => {
     setSelectedLead(lead);
@@ -576,12 +599,32 @@ function LeadCreation({ customer: propCustomer }) {
                 >
                   Update Status
                 </button>
-                <button 
-                  onClick={() => navigate('/lead/dashboard', { state: { leadId: selectedLead._id, customer: customer } })}
-                  className="px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 transform hover:scale-105 font-medium"
-                >
-                  Go to Dashboard
-                </button>
+
+
+
+            <button 
+  onClick={async () => {
+    const customerData = await handlecustomerdata(selectedLead.email);
+    if (customerData) {
+      navigate('/lead/dashboard', { 
+        state: { 
+          leadId: selectedLead._id, 
+          customer: customerData 
+        } 
+      });
+    } else {
+      alert('Customer data not found');
+    }
+  }}
+  className="px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 transform hover:scale-105 font-medium"
+>
+  Go to Dashboard
+</button>
+
+
+
+
+                
               </div>
             </div>
           </div>
