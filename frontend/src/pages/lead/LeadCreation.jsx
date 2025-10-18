@@ -64,6 +64,11 @@ function LeadCreation({ }) {
     setLoadingLeads(false);
   };
 
+
+
+
+  
+
   useEffect(() => {
     fetchLeads();
     axios
@@ -76,6 +81,11 @@ function LeadCreation({ }) {
         console.error("Error fetching follow-ups:", error);
       });
   }, [user?.employeeId]);
+
+
+
+
+
 
   // Search and sort leads
   useEffect(() => {

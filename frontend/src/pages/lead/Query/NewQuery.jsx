@@ -486,11 +486,13 @@ function NewQuery({ leadId, user, customer }) {
         contact: customerData.contact
       },
       employee: {
-        id: employee?._id,
-        name: employee?.name || employee?.username
+        id: employee.employeeId,
+        email: employee.email
       },
       selectedItems,
-      data: itineraryData
+      data: itineraryData,
+      to_mail: customerData.email,
+      from_mail: employee.email
     };
 
     console.log('Sending itinerary payload:', payload);
