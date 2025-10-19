@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 // Follow-up Interaction Component
 function FollowUpInteraction({ query, onClose, user }) {
+
   const [interactions, setInteractions] = useState([]);
   const [pendingFollowUps, setPendingFollowUps] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -64,7 +65,8 @@ function FollowUpInteraction({ query, onClose, user }) {
         `http://localhost:8000/api/followup/query/${query._id}/followup`,
         {
           ...newInteraction,
-          employeeId:user.employeeId
+          employeeId:user.employeeId,
+          employeeEmail : user.email,
         }
       );
       

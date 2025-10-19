@@ -2,6 +2,10 @@ const Interaction = require("../../Models/Leads/followUpInteraction.model");
 const Query = require("../../Models/Query/queryPackage.model");
 const Lead = require("../../Models/Leads/lead.model");
 const mongoose = require("mongoose");
+const { sendRemainderEmailEmployee } = require("../../Services/EmployeeRemainder.service");
+
+
+
 // ======================
 // 1. CREATE NEW FOLLOW-UP
 // ======================
@@ -18,9 +22,10 @@ const createFollowUp = async (req, res) => {
       callDetails,
       emailDetails,
       whatsappDetails,
-      employeeId
+      employeeId,
+      employeeEmail
     } = req.body;
-
+    
     // Validate required fields
     if (!queryId || !type || !summary) {
       return res.status(400).json({
@@ -33,7 +38,7 @@ const createFollowUp = async (req, res) => {
     if (!query) {
       return res.status(404).json({ message: "Query not found" });
     }
-
+  
     // Create new interaction
     const newInteraction = new Interaction({
       queryId: queryId,
@@ -51,7 +56,25 @@ const createFollowUp = async (req, res) => {
       assignedTo: employeeId || null
     });
 
+    console.log("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+    console.log("Follow up details received:", newInteraction.followUpDetails.scheduledAt);
+ 
+
+    sendRemainderEmailEmployee(employeeEmail , newInteraction.followUpDetails.scheduledAt );
+
+    console.log("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++")
+
     const savedInteraction = await newInteraction.save();
+
+    
+
+
+
+
+
+
+
+
 
 
     
@@ -167,6 +190,15 @@ const getFollowUpById = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+//scheduleFollowUp
+
+
+
+
+
+
+
 
 // ======================
 // 4. UPDATE FOLLOW-UP
