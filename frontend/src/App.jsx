@@ -170,13 +170,19 @@ const RootLayout = () => {
 
   return (
     <Router>
+
+
+
       <div className="flex min-h-screen flex-col">
         <Header />
+
+
+
         <main className="flex-1">
           <Routes>
             {/* Public routes that should only be accessible when not authenticated */}
 
-            <Route path="/admin" element={<UserManagement />} />
+            {/* <Route path="/admin" element={<UserManagement />} /> */}
 
             <Route
               path="/login"
@@ -201,7 +207,16 @@ const RootLayout = () => {
               }
             />
 
+
+
+
+
+
+
+            {/* //only if user.role===employee */}
             <Route path="/hotel-packages" element={<HotelPackageList />} />
+
+
             <Route
               path="/admin/hotel-packages/create"
               element={<HotelPackageForm />}
@@ -213,7 +228,13 @@ const RootLayout = () => {
             />
 
 
+
+
+
+
+ {/* //only if user.role===employee */}
             <Route path="/flight-packages" element={<FlightPackageList />} />
+
             <Route
               path="/admin/flight-packages/create"
               element={<FlightPackageForm />}
@@ -223,6 +244,12 @@ const RootLayout = () => {
               path="/flight-packages/details"
               element={<FlightPackageDetail />}
             />
+
+
+
+
+
+
 
 
 
@@ -236,6 +263,7 @@ const RootLayout = () => {
               path="/customize-packages"
               element={<CustomizePackageForm />}
             />
+
             <Route path="/flights" element={<FlightsPage />} />
             <Route path="/packages" element={<PackagesPage />} />
 
@@ -277,7 +305,7 @@ const RootLayout = () => {
 
 
 
-
+            {/* //only if user.role===customer */}
             {/* Protected routes - only accessible when authenticated */}
             <Route
               path="/profile"
@@ -291,7 +319,7 @@ const RootLayout = () => {
 
 
 
-            
+             {/* //only if user.role===employee */}
             <Route
               path="/itenaryCreation"
               element={
