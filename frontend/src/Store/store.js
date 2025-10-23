@@ -17,6 +17,7 @@ import userSlice from "./Admin/User/userSlice.js";
 
 import employeeSlice from "./Admin/User/userSlice copy.js"
 
+// import customerProfileSlice from "./CustomerProfile/index.js";
 
 import leadSlice from "./Lead/index.js";
 
@@ -30,7 +31,8 @@ const store = configureStore({
     packages: packageReducer,
     users:userSlice,
     employees : employeeSlice,  
-    leadData : leadSlice
+    leadData : leadSlice,
+    customerProfile:customerProfileSlice
 
   },
 });

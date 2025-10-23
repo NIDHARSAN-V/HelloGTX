@@ -1,6 +1,11 @@
 const Customer = require("../../Models/Auth/Users/customer.model");
 const User = require("../../Models/Auth/user.model");
 
+
+
+
+
+
 const getProfile = async (req, res) => {
   try {
     const user = req.user;
@@ -40,15 +45,20 @@ const getProfile = async (req, res) => {
       await User.findByIdAndUpdate(user.id, { customerRef: customer._id });
     }
     
+    const uu = await User.findById(user.id);
+    console.log("----------------------------------")
+    console.log("Updated User : " , uu);
+    console.log("----------------------------------")
 
     const profileData = {
       user: {
-        firstName: user.firstName,
-        lastName: user.lastName,
-        email: user.email,
-        phone: user.phone,
-        alternatePhone: user.alternatePhone,
-        dateOfBirth: user.dateOfBirth,
+        firstName: uu.firstName,
+        lastName: uu.lastName,
+        email: uu.email,
+        phone: uu.phone,
+        alternatePhone: uu.alternatePhone,
+        dateOfBirth: uu.dateOfBirth,
+
       },
       customer: {
         address: customer.address || {},
@@ -75,6 +85,12 @@ const getProfile = async (req, res) => {
     });
   }
 };
+
+
+
+
+
+
 
 const saveProfile = async (req, res) => {
   try {
@@ -177,10 +193,15 @@ const saveProfile = async (req, res) => {
   }
 };
 
+
+
+
+
+
 const clearProfile = async (req, res) => {
   try {
     const user = req.user;
-
+    console.log("Clearing profile for user:", user.id);
     if (user.role !== "customer") {
       return res.status(403).json({
         success: false,

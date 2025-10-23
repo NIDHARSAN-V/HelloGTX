@@ -3,11 +3,13 @@ import { useDispatch, useSelector } from 'react-redux';
 // import { fetchProfile } from '../../Store/CustomerProfile';
 import ProfileForm from './ProfileForm';
 import ProfileView from './ProfileView';
-import { fetchProfile } from '../../Store/CustomerProfile';
+import { clearProfile, fetchProfile } from '../../Store/CustomerProfile';
 
 const ProfilePage = () => {
   const dispatch = useDispatch();
-  const { profile } = useSelector(state => state.customerProfile);
+  
+  const { profile } = useSelector(state => state.customerProfile);  
+
   const {user} = useSelector(state => state.auth);
 
 
@@ -17,6 +19,17 @@ const ProfilePage = () => {
   useEffect(() => {
     dispatch(fetchProfile(user.id));
   }, [dispatch]);
+
+
+  const handleClearProfile = () => {
+    // Dispatch an action to clear profile data
+    // dispatch(clearProfile());
+    dispatch(clearProfile(user)).then((data)  => {
+      console.log("Profile cleared:", data);
+    }).catch((error) => {
+      console.error("Error clearing profile:", error);
+    });
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -39,6 +52,9 @@ const ProfilePage = () => {
           <ProfileView profile={profile} />
         )}
       </div>
+      <button className='font-bold bg-amber-400' onClick={()=>{
+        handleClearProfile()
+      }}>clear </button>
     </div>
   );
 };
