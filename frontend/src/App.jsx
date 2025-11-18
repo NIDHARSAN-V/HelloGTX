@@ -300,6 +300,8 @@ const RootLayout = () => {
 
             {/* ==================== FALLBACK ==================== */}
             <Route path="*" element={<NotFound />} />
+
+            
           </Routes>
         </main>
         <Footer />
