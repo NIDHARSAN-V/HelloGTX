@@ -646,66 +646,82 @@ function NewQuery({ leadId, user, customer }) {
     }));
   };
 
-  const handleDayDeepFieldChange = (category, dayIndex, section, subsection, field, value) => {
+
+
+
+
+
+
+
+  
+// NewQuery.js: Starting near Line 200 (Replacing the logic of the old function)
+
+  // NOTE: Assuming you are replacing the previous complex logic entirely.
+  // The correct signature for your use case is: 
+  // (category, dayIndex, section, field, value)
+  const handleDayDeepFieldChange = (category, dayIndex, section, field, value) => {
+    // We use the functional update form of useState (prev => ...)
     setDayWiseData(prev => ({
       ...prev,
+      // 1. Update the top-level category array (e.g., 'flights')
       [category]: prev[category].map((day, index) => {
+        // 2. Find the specific day/item to update
         if (index === dayIndex) {
+          // 3. Return a new day object (immutability)
           return {
-            ...day,
+            ...day, // Copy existing day properties
+            // 4. Update the nested section object (e.g., 'departure')
             [section]: {
-              ...day[section],
-              [subsection]: {
-                ...day[section][subsection],
-                [field]: value
-              }
-            }
-          };
-        }
-        return day;
-      })
-    }));
-  };
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-const handleDayNestedFieldChange = (category, dayIndex, section, field, value) => {
-    setDayWiseData(prev => ({
-      ...prev,
-      [category]: prev[category].map((day, index) => {
-        if (index === dayIndex) {
-          return {
-            ...day,
-            [section]: {
-              ...day[section],
+              ...day[section], // Copy existing section properties (e.g., existing airport, terminal)
+              // 5. Update the target field within the section (e.g., 'city' or 'datetime')
               [field]: value
             }
           };
         }
+        // Return unchanged days
         return day;
       })
     }));
   };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+// const handleDayNestedFieldChange = (category, dayIndex, section, field, value) => {
+//     setDayWiseData(prev => ({
+//       ...prev,
+//       [category]: prev[category].map((day, index) => {
+//         if (index === dayIndex) {
+//           return {
+//             ...day,
+//             [section]: {
+//               ...day[section],
+//               [field]: value
+//             }
+//           };
+//         }
+//         return day;
+//       })
+//     }));
+//   };
 
 
 
@@ -1923,7 +1939,7 @@ const handleDayNestedFieldChange = (category, dayIndex, section, field, value) =
                   <input
                     type="text"
                     value={flight.departure.city}
-                   onChange={(e) => handleDayNestedFieldChange('flights', dayIndex, 'departure', 'city', e.target.value)}
+                    onChange={(e) => handleDayDeepFieldChange('flights', dayIndex, 'departure', 'city', e.target.value)}
                     className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
@@ -1932,7 +1948,7 @@ const handleDayNestedFieldChange = (category, dayIndex, section, field, value) =
                   <input
                     type="text"
                     value={flight.arrival.city}
-                   onChange={(e) => handleDayNestedFieldChange('flights', dayIndex, 'arrival', 'city', e.target.value)}
+                    onChange={(e) => handleDayDeepFieldChange('flights', dayIndex, 'arrival', 'city', e.target.value)}
                     className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
@@ -1944,7 +1960,7 @@ const handleDayNestedFieldChange = (category, dayIndex, section, field, value) =
                   <input
                     type="datetime-local"
                     value={flight.departure.datetime}
-                    onChange={(e) => handleDayNestedFieldChange('flights', dayIndex, 'departure', 'datetime', e.target.value)}
+                    onChange={(e) => handleDayDeepFieldChange('flights', dayIndex, 'departure', 'datetime', e.target.value)}
                     className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
@@ -1953,7 +1969,7 @@ const handleDayNestedFieldChange = (category, dayIndex, section, field, value) =
                   <input
                     type="datetime-local"
                     value={flight.arrival.datetime}
-                    onChange={(e) => handleDayNestedFieldChange('flights', dayIndex, 'arrival', 'datetime', e.target.value)}
+                    onChange={(e) => handleDayDeepFieldChange('flights', dayIndex, 'arrival', 'datetime', e.target.value)}
                     className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
