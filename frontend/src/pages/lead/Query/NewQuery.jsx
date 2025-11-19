@@ -667,6 +667,67 @@ function NewQuery({ leadId, user, customer }) {
     }));
   };
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+const handleDayNestedFieldChange = (category, dayIndex, section, field, value) => {
+    setDayWiseData(prev => ({
+      ...prev,
+      [category]: prev[category].map((day, index) => {
+        if (index === dayIndex) {
+          return {
+            ...day,
+            [section]: {
+              ...day[section],
+              [field]: value
+            }
+          };
+        }
+        return day;
+      })
+    }));
+  };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   const handleDayArrayFieldChange = (category, dayIndex, section, field, value) => {
     setDayWiseData(prev => ({
       ...prev,
@@ -1862,7 +1923,7 @@ function NewQuery({ leadId, user, customer }) {
                   <input
                     type="text"
                     value={flight.departure.city}
-                    onChange={(e) => handleDayDeepFieldChange('flights', dayIndex, 'departure', 'city', e.target.value)}
+                   onChange={(e) => handleDayNestedFieldChange('flights', dayIndex, 'departure', 'city', e.target.value)}
                     className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
@@ -1871,7 +1932,7 @@ function NewQuery({ leadId, user, customer }) {
                   <input
                     type="text"
                     value={flight.arrival.city}
-                    onChange={(e) => handleDayDeepFieldChange('flights', dayIndex, 'arrival', 'city', e.target.value)}
+                   onChange={(e) => handleDayNestedFieldChange('flights', dayIndex, 'arrival', 'city', e.target.value)}
                     className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
@@ -1883,7 +1944,7 @@ function NewQuery({ leadId, user, customer }) {
                   <input
                     type="datetime-local"
                     value={flight.departure.datetime}
-                    onChange={(e) => handleDayDeepFieldChange('flights', dayIndex, 'departure', 'datetime', e.target.value)}
+                    onChange={(e) => handleDayNestedFieldChange('flights', dayIndex, 'departure', 'datetime', e.target.value)}
                     className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
@@ -1892,7 +1953,7 @@ function NewQuery({ leadId, user, customer }) {
                   <input
                     type="datetime-local"
                     value={flight.arrival.datetime}
-                    onChange={(e) => handleDayDeepFieldChange('flights', dayIndex, 'arrival', 'datetime', e.target.value)}
+                    onChange={(e) => handleDayNestedFieldChange('flights', dayIndex, 'arrival', 'datetime', e.target.value)}
                     className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
