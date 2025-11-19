@@ -367,7 +367,32 @@ const QuerySchema = new mongoose.Schema({
     type: String,
     enum: ["sold_out", "active"],
     default: "active",
-  }
+  },
+
+  // ======================
+  // 12. ITINERARY SENDING HISTORY
+  // ======================
+  itineraryHistory: [{
+    sentAt: {
+      type: Date,
+      default: Date.now
+    },
+    sentTo: String,
+    sentBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Employee"
+    },
+    selectedItems: [{
+      type: String,
+      withAmount: Boolean
+    }],
+    htmlContent: String,
+    status: {
+      type: String,
+      enum: ["sent", "delivered", "failed"],
+      default: "sent"
+    }
+  }]
 
 }, {
   timestamps: true

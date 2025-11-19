@@ -33,7 +33,7 @@ function NewQuery({ leadId, user, customer }) {
 
   // Requirement types and active tab state
   const requirementTypes = [
-    'Package', 'Flight', 'Transfer', 'Visa', 'Hotel',
+    'Package', 'Flight', 'Hotel', 'Transfer', 'Visa', 
     'Sightseeing', 'Miscellaneous', 'Company Formation', 'Forex', 'Day-wise Itinerary'
   ];
   const [activeTab, setActiveTab] = useState(0);
@@ -43,106 +43,278 @@ function NewQuery({ leadId, user, customer }) {
   const [itinerarySelections, setItinerarySelections] = useState({});
   const [sendingItinerary, setSendingItinerary] = useState(false);
 
+  // Main form data structure matching the schema
   const [formData, setFormData] = useState({
-    queryType: 'FIT',
-    goingFrom: '',
-    goingTo: '',
-    specificDate: '',
-    noOfDays: '',
-    travellers: 2,
-    priceRange: '',
-    inclusions: [],
-    themes: [],
-    hotelPreference: '3',
-    foodPreferences: [],
-    remarks: '',
+    // Query Status
+    onStatus: 'draft',
+    
+    // Package Details
+    package: {
+      queryType: 'FIT',
+      goingFrom: '',
+      goingTo: '',
+      specificDate: '',
+      noOfDays: '',
+      travellers: 2,
+      priceRange: '',
+      inclusions: [],
+      themes: [],
+      hotelPreference: '3',
+      foodPreferences: [],
+      remarks: '',
+      expectedClosureDate: '',
+      expectedClosureAmount: '',
+      name: '',
+      description: '',
+      tags: []
+    },
+
+    // Pricing
+    pricing: {
+      basePrice: '',
+      components: {
+        flights: '',
+        accommodation: '',
+        visas: '',
+        transfers: '',
+        activities: '',
+        taxes: '',
+        fees: ''
+      },
+      discounts: {
+        earlyBird: '',
+        group: '',
+        promoCode: ''
+      },
+      totalPrice: '',
+      currency: 'USD',
+      paymentPlan: {
+        depositRequired: false,
+        depositAmount: '',
+        installmentOptions: []
+      }
+    },
+
+    // Common fields
     expectedClosureDate: '',
     expectedClosureAmount: '',
-    // Flight specific
-    flightSelectionType: 'new',
-    selectedFlightPackage: null,
-    flightType: 'oneway',
-    sourceCity: '',
-    destinationCity: '',
-    departureDate: '',
-    returnDate: '',
-    adults: 1,
-    children: 0,
-    infants: 0,
-    flightClass: 'Economy',
-    preferredAirline: '',
-    // Hotel specific
-    hotelSelectionType: 'new',
-    selectedHotelPackage: null,
-    hotelDetails: {
-      checkIn: '',
-      checkOut: '',
-      roomType: 'Standard',
-      adults: 2,
-      children: 0,
-      mealPlan: 'breakfast'
-    },
-    // Third Party Details
-    thirdPartyFlightDetails: {
-        pnr: '',
-        supplier: '',
-        cost: '',
-        confirmationFile: null
-    },
-    thirdPartyHotelDetails: {
-        confirmationNumber: '',
-        supplier: '',
-        cost: '',
-        voucherFile: null
-    },
-    // Additional fields for other requirement types
-    transferDetails: {
-      pickup: '',
-      dropoff: '',
-      vehicleType: 'Sedan'
-    },
-    visaDetails: {
-      country: '',
-      type: 'Tourist',
-      processingTime: ''
-    }
+    remarks: ''
   });
 
-  // Day-wise Itinerary State
-  const [dayWiseItinerary, setDayWiseItinerary] = useState([
-    {
-      day: 1,
-      date: '',
-      description: '',
-      flights: [{
+  // Day-wise data for all requirement types
+  const [dayWiseData, setDayWiseData] = useState({
+    flights: [
+      {
+        day: 1,
+        date: '',
+        flightType: 'oneway',
         airline: '',
         flightNumber: '',
-        from: '',
-        to: '',
-        departureTime: '',
-        arrivalTime: '',
-        flightClass: '',
-        preferredAirline: ''
-      }],
-      hotels: [{
+        departure: {
+          airport: '',
+          terminal: '',
+          datetime: '',
+          city: ''
+        },
+        arrival: {
+          airport: '',
+          terminal: '',
+          datetime: '',
+          city: ''
+        },
+        duration: '',
+        cabinClass: 'economy',
+        baggage: {
+          carryOn: { allowed: false, weight: '', dimensions: '' },
+          checked: { allowed: false, pieces: '', weight: '' }
+        },
+        refundable: false,
+        adults: 1,
+        children: 0,
+        infants: 0,
+        preferredAirline: '',
+        selectionType: 'new',
+        selectedFlightPackage: null,
+        thirdPartyDetails: {
+          pnr: '',
+          supplier: '',
+          cost: '',
+          confirmationFile: null
+        },
+        remarks: ''
+      }
+    ],
+    hotels: [
+      {
+        day: 1,
+        date: '',
         name: '',
+        starRating: 3,
+        location: {
+          address: '',
+          city: '',
+          coordinates: []
+        },
+        roomType: 'Standard',
+        amenities: [],
         checkIn: '',
         checkOut: '',
-        roomType: '',
-        mealPlan: '',
+        cancellationPolicy: [],
+        mealPlan: 'breakfast',
         adults: 2,
-        children: 0
-      }],
-      transfers: [{
+        children: 0,
+        selectionType: 'new',
+        selectedHotelPackage: null,
+        thirdPartyDetails: {
+          confirmationNumber: '',
+          supplier: '',
+          cost: '',
+          voucherFile: null
+        },
+        remarks: ''
+      }
+    ],
+    transfers: [
+      {
+        day: 1,
+        date: '',
         pickup: '',
         dropoff: '',
-        vehicleType: 'Sedan'
-      }],
-      activities: [],
-      meals: [],
-      notes: ''
-    }
-  ]);
+        vehicleType: 'Sedan',
+        time: '',
+        duration: '',
+        cost: '',
+        remarks: ''
+      }
+    ],
+    visas: [
+      {
+        day: 1,
+        date: '',
+        country: '',
+        type: 'tourist',
+        processingTime: '',
+        requirements: [],
+        remarks: ''
+      }
+    ],
+    sightseeing: [
+      {
+        day: 1,
+        date: '',
+        activity: '',
+        location: '',
+        duration: '',
+        time: '',
+        cost: '',
+        includes: [],
+        remarks: ''
+      }
+    ],
+    miscellaneous: [
+      {
+        day: 1,
+        date: '',
+        description: '',
+        category: '',
+        cost: '',
+        remarks: ''
+      }
+    ],
+    companyFormation: [
+      {
+        day: 1,
+        date: '',
+        description: '',
+        requirements: [],
+        timeline: '',
+        documents: [],
+        remarks: '',
+        expectedClosureDate: '',
+        expectedClosureAmount: ''
+      }
+    ],
+    forex: [
+      {
+        day: 1,
+        date: '',
+        description: '',
+        currency: 'USD',
+        amount: '',
+        exchangeRate: '',
+        deliveryDate: '',
+        remarks: '',
+        expectedClosureDate: '',
+        expectedClosureAmount: ''
+      }
+    ],
+    itinerary: [
+      {
+        day: 1,
+        date: '',
+        description: '',
+        flight: {
+          flightType: 'oneway',
+          airline: '',
+          flightNumber: '',
+          departure: { airport: '', terminal: '', datetime: '', city: '' },
+          arrival: { airport: '', terminal: '', datetime: '', city: '' },
+          duration: '',
+          cabinClass: 'economy',
+          baggage: {
+            carryOn: { allowed: false, weight: '', dimensions: '' },
+            checked: { allowed: false, pieces: '', weight: '' }
+          },
+          refundable: false
+        },
+        hotel: {
+          name: '',
+          starRating: 3,
+          location: { address: '', city: '', coordinates: [] },
+          roomType: 'Standard',
+          amenities: [],
+          checkIn: '',
+          checkOut: '',
+          cancellationPolicy: [],
+          mealPlan: 'breakfast',
+          adults: 2,
+          children: 0
+        },
+        transfer: {
+          pickup: '',
+          dropoff: '',
+          vehicleType: 'Sedan',
+          time: '',
+          duration: '',
+          cost: '',
+          remarks: ''
+        },
+        visa: {
+          country: '',
+          type: 'tourist',
+          processingTime: '',
+          requirements: [],
+          remarks: ''
+        },
+        sightseeing: {
+          activity: '',
+          location: '',
+          duration: '',
+          time: '',
+          cost: '',
+          includes: [],
+          remarks: ''
+        },
+        miscellaneous: {
+          description: '',
+          category: '',
+          cost: '',
+          remarks: ''
+        },
+        notes: ''
+      }
+    ]
+  });
 
   // Flight packages state
   const [flightPackages, setFlightPackages] = useState([]);
@@ -173,6 +345,10 @@ function NewQuery({ leadId, user, customer }) {
   const foodPreferenceOptions = ['Vegetarian', 'Vegan', 'Halal', 'Kosher', 'Gluten-Free', 'Jain'];
   const mealPlanOptions = ['breakfast', 'half_board', 'full_board', 'all_inclusive'];
   const roomTypeOptions = ['Standard', 'Deluxe', 'Suite', 'Executive', 'Family'];
+  const cabinClassOptions = ['economy', 'premium', 'business', 'first'];
+  const visaTypeOptions = ['tourist', 'business', 'student', 'work'];
+  const currencyOptions = ['USD', 'EUR', 'GBP', 'INR'];
+  const vehicleTypeOptions = ['Sedan', 'SUV', 'Van', 'Luxury', 'Bus'];
 
   // Initialize itinerary selections based on requirement types
   useEffect(() => {
@@ -188,260 +364,395 @@ function NewQuery({ leadId, user, customer }) {
 
   // Auto-create days when noOfDays changes
   useEffect(() => {
-    if (formData.noOfDays && formData.noOfDays > 0) {
-      const numberOfDays = parseInt(formData.noOfDays);
-      if (numberOfDays > dayWiseItinerary.length) {
-        // Add new days
-        const newDays = [];
-        for (let i = dayWiseItinerary.length + 1; i <= numberOfDays; i++) {
-          newDays.push({
-            day: i,
-            date: '',
-            description: '',
-            flights: [{
-              airline: '',
-              flightNumber: '',
-              from: '',
-              to: '',
-              departureTime: '',
-              arrivalTime: '',
-              flightClass: '',
-              preferredAirline: ''
-            }],
-            hotels: [{
-              name: '',
-              checkIn: '',
-              checkOut: '',
-              roomType: '',
-              mealPlan: '',
-              adults: 2,
-              children: 0
-            }],
-            transfers: [{
-              pickup: '',
-              dropoff: '',
-              vehicleType: 'Sedan'
-            }],
-            activities: [],
-            meals: [],
-            notes: ''
-          });
+    if (formData.package.noOfDays && formData.package.noOfDays > 0) {
+      const numberOfDays = parseInt(formData.package.noOfDays);
+      Object.keys(dayWiseData).forEach(category => {
+        if (dayWiseData[category].length !== numberOfDays) {
+          setDayWiseData(prev => ({
+            ...prev,
+            [category]: Array.from({ length: numberOfDays }, (_, i) => {
+              const existingDay = prev[category][i] || {};
+              return {
+                day: i + 1,
+                date: formData.package.specificDate || '',
+                ...getDefaultDayData(category),
+                ...existingDay
+              };
+            })
+          }));
         }
-        setDayWiseItinerary(prev => [...prev, ...newDays]);
-      } else if (numberOfDays < dayWiseItinerary.length) {
-        // Remove extra days
-        setDayWiseItinerary(prev => prev.slice(0, numberOfDays));
-      }
+      });
     }
-  }, [formData.noOfDays]);
+  }, [formData.package.noOfDays, formData.package.specificDate]);
+
+  // Helper function to get default day data for each category
+  const getDefaultDayData = (category) => {
+    const defaults = {
+      flights: {
+        flightType: 'oneway',
+        airline: '',
+        flightNumber: '',
+        departure: { airport: '', terminal: '', datetime: '', city: '' },
+        arrival: { airport: '', terminal: '', datetime: '', city: '' },
+        duration: '',
+        cabinClass: 'economy',
+        baggage: {
+          carryOn: { allowed: false, weight: '', dimensions: '' },
+          checked: { allowed: false, pieces: '', weight: '' }
+        },
+        refundable: false,
+        adults: 1,
+        children: 0,
+        infants: 0,
+        preferredAirline: '',
+        selectionType: 'new',
+        selectedFlightPackage: null,
+        thirdPartyDetails: {
+          pnr: '',
+          supplier: '',
+          cost: '',
+          confirmationFile: null
+        },
+        remarks: ''
+      },
+      hotels: {
+        name: '',
+        starRating: 3,
+        location: { address: '', city: '', coordinates: [] },
+        roomType: 'Standard',
+        amenities: [],
+        checkIn: '',
+        checkOut: '',
+        cancellationPolicy: [],
+        mealPlan: 'breakfast',
+        adults: 2,
+        children: 0,
+        selectionType: 'new',
+        selectedHotelPackage: null,
+        thirdPartyDetails: {
+          confirmationNumber: '',
+          supplier: '',
+          cost: '',
+          voucherFile: null
+        },
+        remarks: ''
+      },
+      transfers: {
+        pickup: '',
+        dropoff: '',
+        vehicleType: 'Sedan',
+        time: '',
+        duration: '',
+        cost: '',
+        remarks: ''
+      },
+      visas: {
+        country: '',
+        type: 'tourist',
+        processingTime: '',
+        requirements: [],
+        remarks: ''
+      },
+      sightseeing: {
+        activity: '',
+        location: '',
+        duration: '',
+        time: '',
+        cost: '',
+        includes: [],
+        remarks: ''
+      },
+      miscellaneous: {
+        description: '',
+        category: '',
+        cost: '',
+        remarks: ''
+      },
+      companyFormation: {
+        description: '',
+        requirements: [],
+        timeline: '',
+        documents: [],
+        remarks: '',
+        expectedClosureDate: '',
+        expectedClosureAmount: ''
+      },
+      forex: {
+        description: '',
+        currency: 'USD',
+        amount: '',
+        exchangeRate: '',
+        deliveryDate: '',
+        remarks: '',
+        expectedClosureDate: '',
+        expectedClosureAmount: ''
+      },
+      itinerary: {
+        description: '',
+        flight: {
+          flightType: 'oneway',
+          airline: '',
+          flightNumber: '',
+          departure: { airport: '', terminal: '', datetime: '', city: '' },
+          arrival: { airport: '', terminal: '', datetime: '', city: '' },
+          duration: '',
+          cabinClass: 'economy',
+          baggage: {
+            carryOn: { allowed: false, weight: '', dimensions: '' },
+            checked: { allowed: false, pieces: '', weight: '' }
+          },
+          refundable: false
+        },
+        hotel: {
+          name: '',
+          starRating: 3,
+          location: { address: '', city: '', coordinates: [] },
+          roomType: 'Standard',
+          amenities: [],
+          checkIn: '',
+          checkOut: '',
+          cancellationPolicy: [],
+          mealPlan: 'breakfast',
+          adults: 2,
+          children: 0
+        },
+        transfer: {
+          pickup: '',
+          dropoff: '',
+          vehicleType: 'Sedan',
+          time: '',
+          duration: '',
+          cost: '',
+          remarks: ''
+        },
+        visa: {
+          country: '',
+          type: 'tourist',
+          processingTime: '',
+          requirements: [],
+          remarks: ''
+        },
+        sightseeing: {
+          activity: '',
+          location: '',
+          duration: '',
+          time: '',
+          cost: '',
+          includes: [],
+          remarks: ''
+        },
+        miscellaneous: {
+          description: '',
+          category: '',
+          cost: '',
+          remarks: ''
+        },
+        notes: ''
+      }
+    };
+    return defaults[category] || {};
+  };
 
   // Fetch flight packages when flight tab is active
   useEffect(() => {
-    if (requirementTypes[activeTab] === 'Flight' && formData.flightSelectionType === 'existing') {
-      fetchFlightPackages();
+    if (requirementTypes[activeTab] === 'Flight') {
+      const hasExistingSelection = dayWiseData.flights.some(flight => 
+        flight.selectionType === 'existing'
+      );
+      if (hasExistingSelection) {
+        fetchFlightPackages();
+      }
     }
-  }, [activeTab, formData.flightSelectionType, flightFilters]);
+  }, [activeTab, flightFilters]);
 
   // Fetch hotel packages when hotel tab is active
   useEffect(() => {
-    if (requirementTypes[activeTab] === 'Hotel' && formData.hotelSelectionType === 'existing') {
-      fetchHotelPackages();
-    }
-  }, [activeTab, formData.hotelSelectionType, hotelFilters]);
-
-  // Day-wise Itinerary Handlers
-  const addNewDay = () => {
-    setDayWiseItinerary(prev => [
-      ...prev,
-      {
-        day: prev.length + 1,
-        date: '',
-        description: '',
-        flights: [{
-          airline: '',
-          flightNumber: '',
-          from: '',
-          to: '',
-          departureTime: '',
-          arrivalTime: '',
-          flightClass: '',
-          preferredAirline: ''
-        }],
-        hotels: [{
-          name: '',
-          checkIn: '',
-          checkOut: '',
-          roomType: '',
-          mealPlan: '',
-          adults: 2,
-          children: 0
-        }],
-        transfers: [{
-          pickup: '',
-          dropoff: '',
-          vehicleType: 'Sedan'
-        }],
-        activities: [],
-        meals: [],
-        notes: ''
+    if (requirementTypes[activeTab] === 'Hotel') {
+      const hasExistingSelection = dayWiseData.hotels.some(hotel => 
+        hotel.selectionType === 'existing'
+      );
+      if (hasExistingSelection) {
+        fetchHotelPackages();
       }
-    ]);
-  };
+    }
+  }, [activeTab, hotelFilters]);
 
-  const removeDay = (dayIndex) => {
-    if (dayWiseItinerary.length > 1) {
-      setDayWiseItinerary(prev => prev.filter((_, index) => index !== dayIndex));
+  // Enhanced input handlers for nested objects
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    
+    if (name.includes('.')) {
+      const keys = name.split('.');
+      setFormData(prev => {
+        const updated = { ...prev };
+        let current = updated;
+        
+        for (let i = 0; i < keys.length - 1; i++) {
+          current = current[keys[i]] = { ...current[keys[i]] };
+        }
+        
+        current[keys[keys.length - 1]] = type === 'checkbox' ? checked : value;
+        return updated;
+      });
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [name]: type === 'checkbox' ? checked : value
+      }));
     }
   };
 
-  const handleDayFieldChange = (dayIndex, field, value) => {
-    setDayWiseItinerary(prev => 
-      prev.map((day, index) => 
+  const handleNestedInputChange = (section, e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [section]: {
+        ...prev[section],
+        [name]: type === 'checkbox' ? checked : value
+      }
+    }));
+  };
+
+  // Day-wise data handlers
+  const addNewDay = (category) => {
+    setDayWiseData(prev => ({
+      ...prev,
+      [category]: [
+        ...prev[category],
+        {
+          day: prev[category].length + 1,
+          date: formData.package.specificDate || '',
+          ...getDefaultDayData(category)
+        }
+      ]
+    }));
+  };
+
+  const removeDay = (category, dayIndex) => {
+    if (dayWiseData[category].length > 1) {
+      setDayWiseData(prev => ({
+        ...prev,
+        [category]: prev[category].filter((_, index) => index !== dayIndex)
+      }));
+    }
+  };
+
+  const handleDayFieldChange = (category, dayIndex, field, value) => {
+    setDayWiseData(prev => ({
+      ...prev,
+      [category]: prev[category].map((day, index) => 
         index === dayIndex ? { ...day, [field]: value } : day
       )
-    );
+    }));
   };
 
-  const handleDayFlightChange = (dayIndex, flightIndex, field, value) => {
-    setDayWiseItinerary(prev => 
-      prev.map((day, index) => {
+  const handleDayDeepFieldChange = (category, dayIndex, section, subsection, field, value) => {
+    setDayWiseData(prev => ({
+      ...prev,
+      [category]: prev[category].map((day, index) => {
         if (index === dayIndex) {
-          const flights = [...day.flights];
-          flights[flightIndex] = { ...flights[flightIndex], [field]: value };
-          return { ...day, flights };
+          return {
+            ...day,
+            [section]: {
+              ...day[section],
+              [subsection]: {
+                ...day[section][subsection],
+                [field]: value
+              }
+            }
+          };
         }
         return day;
       })
-    );
+    }));
   };
 
-  const handleDayHotelChange = (dayIndex, hotelIndex, field, value) => {
-    setDayWiseItinerary(prev => 
-      prev.map((day, index) => {
+  const handleDayArrayFieldChange = (category, dayIndex, section, field, value) => {
+    setDayWiseData(prev => ({
+      ...prev,
+      [category]: prev[category].map((day, index) => {
         if (index === dayIndex) {
-          const hotels = [...day.hotels];
-          hotels[hotelIndex] = { ...hotels[hotelIndex], [field]: value };
-          return { ...day, hotels };
+          const currentArray = day[section]?.[field] || [];
+          const updatedArray = currentArray.includes(value)
+            ? currentArray.filter(item => item !== value)
+            : [...currentArray, value];
+          
+          return {
+            ...day,
+            [section]: {
+              ...day[section],
+              [field]: updatedArray
+            }
+          };
         }
         return day;
       })
-    );
+    }));
   };
 
-  const handleDayTransferChange = (dayIndex, transferIndex, field, value) => {
-    setDayWiseItinerary(prev => 
-      prev.map((day, index) => {
+  const addArrayItem = (category, dayIndex, section, field, newItem) => {
+    setDayWiseData(prev => ({
+      ...prev,
+      [category]: prev[category].map((day, index) => {
         if (index === dayIndex) {
-          const transfers = [...day.transfers];
-          transfers[transferIndex] = { ...transfers[transferIndex], [field]: value };
-          return { ...day, transfers };
+          const currentArray = day[section]?.[field] || [];
+          return {
+            ...day,
+            [section]: {
+              ...day[section],
+              [field]: [...currentArray, newItem]
+            }
+          };
         }
         return day;
       })
-    );
+    }));
   };
 
-  const addActivity = (dayIndex) => {
-    setDayWiseItinerary(prev => 
-      prev.map((day, index) => 
-        index === dayIndex 
-          ? { ...day, activities: [...day.activities, ''] }
-          : day
-      )
-    );
-  };
-
-  const removeActivity = (dayIndex, activityIndex) => {
-    setDayWiseItinerary(prev => 
-      prev.map((day, index) => 
-        index === dayIndex 
-          ? { ...day, activities: day.activities.filter((_, idx) => idx !== activityIndex) }
-          : day
-      )
-    );
-  };
-
-  const handleDayActivityChange = (dayIndex, activityIndex, value) => {
-    setDayWiseItinerary(prev => 
-      prev.map((day, index) => {
+  const removeArrayItem = (category, dayIndex, section, field, itemIndex) => {
+    setDayWiseData(prev => ({
+      ...prev,
+      [category]: prev[category].map((day, index) => {
         if (index === dayIndex) {
-          const activities = [...day.activities];
-          activities[activityIndex] = value;
-          return { ...day, activities };
+          const currentArray = day[section]?.[field] || [];
+          return {
+            ...day,
+            [section]: {
+              ...day[section],
+              [field]: currentArray.filter((_, idx) => idx !== itemIndex)
+            }
+          };
         }
         return day;
       })
-    );
+    }));
   };
 
-  const handleDayMealChange = (dayIndex, meal, isChecked) => {
-    setDayWiseItinerary(prev => 
-      prev.map((day, index) => {
-        if (index === dayIndex) {
-          const meals = isChecked 
-            ? [...day.meals, meal]
-            : day.meals.filter(m => m !== meal);
-          return { ...day, meals };
-        }
-        return day;
-      })
-    );
+  // Checkbox handlers for arrays
+  const handleCheckboxChange = (section, field, option) => {
+    setFormData(prev => {
+      const currentOptions = prev[section][field] || [];
+      if (currentOptions.includes(option)) {
+        return {
+          ...prev,
+          [section]: {
+            ...prev[section],
+            [field]: currentOptions.filter(item => item !== option)
+          }
+        };
+      } else {
+        return {
+          ...prev,
+          [section]: {
+            ...prev[section],
+            [field]: [...currentOptions, option]
+          }
+        };
+      }
+    });
   };
 
-  // Sync data from individual tabs to day-wise itinerary
-  const syncDataToDayWiseItinerary = () => {
-    setDayWiseItinerary(prev => 
-      prev.map((day, index) => {
-        const updatedDay = { ...day };
-        
-        // Sync flight data
-        if (formData.sourceCity || formData.destinationCity) {
-          updatedDay.flights = [{
-            ...updatedDay.flights[0],
-            airline: formData.preferredAirline || '',
-            from: formData.sourceCity || '',
-            to: formData.destinationCity || '',
-            departureTime: formData.departureDate || '',
-            arrivalTime: formData.returnDate || '',
-            flightClass: formData.flightClass || '',
-            preferredAirline: formData.preferredAirline || ''
-          }];
-        }
-
-        // Sync hotel data
-        if (formData.goingTo || formData.hotelDetails.checkIn) {
-          updatedDay.hotels = [{
-            ...updatedDay.hotels[0],
-            name: `Hotel in ${formData.goingTo}`,
-            checkIn: formData.hotelDetails.checkIn || '',
-            checkOut: formData.hotelDetails.checkOut || '',
-            roomType: formData.hotelDetails.roomType || '',
-            mealPlan: formData.hotelDetails.mealPlan || '',
-            adults: formData.hotelDetails.adults || 2,
-            children: formData.hotelDetails.children || 0
-          }];
-        }
-
-        // Sync transfer data
-        if (formData.transferDetails.pickup || formData.transferDetails.dropoff) {
-          updatedDay.transfers = [{
-            ...updatedDay.transfers[0],
-            pickup: formData.transferDetails.pickup || '',
-            dropoff: formData.transferDetails.dropoff || '',
-            vehicleType: formData.transferDetails.vehicleType || 'Sedan'
-          }];
-        }
-
-        // Sync visa data to notes
-        if (formData.visaDetails.country) {
-          updatedDay.notes = `Visa Requirements: ${formData.visaDetails.country} - ${formData.visaDetails.type} Visa (Processing: ${formData.visaDetails.processingTime})`;
-        }
-
-        return updatedDay;
-      })
-    );
-  };
-
+  // Flight package handlers
   const fetchFlightPackages = async () => {
     try {
       setFlightLoading(true);
@@ -478,91 +789,68 @@ function NewQuery({ leadId, user, customer }) {
     }
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
+  const handleFlightPackageSelect = (category, dayIndex, flight) => {
+    setDayWiseData(prev => ({
       ...prev,
-      [name]: value
+      [category]: prev[category].map((day, index) => {
+        if (index === dayIndex) {
+          return {
+            ...day,
+            selectedFlightPackage: flight._id,
+            flightType: flight.tripType || 'oneway',
+            airline: flight.airline || '',
+            flightNumber: flight.flightNumber || '',
+            departure: {
+              airport: flight.departure?.airport || '',
+              terminal: flight.departure?.terminal || '',
+              datetime: flight.departure?.datetime || '',
+              city: flight.departure?.city || ''
+            },
+            arrival: {
+              airport: flight.arrival?.airport || '',
+              terminal: flight.arrival?.terminal || '',
+              datetime: flight.arrival?.datetime || '',
+              city: flight.arrival?.city || ''
+            },
+            duration: flight.duration || '',
+            cabinClass: flight.class || 'economy',
+            adults: flight.passengers?.adults || 1,
+            children: flight.passengers?.children || 0,
+            infants: flight.passengers?.infants || 0,
+            preferredAirline: flight.airline || ''
+          };
+        }
+        return day;
+      })
     }));
   };
 
-  const handleNestedInputChange = (section, e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
+  const handleHotelPackageSelect = (category, dayIndex, hotel) => {
+    setDayWiseData(prev => ({
       ...prev,
-      [section]: {
-        ...prev[section],
-        [name]: value
-      }
-    }));
-  };
-
-  const handleFlightFilterChange = (e) => {
-    const { name, value } = e.target;
-    setFlightFilters(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleHotelFilterChange = (e) => {
-    const { name, value } = e.target;
-    setHotelFilters(prev => ({
-      ...prev,
-      [name]: value
-    }));
-  };
-
-  const handleCheckboxChange = (field, option) => {
-    setFormData(prev => {
-      const currentOptions = prev[field] || [];
-      if (currentOptions.includes(option)) {
-        return {
-          ...prev,
-          [field]: currentOptions.filter(item => item !== option)
-        };
-      } else {
-        return {
-          ...prev,
-          [field]: [...currentOptions, option]
-        };
-      }
-    });
-  };
-
-  const handleFlightPackageSelect = (flight) => {
-    setFormData(prev => ({
-      ...prev,
-      selectedFlightPackage: flight._id,
-      flightType: flight.tripType || 'oneway',
-      sourceCity: flight.departure?.city || '',
-      destinationCity: flight.arrival?.city || '',
-      departureDate: flight.departure?.datetime ? flight.departure.datetime.split('T')[0] : '',
-      returnDate: flight.returnFlight?.datetime ? flight.returnFlight.datetime.split('T')[0] : '',
-      adults: flight.passengers?.adults?.toString() || "1",
-      children: flight.passengers?.children || 0,
-      infants: flight.passengers?.infants || 0,
-      flightClass: flight.class || 'Economy',
-      preferredAirline: flight.airline || '',
-      remarks: flight.remarks || ''
-    }));
-  };
-
-  const handleHotelPackageSelect = (hotel) => {
-    setFormData(prev => ({
-      ...prev,
-      selectedHotelPackage: hotel._id,
-      goingTo: hotel.location?.city || '',
-      hotelDetails: {
-        checkIn: hotel.checkIn ? new Date(hotel.checkIn).toISOString().split('T')[0] : '',
-        checkOut: hotel.checkOut ? new Date(hotel.checkOut).toISOString().split('T')[0] : '',
-        roomType: hotel.roomType || 'Standard',
-        adults: hotel.guests?.adults || 2,
-        children: hotel.guests?.children || 0,
-        mealPlan: hotel.mealPlan || 'breakfast'
-      },
-      hotelPreference: hotel.starRating?.toString() || '3',
-      remarks: hotel.remarks || ''
+      [category]: prev[category].map((day, index) => {
+        if (index === dayIndex) {
+          return {
+            ...day,
+            selectedHotelPackage: hotel._id,
+            name: hotel.name || '',
+            starRating: hotel.starRating || 3,
+            location: {
+              address: hotel.location?.address || '',
+              city: hotel.location?.city || '',
+              coordinates: hotel.location?.coordinates || []
+            },
+            roomType: hotel.roomType || 'Standard',
+            amenities: hotel.amenities || [],
+            checkIn: hotel.checkIn || '',
+            checkOut: hotel.checkOut || '',
+            mealPlan: hotel.mealPlan || 'breakfast',
+            adults: hotel.guests?.adults || 2,
+            children: hotel.guests?.children || 0
+          };
+        }
+        return day;
+      })
     }));
   };
 
@@ -570,68 +858,54 @@ function NewQuery({ leadId, user, customer }) {
     e.preventDefault();
 
     if (activeTab < requirementTypes.length - 1) {
-      // Sync data before moving to next tab
-      if (activeTab === 0) { // Package tab
-        // Auto-create days based on noOfDays
-        if (formData.noOfDays && formData.noOfDays > 0) {
-          const numberOfDays = parseInt(formData.noOfDays);
-          const newDays = [];
-          for (let i = 1; i <= numberOfDays; i++) {
-            newDays.push({
-              day: i,
-              date: formData.specificDate || '',
-              description: `Day ${i} of your ${formData.noOfDays}-day ${formData.queryType} package from ${formData.goingFrom} to ${formData.goingTo}`,
-              flights: [{
-                airline: '',
-                flightNumber: '',
-                from: formData.goingFrom || '',
-                to: formData.goingTo || '',
-                departureTime: '',
-                arrivalTime: '',
-                flightClass: formData.flightClass || 'Economy',
-                preferredAirline: formData.preferredAirline || ''
-              }],
-              hotels: [{
-                name: '',
-                checkIn: '',
-                checkOut: '',
-                roomType: formData.hotelDetails.roomType || 'Standard',
-                mealPlan: formData.hotelDetails.mealPlan || 'breakfast',
-                adults: formData.travellers || 2,
-                children: 0
-              }],
-              transfers: [{
-                pickup: '',
-                dropoff: '',
-                vehicleType: 'Sedan'
-              }],
-              activities: [],
-              meals: formData.foodPreferences || [],
-              notes: formData.remarks || ''
-            });
-          }
-          setDayWiseItinerary(newDays);
-        }
-      } else {
-        // Sync data from current tab to day-wise itinerary
-        syncDataToDayWiseItinerary();
-      }
-      
       setActiveTab(activeTab + 1);
     } else {
-      // Final submission
+      // Final submission - structure data according to schema
       const payload = {
-        formData: {
-          ...formData,
-          // Include day-wise itinerary if we're on that tab
-          ...(requirementTypes[activeTab] === 'Day-wise Itinerary' && { dayWiseItinerary })
-        },
+        // Core references
         leadId,
-        customer,
-        employee,
+        customer: {
+          id: customer?._id,
+          name: customerData.name,
+          email: customerData.email,
+          contact: customerData.contact,
+          type: customerData.type
+        },
+        employee: {
+          id: employee.employeeId,
+          email: employee.email,
+          name: employee.name || 'Travel Consultant'
+        },
+
+        // Query status
+        onStatus: formData.onStatus,
+
+        // Package data
+        package: formData.package,
+
+        // Day-wise data
+        dayWiseData,
+
+        // Individual requirement types
+        includes: {
+          flights: requirementTypes.includes('Flight'),
+          hotels: requirementTypes.includes('Hotel'),
+          visas: requirementTypes.includes('Visa'),
+          meals: {
+            breakfast: formData.package.foodPreferences.includes('Breakfast'),
+            lunch: formData.package.foodPreferences.includes('Lunch'),
+            dinner: formData.package.foodPreferences.includes('Dinner')
+          },
+          transfers: requirementTypes.includes('Transfer'),
+          activities: requirementTypes.includes('Sightseeing'),
+          insurance: formData.package.inclusions.includes('Insurance')
+        },
+
+        // Pricing information
+        pricing: formData.pricing
       };
 
-      console.log(payload, 'Submitting payload');
+      console.log('Submitting payload:', payload);
 
       try {
         const response = await axios.post(
@@ -639,11 +913,11 @@ function NewQuery({ leadId, user, customer }) {
           payload
         );
 
-        console.log('Final form submission:', payload);
-        alert('Form submitted successfully!');
+        console.log('Form submitted successfully:', response.data);
+        alert('Query created successfully!');
       } catch (error) {
         console.error('Error submitting form:', error);
-        alert('Failed to submit the form. Please try again.');
+        alert('Failed to submit the query. Please try again.');
       }
     }
   };
@@ -677,105 +951,37 @@ function NewQuery({ leadId, user, customer }) {
           withAmount: data.withAmount
         }));
 
-      // Extract relevant data for each requirement type
+      // Prepare itinerary data
       const itineraryData = {};
       
       if (itinerarySelections.Package?.selected) {
         itineraryData.package = {
-          queryType: formData.queryType,
-          goingFrom: formData.goingFrom,
-          goingTo: formData.goingTo,
-          specificDate: formData.specificDate,
-          noOfDays: formData.noOfDays,
-          travellers: formData.travellers,
-          priceRange: formData.priceRange,
-          inclusions: formData.inclusions,
-          themes: formData.themes,
-          hotelPreference: formData.hotelPreference,
-          foodPreferences: formData.foodPreferences,
-          remarks: formData.remarks,
-          expectedClosureDate: formData.expectedClosureDate,
-          expectedClosureAmount: itinerarySelections.Package.withAmount ? formData.expectedClosureAmount : undefined
+          ...formData.package,
+          expectedClosureAmount: itinerarySelections.Package.withAmount ? formData.package.expectedClosureAmount : undefined
         };
       }
 
-      if (itinerarySelections.Flight?.selected) {
-        itineraryData.flight = {
-          selectionType: formData.flightSelectionType,
-          selectedFlightPackage: formData.selectedFlightPackage,
-          flightType: formData.flightType,
-          sourceCity: formData.sourceCity,
-          destinationCity: formData.destinationCity,
-          departureDate: formData.departureDate,
-          returnDate: formData.returnDate,
-          adults: formData.adults,
-          children: formData.children,
-          infants: formData.infants,
-          flightClass: formData.flightClass,
-          preferredAirline: formData.preferredAirline,
-          remarks: formData.remarks,
-          expectedClosureDate: formData.expectedClosureDate,
-          expectedClosureAmount: itinerarySelections.Flight.withAmount ? formData.expectedClosureAmount : undefined,
-          thirdPartyDetails: formData.flightSelectionType === 'thirdParty' ? {
-            pnr: formData.thirdPartyFlightDetails.pnr,
-            supplier: formData.thirdPartyFlightDetails.supplier,
-            cost: formData.thirdPartyFlightDetails.cost
-          } : undefined
-        };
-      }
-
-      if (itinerarySelections.Hotel?.selected) {
-        itineraryData.hotel = {
-          selectionType: formData.hotelSelectionType,
-          selectedHotelPackage: formData.selectedHotelPackage,
-          location: formData.goingTo,
-          hotelPreference: formData.hotelPreference,
-          hotelDetails: {
-            checkIn: formData.hotelDetails.checkIn,
-            checkOut: formData.hotelDetails.checkOut,
-            roomType: formData.hotelDetails.roomType,
-            adults: formData.hotelDetails.adults,
-            children: formData.hotelDetails.children,
-            mealPlan: formData.hotelDetails.mealPlan
-          },
-          remarks: formData.remarks,
-          expectedClosureDate: formData.expectedClosureDate,
-          expectedClosureAmount: itinerarySelections.Hotel.withAmount ? formData.expectedClosureAmount : undefined,
-          thirdPartyDetails: formData.hotelSelectionType === 'thirdParty' ? {
-            confirmationNumber: formData.thirdPartyHotelDetails.confirmationNumber,
-            supplier: formData.thirdPartyHotelDetails.supplier,
-            cost: formData.thirdPartyHotelDetails.cost
-          } : undefined
-        };
-      }
-
-      // Add other requirement types
-      if (itinerarySelections.Transfer?.selected) {
-        itineraryData.transfer = {
-          pickup: formData.transferDetails.pickup,
-          dropoff: formData.transferDetails.dropoff,
-          vehicleType: formData.transferDetails.vehicleType,
-          remarks: formData.remarks,
-          expectedClosureDate: formData.expectedClosureDate,
-          expectedClosureAmount: itinerarySelections.Transfer.withAmount ? formData.expectedClosureAmount : undefined
-        };
-      }
-
-      if (itinerarySelections.Visa?.selected) {
-        itineraryData.visa = {
-          country: formData.visaDetails.country,
-          type: formData.visaDetails.type,
-          processingTime: formData.visaDetails.processingTime,
-          remarks: formData.remarks,
-          expectedClosureDate: formData.expectedClosureDate,
-          expectedClosureAmount: itinerarySelections.Visa.withAmount ? formData.expectedClosureAmount : undefined
-        };
-      }
-
-      // Include day-wise itinerary if selected
-      if (itinerarySelections['Day-wise Itinerary']?.selected) {
-        itineraryData.dayWiseItinerary = dayWiseItinerary;
-      }
+      // Include day-wise data for selected types
+      Object.entries(itinerarySelections).forEach(([type, data]) => {
+        if (data.selected && type !== 'Package') {
+          const categoryMap = {
+            'Flight': 'flights',
+            'Hotel': 'hotels',
+            'Transfer': 'transfers',
+            'Visa': 'visas',
+            'Sightseeing': 'sightseeing',
+            'Miscellaneous': 'miscellaneous',
+            'Company Formation': 'companyFormation',
+            'Forex': 'forex',
+            'Day-wise Itinerary': 'itinerary'
+          };
+          
+          const category = categoryMap[type];
+          if (category && dayWiseData[category]) {
+            itineraryData[category] = dayWiseData[category];
+          }
+        }
+      });
 
       // Generate HTML content for the itinerary
       const htmlContent = generateItineraryHTML({
@@ -1226,145 +1432,52 @@ function NewQuery({ leadId, user, customer }) {
             </div>` : ''}
         </div>` : ''}
         
-        ${data.flight ? `
+        ${data.flights && data.flights.length > 0 ? `
         <div class="itinerary-section">
             <div class="section-title"><span class="section-icon">✈️</span> Flight Details</div>
-            <table class="details-table">
-                <tr>
-                    <th>Route</th>
-                    <th>Departure</th>
-                    <th>Passengers</th>
-                    <th>Class</th>
-                </tr>
-                <tr>
-                    <td>${data.flight.sourceCity} → ${data.flight.destinationCity}</td>
-                    <td>${data.flight.departureDate}</td>
-                    <td>${data.flight.adults} Adults, ${data.flight.children} Children, ${data.flight.infants} Infants</td>
-                    <td>${data.flight.flightClass}</td>
-                </tr>
-            </table>
-            ${data.flight.expectedClosureAmount ? `
-            <div class="amount-section">
-                <div class="amount-label">Expected Closure Amount</div>
-                <div class="amount-value">$${data.flight.expectedClosureAmount}</div>
-            </div>` : ''}
-        </div>` : ''}
+            ${data.flights.map(flight => `
+                <div style="margin-bottom: 30px; padding: 20px; background: #f8fafc; border-radius: 8px; border-left: 4px solid #4299e1;">
+                    <h3 style="color: #2d3748; margin-bottom: 15px; font-size: 1.2em;">Day ${flight.day} ${flight.date ? `- ${flight.date}` : ''}</h3>
+                    ${flight.airline ? `
+                    <div style="margin-bottom: 15px;">
+                        <h4 style="color: #2d3748; margin-bottom: 8px;">✈️ Flight Details</h4>
+                        <p><strong>${flight.airline}</strong> ${flight.flightNumber || ''}</p>
+                        <p>${flight.departure?.city || ''} → ${flight.arrival?.city || ''}</p>
+                        ${flight.departure?.datetime ? `<p>Departure: ${flight.departure.datetime}</p>` : ''}
+                        ${flight.arrival?.datetime ? `<p>Arrival: ${flight.arrival.datetime}</p>` : ''}
+                        ${flight.cabinClass ? `<p>Class: ${flight.cabinClass}</p>` : ''}
+                    </div>
+                    ` : ''}
+                    ${flight.remarks ? `
+                    <div>
+                        <h4 style="color: #2d3748; margin-bottom: 8px;">📝 Remarks</h4>
+                        <p>${flight.remarks}</p>
+                    </div>
+                    ` : ''}
+                </div>
+            `).join('')}
+        </div>
+        ` : ''}
         
-        ${data.hotel ? `
+        ${data.hotels && data.hotels.length > 0 ? `
         <div class="itinerary-section">
             <div class="section-title"><span class="section-icon">🏨</span> Hotel Details</div>
-            <table class="details-table">
-                <tr>
-                    <th>Location</th>
-                    <th>Check-in</th>
-                    <th>Check-out</th>
-                    <th>Guests</th>
-                </tr>
-                <tr>
-                    <td>${data.hotel.location}</td>
-                    <td>${data.hotel.hotelDetails.checkIn}</td>
-                    <td>${data.hotel.hotelDetails.checkOut}</td>
-                    <td>${data.hotel.hotelDetails.adults} Adults, ${data.hotel.hotelDetails.children} Children</td>
-                </tr>
-            </table>
-            ${data.hotel.expectedClosureAmount ? `
-            <div class="amount-section">
-                <div class="amount-label">Expected Closure Amount</div>
-                <div class="amount-value">$${data.hotel.expectedClosureAmount}</div>
-            </div>` : ''}
-        </div>` : ''}
-        
-        ${data.transfer ? `
-        <div class="itinerary-section">
-            <div class="section-title"><span class="section-icon">🚗</span> Transfer Details</div>
-            <table class="details-table">
-                <tr>
-                    <th>Pickup</th>
-                    <th>Dropoff</th>
-                    <th>Vehicle Type</th>
-                </tr>
-                <tr>
-                    <td>${data.transfer.pickup}</td>
-                    <td>${data.transfer.dropoff}</td>
-                    <td>${data.transfer.vehicleType}</td>
-                </tr>
-            </table>
-            ${data.transfer.expectedClosureAmount ? `
-            <div class="amount-section">
-                <div class="amount-label">Expected Closure Amount</div>
-                <div class="amount-value">$${data.transfer.expectedClosureAmount}</div>
-            </div>` : ''}
-        </div>` : ''}
-        
-        ${data.visa ? `
-        <div class="itinerary-section">
-            <div class="section-title"><span class="section-icon">🛂</span> Visa Details</div>
-            <table class="details-table">
-                <tr>
-                    <th>Country</th>
-                    <th>Visa Type</th>
-                    <th>Processing Time</th>
-                </tr>
-                <tr>
-                    <td>${data.visa.country}</td>
-                    <td>${data.visa.type}</td>
-                    <td>${data.visa.processingTime}</td>
-                </tr>
-            </table>
-            ${data.visa.expectedClosureAmount ? `
-            <div class="amount-section">
-                <div class="amount-label">Expected Closure Amount</div>
-                <div class="amount-value">$${data.visa.expectedClosureAmount}</div>
-            </div>` : ''}
-        </div>` : ''}
-        
-        ${data.dayWiseItinerary && data.dayWiseItinerary.length > 0 ? `
-        <div class="itinerary-section">
-            <div class="section-title"><span class="section-icon">📅</span> Day-wise Itinerary</div>
-            ${data.dayWiseItinerary.map(day => `
+            ${data.hotels.map(hotel => `
                 <div style="margin-bottom: 30px; padding: 20px; background: #f8fafc; border-radius: 8px; border-left: 4px solid #4299e1;">
-                    <h3 style="color: #2d3748; margin-bottom: 15px; font-size: 1.2em;">Day ${day.day} ${day.date ? `- ${day.date}` : ''}</h3>
-                    ${day.description ? `<p style="margin-bottom: 15px; color: #4a5568;">${day.description}</p>` : ''}
-                    
-                    ${day.flights && day.flights[0] && day.flights[0].airline ? `
+                    <h3 style="color: #2d3748; margin-bottom: 15px; font-size: 1.2em;">Day ${hotel.day} ${hotel.date ? `- ${hotel.date}` : ''}</h3>
+                    ${hotel.name ? `
                     <div style="margin-bottom: 15px;">
-                        <h4 style="color: #2d3748; margin-bottom: 8px;">✈️ Flight</h4>
-                        <p><strong>${day.flights[0].airline}</strong> ${day.flights[0].flightNumber || ''} | 
-                        ${day.flights[0].from || ''} → ${day.flights[0].to || ''}</p>
-                        ${day.flights[0].departureTime ? `<p>Departure: ${day.flights[0].departureTime}</p>` : ''}
-                        ${day.flights[0].arrivalTime ? `<p>Arrival: ${day.flights[0].arrivalTime}</p>` : ''}
+                        <h4 style="color: #2d3748; margin-bottom: 8px;">🏨 Hotel Details</h4>
+                        <p><strong>${hotel.name}</strong> ${hotel.starRating ? `- ${'★'.repeat(hotel.starRating)}` : ''}</p>
+                        ${hotel.location?.city ? `<p>Location: ${hotel.location.city}</p>` : ''}
+                        ${hotel.roomType ? `<p>Room Type: ${hotel.roomType}</p>` : ''}
+                        ${hotel.mealPlan ? `<p>Meal Plan: ${hotel.mealPlan}</p>` : ''}
                     </div>
                     ` : ''}
-                    
-                    ${day.hotels && day.hotels[0] && day.hotels[0].name ? `
-                    <div style="margin-bottom: 15px;">
-                        <h4 style="color: #2d3748; margin-bottom: 8px;">🏨 Accommodation</h4>
-                        <p><strong>${day.hotels[0].name}</strong> | ${day.hotels[0].roomType || ''}</p>
-                        ${day.hotels[0].checkIn ? `<p>Check-in: ${day.hotels[0].checkIn}</p>` : ''}
-                        ${day.hotels[0].checkOut ? `<p>Check-out: ${day.hotels[0].checkOut}</p>` : ''}
-                    </div>
-                    ` : ''}
-                    
-                    ${day.activities && day.activities.length > 0 ? `
-                    <div style="margin-bottom: 15px;">
-                        <h4 style="color: #2d3748; margin-bottom: 8px;">🏛️ Activities</h4>
-                        <ul style="padding-left: 20px;">
-                            ${day.activities.map(activity => `<li>${activity}</li>`).join('')}
-                        </ul>
-                    </div>
-                    ` : ''}
-                    
-                    ${day.meals && day.meals.length > 0 ? `
-                    <div style="margin-bottom: 15px;">
-                        <h4 style="color: #2d3748; margin-bottom: 8px;">🍽️ Meals Included</h4>
-                        <p>${day.meals.join(', ')}</p>
-                    </div>
-                    ` : ''}
-                    
-                    ${day.notes ? `
+                    ${hotel.remarks ? `
                     <div>
-                        <h4 style="color: #2d3748; margin-bottom: 8px;">📝 Notes</h4>
-                        <p>${day.notes}</p>
+                        <h4 style="color: #2d3748; margin-bottom: 8px;">📝 Remarks</h4>
+                        <p>${hotel.remarks}</p>
                     </div>
                     ` : ''}
                 </div>
@@ -1394,26 +1507,258 @@ function NewQuery({ leadId, user, customer }) {
 `;
   };
 
-  const formatDuration = (minutes) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return `${hours}h ${mins}m`;
-  };
+  // Component rendering functions for each tab
+  const renderPackageTab = () => (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Package Name *</label>
+          <input
+            type="text"
+            name="package.name"
+            value={formData.package.name}
+            onChange={handleInputChange}
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Query Type *</label>
+          <div className="flex space-x-4">
+            <label className="inline-flex items-center">
+              <input
+                type="radio"
+                name="package.queryType"
+                checked={formData.package.queryType === 'FIT'}
+                onChange={() => handleInputChange({ target: { name: 'package.queryType', value: 'FIT' } })}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+              />
+              <span className="ml-2 text-gray-700">FIT (Normal)</span>
+            </label>
+            <label className="inline-flex items-center">
+              <input
+                type="radio"
+                name="package.queryType"
+                checked={formData.package.queryType === 'GIT'}
+                onChange={() => handleInputChange({ target: { name: 'package.queryType', value: 'GIT' } })}
+                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+              />
+              <span className="ml-2 text-gray-700">GIT (Group)</span>
+            </label>
+          </div>
+        </div>
+      </div>
 
-  const formatDate = (dateString) => {
-    if (!dateString) return '';
-    const options = { year: 'numeric', month: 'short', day: 'numeric' };
-    return new Date(dateString).toLocaleDateString(undefined, options);
-  };
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Going From *</label>
+          <input
+            type="text"
+            name="package.goingFrom"
+            value={formData.package.goingFrom}
+            onChange={handleInputChange}
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Going To *</label>
+          <input
+            type="text"
+            name="package.goingTo"
+            value={formData.package.goingTo}
+            onChange={handleInputChange}
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            required
+          />
+        </div>
+      </div>
 
-  // Day-wise Itinerary Component
-  const dayWiseItineraryFields = () => (
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Specific Date *</label>
+          <input
+            type="date"
+            name="package.specificDate"
+            value={formData.package.specificDate}
+            onChange={handleInputChange}
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">No Of Days *</label>
+          <input
+            type="number"
+            name="package.noOfDays"
+            value={formData.package.noOfDays}
+            onChange={handleInputChange}
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            min="1"
+            required
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Travellers Count *</label>
+          <input
+            type="number"
+            name="package.travellers"
+            value={formData.package.travellers}
+            onChange={handleInputChange}
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            min="1"
+            required
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Price Range (per person)</label>
+          <select
+            name="package.priceRange"
+            value={formData.package.priceRange}
+            onChange={handleInputChange}
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="">Select Range</option>
+            <option value="0-500">$0 - $500</option>
+            <option value="500-1000">$500 - $1000</option>
+            <option value="1000-2000">$1000 - $2000</option>
+            <option value="2000-5000">$2000 - $5000</option>
+            <option value="5000+">$5000+</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Package Description *</label>
+        <textarea
+          name="package.description"
+          value={formData.package.description}
+          onChange={handleInputChange}
+          className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+          rows="3"
+          required
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Select Inclusions</label>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mt-2">
+          {inclusionOptions.map(option => (
+            <label key={option} className="inline-flex items-center">
+              <input
+                type="checkbox"
+                checked={formData.package.inclusions.includes(option)}
+                onChange={() => handleCheckboxChange('package', 'inclusions', option)}
+                className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+              />
+              <span className="ml-2 text-sm text-gray-700">{option}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Select Themes</label>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mt-2">
+          {themeOptions.map(option => (
+            <label key={option} className="inline-flex items-center">
+              <input
+                type="checkbox"
+                checked={formData.package.themes.includes(option)}
+                onChange={() => handleCheckboxChange('package', 'themes', option)}
+                className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+              />
+              <span className="ml-2 text-sm text-gray-700">{option}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Hotel Preference (1-5)</label>
+          <div className="flex items-center space-x-2">
+            {[1, 2, 3, 4, 5].map(star => (
+              <button
+                key={star}
+                type="button"
+                onClick={() => handleInputChange({ target: { name: 'package.hotelPreference', value: star.toString() } })}
+                className={`p-1 rounded-full ${formData.package.hotelPreference >= star ? 'text-yellow-400' : 'text-gray-300'}`}
+              >
+                <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                </svg>
+              </button>
+            ))}
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Food Preferences</label>
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            {foodPreferenceOptions.map(option => (
+              <label key={option} className="inline-flex items-center">
+                <input
+                  type="checkbox"
+                  checked={formData.package.foodPreferences.includes(option)}
+                  onChange={() => handleCheckboxChange('package', 'foodPreferences', option)}
+                  className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
+                />
+                <span className="ml-2 text-sm text-gray-700">{option}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
+        <textarea
+          name="package.remarks"
+          value={formData.package.remarks}
+          onChange={handleInputChange}
+          className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+          rows="3"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Expected Closure Date</label>
+          <input
+            type="date"
+            name="package.expectedClosureDate"
+            value={formData.package.expectedClosureDate}
+            onChange={handleInputChange}
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Expected Closure Amount</label>
+          <input
+            type="number"
+            name="package.expectedClosureAmount"
+            value={formData.package.expectedClosureAmount}
+            onChange={handleInputChange}
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+            min="0"
+            step="0.01"
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  // Flight Tab Component (Day-wise)
+  const renderFlightTab = () => (
     <div className="space-y-6">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-semibold">Day-wise Itinerary Planner</h3>
+        <h3 className="text-lg font-semibold">Day-wise Flight Details</h3>
         <button
           type="button"
-          onClick={addNewDay}
+          onClick={() => addNewDay('flights')}
           className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center"
         >
           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1423,14 +1768,973 @@ function NewQuery({ leadId, user, customer }) {
         </button>
       </div>
 
-      {dayWiseItinerary.map((day, dayIndex) => (
+      {dayWiseData.flights.map((flight, dayIndex) => (
+        <div key={dayIndex} className="border border-gray-200 rounded-lg p-6 bg-gray-50">
+          <div className="flex justify-between items-center mb-4">
+            <h4 className="text-lg font-semibold text-blue-600">Day {flight.day}</h4>
+            {dayWiseData.flights.length > 1 && (
+              <button
+                type="button"
+                onClick={() => removeDay('flights', dayIndex)}
+                className="text-red-600 hover:text-red-800"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+              <input
+                type="date"
+                value={flight.date}
+                onChange={(e) => handleDayFieldChange('flights', dayIndex, 'date', e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Day Number</label>
+              <input
+                type="number"
+                value={flight.day}
+                onChange={(e) => handleDayFieldChange('flights', dayIndex, 'day', parseInt(e.target.value))}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                min="1"
+              />
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <div className="flex border-b border-gray-200">
+              <button
+                type="button"
+                onClick={() => handleDayFieldChange('flights', dayIndex, 'selectionType', 'new')}
+                className={`py-2 px-4 font-medium text-sm ${flight.selectionType === 'new' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                Create New Flight
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDayFieldChange('flights', dayIndex, 'selectionType', 'existing')}
+                className={`py-2 px-4 font-medium text-sm ${flight.selectionType === 'existing' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                Select From Existing
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDayFieldChange('flights', dayIndex, 'selectionType', 'thirdParty')}
+                className={`py-2 px-4 font-medium text-sm ${flight.selectionType === 'thirdParty' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                Third Party Flight
+              </button>
+            </div>
+          </div>
+
+          {flight.selectionType === 'new' && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Airline</label>
+                  <input
+                    type="text"
+                    value={flight.airline}
+                    onChange={(e) => handleDayFieldChange('flights', dayIndex, 'airline', e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Flight Number</label>
+                  <input
+                    type="text"
+                    value={flight.flightNumber}
+                    onChange={(e) => handleDayFieldChange('flights', dayIndex, 'flightNumber', e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Departure City</label>
+                  <input
+                    type="text"
+                    value={flight.departure.city}
+                    onChange={(e) => handleDayDeepFieldChange('flights', dayIndex, 'departure', 'city', e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Arrival City</label>
+                  <input
+                    type="text"
+                    value={flight.arrival.city}
+                    onChange={(e) => handleDayDeepFieldChange('flights', dayIndex, 'arrival', 'city', e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Departure Date & Time</label>
+                  <input
+                    type="datetime-local"
+                    value={flight.departure.datetime}
+                    onChange={(e) => handleDayDeepFieldChange('flights', dayIndex, 'departure', 'datetime', e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Arrival Date & Time</label>
+                  <input
+                    type="datetime-local"
+                    value={flight.arrival.datetime}
+                    onChange={(e) => handleDayDeepFieldChange('flights', dayIndex, 'arrival', 'datetime', e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {flight.selectionType === 'existing' && renderExistingFlightPackages('flights', dayIndex)}
+          {flight.selectionType === 'thirdParty' && renderThirdPartyFlight('flights', dayIndex)}
+
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
+            <textarea
+              value={flight.remarks}
+              onChange={(e) => handleDayFieldChange('flights', dayIndex, 'remarks', e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              rows="2"
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  // Hotel Tab Component (Day-wise)
+  const renderHotelTab = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold">Day-wise Hotel Details</h3>
+        <button
+          type="button"
+          onClick={() => addNewDay('hotels')}
+          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center"
+        >
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Add Day
+        </button>
+      </div>
+
+      {dayWiseData.hotels.map((hotel, dayIndex) => (
+        <div key={dayIndex} className="border border-gray-200 rounded-lg p-6 bg-gray-50">
+          <div className="flex justify-between items-center mb-4">
+            <h4 className="text-lg font-semibold text-blue-600">Day {hotel.day}</h4>
+            {dayWiseData.hotels.length > 1 && (
+              <button
+                type="button"
+                onClick={() => removeDay('hotels', dayIndex)}
+                className="text-red-600 hover:text-red-800"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+              <input
+                type="date"
+                value={hotel.date}
+                onChange={(e) => handleDayFieldChange('hotels', dayIndex, 'date', e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Day Number</label>
+              <input
+                type="number"
+                value={hotel.day}
+                onChange={(e) => handleDayFieldChange('hotels', dayIndex, 'day', parseInt(e.target.value))}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                min="1"
+              />
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <div className="flex border-b border-gray-200">
+              <button
+                type="button"
+                onClick={() => handleDayFieldChange('hotels', dayIndex, 'selectionType', 'new')}
+                className={`py-2 px-4 font-medium text-sm ${hotel.selectionType === 'new' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                Create New Hotel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDayFieldChange('hotels', dayIndex, 'selectionType', 'existing')}
+                className={`py-2 px-4 font-medium text-sm ${hotel.selectionType === 'existing' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                Select From Existing
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDayFieldChange('hotels', dayIndex, 'selectionType', 'thirdParty')}
+                className={`py-2 px-4 font-medium text-sm ${hotel.selectionType === 'thirdParty' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+              >
+                Third Party Hotel
+              </button>
+            </div>
+          </div>
+
+          {hotel.selectionType === 'new' && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Hotel Name</label>
+                  <input
+                    type="text"
+                    value={hotel.name}
+                    onChange={(e) => handleDayFieldChange('hotels', dayIndex, 'name', e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Star Rating</label>
+                  <select
+                    value={hotel.starRating}
+                    onChange={(e) => handleDayFieldChange('hotels', dayIndex, 'starRating', parseInt(e.target.value))}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="1">1 Star</option>
+                    <option value="2">2 Stars</option>
+                    <option value="3">3 Stars</option>
+                    <option value="4">4 Stars</option>
+                    <option value="5">5 Stars</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">City</label>
+                  <input
+                    type="text"
+                    value={hotel.location.city}
+                    onChange={(e) => handleDayDeepFieldChange('hotels', dayIndex, 'location', 'city', e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+                  <input
+                    type="text"
+                    value={hotel.location.address}
+                    onChange={(e) => handleDayDeepFieldChange('hotels', dayIndex, 'location', 'address', e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Check-In Date</label>
+                  <input
+                    type="date"
+                    value={hotel.checkIn}
+                    onChange={(e) => handleDayFieldChange('hotels', dayIndex, 'checkIn', e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Check-Out Date</label>
+                  <input
+                    type="date"
+                    value={hotel.checkOut}
+                    onChange={(e) => handleDayFieldChange('hotels', dayIndex, 'checkOut', e.target.value)}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {hotel.selectionType === 'existing' && renderExistingHotelPackages('hotels', dayIndex)}
+          {hotel.selectionType === 'thirdParty' && renderThirdPartyHotel('hotels', dayIndex)}
+
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
+            <textarea
+              value={hotel.remarks}
+              onChange={(e) => handleDayFieldChange('hotels', dayIndex, 'remarks', e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              rows="2"
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  // Transfer Tab Component (Day-wise)
+  const renderTransferTab = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold">Day-wise Transfer Details</h3>
+        <button
+          type="button"
+          onClick={() => addNewDay('transfers')}
+          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center"
+        >
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Add Day
+        </button>
+      </div>
+
+      {dayWiseData.transfers.map((transfer, dayIndex) => (
+        <div key={dayIndex} className="border border-gray-200 rounded-lg p-6 bg-gray-50">
+          <div className="flex justify-between items-center mb-4">
+            <h4 className="text-lg font-semibold text-blue-600">Day {transfer.day}</h4>
+            {dayWiseData.transfers.length > 1 && (
+              <button
+                type="button"
+                onClick={() => removeDay('transfers', dayIndex)}
+                className="text-red-600 hover:text-red-800"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+              <input
+                type="date"
+                value={transfer.date}
+                onChange={(e) => handleDayFieldChange('transfers', dayIndex, 'date', e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Day Number</label>
+              <input
+                type="number"
+                value={transfer.day}
+                onChange={(e) => handleDayFieldChange('transfers', dayIndex, 'day', parseInt(e.target.value))}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                min="1"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Pickup Location</label>
+              <input
+                type="text"
+                value={transfer.pickup}
+                onChange={(e) => handleDayFieldChange('transfers', dayIndex, 'pickup', e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Dropoff Location</label>
+              <input
+                type="text"
+                value={transfer.dropoff}
+                onChange={(e) => handleDayFieldChange('transfers', dayIndex, 'dropoff', e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle Type</label>
+              <select
+                value={transfer.vehicleType}
+                onChange={(e) => handleDayFieldChange('transfers', dayIndex, 'vehicleType', e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              >
+                {vehicleTypeOptions.map(option => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Transfer Time</label>
+              <input
+                type="time"
+                value={transfer.time}
+                onChange={(e) => handleDayFieldChange('transfers', dayIndex, 'time', e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
+            <textarea
+              value={transfer.remarks}
+              onChange={(e) => handleDayFieldChange('transfers', dayIndex, 'remarks', e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              rows="2"
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  // Visa Tab Component (Day-wise)
+  const renderVisaTab = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold">Day-wise Visa Details</h3>
+        <button
+          type="button"
+          onClick={() => addNewDay('visas')}
+          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center"
+        >
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Add Day
+        </button>
+      </div>
+
+      {dayWiseData.visas.map((visa, dayIndex) => (
+        <div key={dayIndex} className="border border-gray-200 rounded-lg p-6 bg-gray-50">
+          <div className="flex justify-between items-center mb-4">
+            <h4 className="text-lg font-semibold text-blue-600">Day {visa.day}</h4>
+            {dayWiseData.visas.length > 1 && (
+              <button
+                type="button"
+                onClick={() => removeDay('visas', dayIndex)}
+                className="text-red-600 hover:text-red-800"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+              <input
+                type="date"
+                value={visa.date}
+                onChange={(e) => handleDayFieldChange('visas', dayIndex, 'date', e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Day Number</label>
+              <input
+                type="number"
+                value={visa.day}
+                onChange={(e) => handleDayFieldChange('visas', dayIndex, 'day', parseInt(e.target.value))}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                min="1"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
+              <input
+                type="text"
+                value={visa.country}
+                onChange={(e) => handleDayFieldChange('visas', dayIndex, 'country', e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Visa Type</label>
+              <select
+                value={visa.type}
+                onChange={(e) => handleDayFieldChange('visas', dayIndex, 'type', e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              >
+                {visaTypeOptions.map(option => (
+                  <option key={option} value={option}>{option.charAt(0).toUpperCase() + option.slice(1)}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Processing Time</label>
+            <input
+              type="text"
+              value={visa.processingTime}
+              onChange={(e) => handleDayFieldChange('visas', dayIndex, 'processingTime', e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              placeholder="e.g., 5-7 business days"
+            />
+          </div>
+
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
+            <textarea
+              value={visa.remarks}
+              onChange={(e) => handleDayFieldChange('visas', dayIndex, 'remarks', e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              rows="2"
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  // Sightseeing Tab Component (Day-wise)
+  const renderSightseeingTab = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold">Day-wise Sightseeing Details</h3>
+        <button
+          type="button"
+          onClick={() => addNewDay('sightseeing')}
+          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center"
+        >
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Add Day
+        </button>
+      </div>
+
+      {dayWiseData.sightseeing.map((activity, dayIndex) => (
+        <div key={dayIndex} className="border border-gray-200 rounded-lg p-6 bg-gray-50">
+          <div className="flex justify-between items-center mb-4">
+            <h4 className="text-lg font-semibold text-blue-600">Day {activity.day}</h4>
+            {dayWiseData.sightseeing.length > 1 && (
+              <button
+                type="button"
+                onClick={() => removeDay('sightseeing', dayIndex)}
+                className="text-red-600 hover:text-red-800"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+              <input
+                type="date"
+                value={activity.date}
+                onChange={(e) => handleDayFieldChange('sightseeing', dayIndex, 'date', e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Day Number</label>
+              <input
+                type="number"
+                value={activity.day}
+                onChange={(e) => handleDayFieldChange('sightseeing', dayIndex, 'day', parseInt(e.target.value))}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                min="1"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Activity</label>
+              <input
+                type="text"
+                value={activity.activity}
+                onChange={(e) => handleDayFieldChange('sightseeing', dayIndex, 'activity', e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+              <input
+                type="text"
+                value={activity.location}
+                onChange={(e) => handleDayFieldChange('sightseeing', dayIndex, 'location', e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Duration</label>
+              <input
+                type="text"
+                value={activity.duration}
+                onChange={(e) => handleDayFieldChange('sightseeing', dayIndex, 'duration', e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                placeholder="e.g., 3 hours"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
+              <input
+                type="time"
+                value={activity.time}
+                onChange={(e) => handleDayFieldChange('sightseeing', dayIndex, 'time', e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
+            <textarea
+              value={activity.remarks}
+              onChange={(e) => handleDayFieldChange('sightseeing', dayIndex, 'remarks', e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              rows="2"
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  // Miscellaneous Tab Component (Day-wise)
+  const renderMiscellaneousTab = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold">Day-wise Miscellaneous Details</h3>
+        <button
+          type="button"
+          onClick={() => addNewDay('miscellaneous')}
+          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center"
+        >
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Add Day
+        </button>
+      </div>
+
+      {dayWiseData.miscellaneous.map((item, dayIndex) => (
+        <div key={dayIndex} className="border border-gray-200 rounded-lg p-6 bg-gray-50">
+          <div className="flex justify-between items-center mb-4">
+            <h4 className="text-lg font-semibold text-blue-600">Day {item.day}</h4>
+            {dayWiseData.miscellaneous.length > 1 && (
+              <button
+                type="button"
+                onClick={() => removeDay('miscellaneous', dayIndex)}
+                className="text-red-600 hover:text-red-800"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+              <input
+                type="date"
+                value={item.date}
+                onChange={(e) => handleDayFieldChange('miscellaneous', dayIndex, 'date', e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Day Number</label>
+              <input
+                type="number"
+                value={item.day}
+                onChange={(e) => handleDayFieldChange('miscellaneous', dayIndex, 'day', parseInt(e.target.value))}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                min="1"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+              <input
+                type="text"
+                value={item.description}
+                onChange={(e) => handleDayFieldChange('miscellaneous', dayIndex, 'description', e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+              <input
+                type="text"
+                value={item.category}
+                onChange={(e) => handleDayFieldChange('miscellaneous', dayIndex, 'category', e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                placeholder="e.g., Insurance, Tips, etc."
+              />
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
+            <textarea
+              value={item.remarks}
+              onChange={(e) => handleDayFieldChange('miscellaneous', dayIndex, 'remarks', e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              rows="2"
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  // Company Formation Tab Component (Day-wise)
+  const renderCompanyFormationTab = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold">Day-wise Company Formation Details</h3>
+        <button
+          type="button"
+          onClick={() => addNewDay('companyFormation')}
+          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center"
+        >
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Add Day
+        </button>
+      </div>
+
+      {dayWiseData.companyFormation.map((company, dayIndex) => (
+        <div key={dayIndex} className="border border-gray-200 rounded-lg p-6 bg-gray-50">
+          <div className="flex justify-between items-center mb-4">
+            <h4 className="text-lg font-semibold text-blue-600">Day {company.day}</h4>
+            {dayWiseData.companyFormation.length > 1 && (
+              <button
+                type="button"
+                onClick={() => removeDay('companyFormation', dayIndex)}
+                className="text-red-600 hover:text-red-800"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+              <input
+                type="date"
+                value={company.date}
+                onChange={(e) => handleDayFieldChange('companyFormation', dayIndex, 'date', e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Day Number</label>
+              <input
+                type="number"
+                value={company.day}
+                onChange={(e) => handleDayFieldChange('companyFormation', dayIndex, 'day', parseInt(e.target.value))}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                min="1"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <textarea
+              value={company.description}
+              onChange={(e) => handleDayFieldChange('companyFormation', dayIndex, 'description', e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              rows="3"
+            />
+          </div>
+
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Timeline</label>
+            <input
+              type="text"
+              value={company.timeline}
+              onChange={(e) => handleDayFieldChange('companyFormation', dayIndex, 'timeline', e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              placeholder="e.g., 4-6 weeks"
+            />
+          </div>
+
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
+            <textarea
+              value={company.remarks}
+              onChange={(e) => handleDayFieldChange('companyFormation', dayIndex, 'remarks', e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              rows="2"
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  // Forex Tab Component (Day-wise)
+  const renderForexTab = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold">Day-wise Forex Details</h3>
+        <button
+          type="button"
+          onClick={() => addNewDay('forex')}
+          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center"
+        >
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Add Day
+        </button>
+      </div>
+
+      {dayWiseData.forex.map((forex, dayIndex) => (
+        <div key={dayIndex} className="border border-gray-200 rounded-lg p-6 bg-gray-50">
+          <div className="flex justify-between items-center mb-4">
+            <h4 className="text-lg font-semibold text-blue-600">Day {forex.day}</h4>
+            {dayWiseData.forex.length > 1 && (
+              <button
+                type="button"
+                onClick={() => removeDay('forex', dayIndex)}
+                className="text-red-600 hover:text-red-800"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
+              <input
+                type="date"
+                value={forex.date}
+                onChange={(e) => handleDayFieldChange('forex', dayIndex, 'date', e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Day Number</label>
+              <input
+                type="number"
+                value={forex.day}
+                onChange={(e) => handleDayFieldChange('forex', dayIndex, 'day', parseInt(e.target.value))}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                min="1"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+            <textarea
+              value={forex.description}
+              onChange={(e) => handleDayFieldChange('forex', dayIndex, 'description', e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              rows="3"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
+              <select
+                value={forex.currency}
+                onChange={(e) => handleDayFieldChange('forex', dayIndex, 'currency', e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              >
+                {currencyOptions.map(option => (
+                  <option key={option} value={option}>{option}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Amount</label>
+              <input
+                type="number"
+                value={forex.amount}
+                onChange={(e) => handleDayFieldChange('forex', dayIndex, 'amount', e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                min="0"
+                step="0.01"
+              />
+            </div>
+          </div>
+
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
+            <textarea
+              value={forex.remarks}
+              onChange={(e) => handleDayFieldChange('forex', dayIndex, 'remarks', e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+              rows="2"
+            />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  // Day-wise Itinerary Tab Component
+  const renderDayWiseItineraryTab = () => (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-lg font-semibold">Day-wise Itinerary Planner</h3>
+        <button
+          type="button"
+          onClick={() => addNewDay('itinerary')}
+          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 flex items-center"
+        >
+          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Add Day
+        </button>
+      </div>
+
+      {dayWiseData.itinerary.map((day, dayIndex) => (
         <div key={dayIndex} className="border border-gray-200 rounded-lg p-6 bg-gray-50">
           <div className="flex justify-between items-center mb-4">
             <h4 className="text-lg font-semibold text-blue-600">Day {day.day}</h4>
-            {dayWiseItinerary.length > 1 && (
+            {dayWiseData.itinerary.length > 1 && (
               <button
                 type="button"
-                onClick={() => removeDay(dayIndex)}
+                onClick={() => removeDay('itinerary', dayIndex)}
                 className="text-red-600 hover:text-red-800"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1446,7 +2750,7 @@ function NewQuery({ leadId, user, customer }) {
               <input
                 type="date"
                 value={day.date}
-                onChange={(e) => handleDayFieldChange(dayIndex, 'date', e.target.value)}
+                onChange={(e) => handleDayFieldChange('itinerary', dayIndex, 'date', e.target.value)}
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -1455,7 +2759,7 @@ function NewQuery({ leadId, user, customer }) {
               <input
                 type="number"
                 value={day.day}
-                onChange={(e) => handleDayFieldChange(dayIndex, 'day', parseInt(e.target.value))}
+                onChange={(e) => handleDayFieldChange('itinerary', dayIndex, 'day', parseInt(e.target.value))}
                 className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                 min="1"
               />
@@ -1466,265 +2770,18 @@ function NewQuery({ leadId, user, customer }) {
             <label className="block text-sm font-medium text-gray-700 mb-1">Day Description</label>
             <textarea
               value={day.description}
-              onChange={(e) => handleDayFieldChange(dayIndex, 'description', e.target.value)}
+              onChange={(e) => handleDayFieldChange('itinerary', dayIndex, 'description', e.target.value)}
               className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               rows="3"
               placeholder="Describe the activities and schedule for this day..."
             />
           </div>
 
-          {/* Flight for this day */}
-          <div className="mb-4 p-4 bg-white rounded-lg border">
-            <h5 className="font-semibold mb-3 flex items-center">
-              <svg className="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-              </svg>
-              Flight Details
-            </h5>
-            {day.flights.map((flight, flightIndex) => (
-              <div key={flightIndex} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Airline</label>
-                    <input
-                      type="text"
-                      value={flight.airline}
-                      onChange={(e) => handleDayFlightChange(dayIndex, flightIndex, 'airline', e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Airline name"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Flight Number</label>
-                    <input
-                      type="text"
-                      value={flight.flightNumber}
-                      onChange={(e) => handleDayFlightChange(dayIndex, flightIndex, 'flightNumber', e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Flight number"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">From</label>
-                    <input
-                      type="text"
-                      value={flight.from}
-                      onChange={(e) => handleDayFlightChange(dayIndex, flightIndex, 'from', e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Departure city"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">To</label>
-                    <input
-                      type="text"
-                      value={flight.to}
-                      onChange={(e) => handleDayFlightChange(dayIndex, flightIndex, 'to', e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Arrival city"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Departure Time</label>
-                    <input
-                      type="time"
-                      value={flight.departureTime}
-                      onChange={(e) => handleDayFlightChange(dayIndex, flightIndex, 'departureTime', e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Arrival Time</label>
-                    <input
-                      type="time"
-                      value={flight.arrivalTime}
-                      onChange={(e) => handleDayFlightChange(dayIndex, flightIndex, 'arrivalTime', e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Hotel for this day */}
-          <div className="mb-4 p-4 bg-white rounded-lg border">
-            <h5 className="font-semibold mb-3 flex items-center">
-              <svg className="w-5 h-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-              Hotel Details
-            </h5>
-            {day.hotels.map((hotel, hotelIndex) => (
-              <div key={hotelIndex} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Hotel Name</label>
-                    <input
-                      type="text"
-                      value={hotel.name}
-                      onChange={(e) => handleDayHotelChange(dayIndex, hotelIndex, 'name', e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Hotel name"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Room Type</label>
-                    <select
-                      value={hotel.roomType}
-                      onChange={(e) => handleDayHotelChange(dayIndex, hotelIndex, 'roomType', e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    >
-                      <option value="">Select Room Type</option>
-                      <option value="Standard">Standard</option>
-                      <option value="Deluxe">Deluxe</option>
-                      <option value="Suite">Suite</option>
-                      <option value="Executive">Executive</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Check-in</label>
-                    <input
-                      type="time"
-                      value={hotel.checkIn}
-                      onChange={(e) => handleDayHotelChange(dayIndex, hotelIndex, 'checkIn', e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Check-out</label>
-                    <input
-                      type="time"
-                      value={hotel.checkOut}
-                      onChange={(e) => handleDayHotelChange(dayIndex, hotelIndex, 'checkOut', e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Transfer for this day */}
-          <div className="mb-4 p-4 bg-white rounded-lg border">
-            <h5 className="font-semibold mb-3 flex items-center">
-              <svg className="w-5 h-5 mr-2 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-              </svg>
-              Transfer Details
-            </h5>
-            {day.transfers.map((transfer, transferIndex) => (
-              <div key={transferIndex} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Pickup Location</label>
-                    <input
-                      type="text"
-                      value={transfer.pickup}
-                      onChange={(e) => handleDayTransferChange(dayIndex, transferIndex, 'pickup', e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Pickup location"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Dropoff Location</label>
-                    <input
-                      type="text"
-                      value={transfer.dropoff}
-                      onChange={(e) => handleDayTransferChange(dayIndex, transferIndex, 'dropoff', e.target.value)}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Dropoff location"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle Type</label>
-                  <select
-                    value={transfer.vehicleType}
-                    onChange={(e) => handleDayTransferChange(dayIndex, transferIndex, 'vehicleType', e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="Sedan">Sedan</option>
-                    <option value="SUV">SUV</option>
-                    <option value="Van">Van</option>
-                    <option value="Luxury">Luxury</option>
-                    <option value="Bus">Bus</option>
-                  </select>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Activities for this day */}
-          <div className="mb-4 p-4 bg-white rounded-lg border">
-            <h5 className="font-semibold mb-3 flex items-center">
-              <svg className="w-5 h-5 mr-2 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              Activities & Sightseeing
-            </h5>
-            {day.activities.map((activity, activityIndex) => (
-              <div key={activityIndex} className="flex gap-4 mb-3">
-                <input
-                  type="text"
-                  value={activity}
-                  onChange={(e) => handleDayActivityChange(dayIndex, activityIndex, e.target.value)}
-                  className="flex-1 p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="Activity description"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeActivity(dayIndex, activityIndex)}
-                  className="px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={() => addActivity(dayIndex)}
-              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-            >
-              Add Activity
-            </button>
-          </div>
-
-          {/* Meals for this day */}
-          <div className="mb-4 p-4 bg-white rounded-lg border">
-            <h5 className="font-semibold mb-3 flex items-center">
-              <svg className="w-5 h-5 mr-2 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
-              </svg>
-              Meals Included
-            </h5>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-              {['Breakfast', 'Lunch', 'Dinner', 'Snacks'].map((meal) => (
-                <label key={meal} className="flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={day.meals.includes(meal)}
-                    onChange={(e) => handleDayMealChange(dayIndex, meal, e.target.checked)}
-                    className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">{meal}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-
-          {/* Notes for this day */}
-          <div>
+          <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-1">Additional Notes</label>
             <textarea
               value={day.notes}
-              onChange={(e) => handleDayFieldChange(dayIndex, 'notes', e.target.value)}
+              onChange={(e) => handleDayFieldChange('itinerary', dayIndex, 'notes', e.target.value)}
               className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
               rows="2"
               placeholder="Any special notes for this day..."
@@ -1735,440 +2792,356 @@ function NewQuery({ leadId, user, customer }) {
     </div>
   );
 
-  // Individual Tab Components with Day-wise Structure
-  const flightTabWithDays = () => (
-    <div className="space-y-6">
-      <div className="mb-6">
-        <div className="flex border-b border-gray-200">
-          <button
-            type="button"
-            onClick={() => setFormData({...formData, flightSelectionType: 'new'})}
-            className={`py-2 px-4 font-medium text-sm ${formData.flightSelectionType === 'new' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-          >
-            Create New Flight
-          </button>
-          <button
-            type="button"
-            onClick={() => setFormData({...formData, flightSelectionType: 'existing'})}
-            className={`py-2 px-4 font-medium text-sm ${formData.flightSelectionType === 'existing' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-          >
-            Select From Existing
-          </button>
-          <button
-            type="button"
-            onClick={() => setFormData({...formData, flightSelectionType: 'thirdParty'})}
-            className={`py-2 px-4 font-medium text-sm ${formData.flightSelectionType === 'thirdParty' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-          >
-            Third Party Flight
-          </button>
+  // Existing Flight Packages Component
+  const renderExistingFlightPackages = (category, dayIndex) => (
+    <div>
+      {flightLoading ? (
+        <div className="flex justify-center items-center h-32">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
         </div>
-      </div>
-
-      {formData.flightSelectionType === 'new' && (
-        <div className="space-y-6">
-          <div className="mb-4">
-            <h3 className="text-sm font-medium text-gray-700 mb-2">Flight Type:</h3>
-            <div className="flex flex-wrap gap-4">
-              <label className="inline-flex items-center">
+      ) : (
+        <div>
+          <div className="bg-white p-4 rounded-lg shadow-md mb-4">
+            <h4 className="text-lg font-semibold mb-3">Filter Flight Packages</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-700">Departure City</label>
                 <input
-                  type="radio"
-                  name="flightType"
-                  checked={formData.flightType === 'oneway'}
-                  onChange={() => setFormData({...formData, flightType: 'oneway'})}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  type="text"
+                  value={flightFilters.departureCity}
+                  onChange={(e) => setFlightFilters(prev => ({...prev, departureCity: e.target.value}))}
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1 px-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
                 />
-                <span className="ml-2 text-gray-700">One Way</span>
-              </label>
-              <label className="inline-flex items-center">
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700">Arrival City</label>
                 <input
-                  type="radio"
-                  name="flightType"
-                  checked={formData.flightType === 'roundtrip'}
-                  onChange={() => setFormData({...formData, flightType: 'roundtrip'})}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  type="text"
+                  value={flightFilters.arrivalCity}
+                  onChange={(e) => setFlightFilters(prev => ({...prev, arrivalCity: e.target.value}))}
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1 px-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
                 />
-                <span className="ml-2 text-gray-700">Round Trip</span>
-              </label>
-              <label className="inline-flex items-center">
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700">Min Price</label>
                 <input
-                  type="radio"
-                  name="flightType"
-                  checked={formData.flightType === 'multicity'}
-                  onChange={() => setFormData({...formData, flightType: 'multicity'})}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
+                  type="number"
+                  value={flightFilters.minPrice}
+                  onChange={(e) => setFlightFilters(prev => ({...prev, minPrice: e.target.value}))}
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1 px-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
                 />
-                <span className="ml-2 text-gray-700">Multi City</span>
-              </label>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700">Sort By</label>
+                <select
+                  value={flightFilters.sort}
+                  onChange={(e) => setFlightFilters(prev => ({...prev, sort: e.target.value}))}
+                  className="mt-1 block w-full pl-2 pr-8 py-1 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm rounded-md"
+                >
+                  <option value="">Default</option>
+                  <option value="price_asc">Price: Low to High</option>
+                  <option value="price_desc">Price: High to Low</option>
+                  <option value="duration">Duration</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          {/* Day-wise Flight Sections */}
-          {dayWiseItinerary.map((day, dayIndex) => (
-            <div key={dayIndex} className="border border-gray-200 rounded-lg p-6 bg-gray-50">
-              <h4 className="text-lg font-semibold text-blue-600 mb-4">Day {day.day} - Flight Details</h4>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Source City *</label>
-                  <input
-                    type="text"
-                    value={day.flights[0]?.from || formData.sourceCity}
-                    onChange={(e) => {
-                      handleDayFlightChange(dayIndex, 0, 'from', e.target.value);
-                      setFormData(prev => ({...prev, sourceCity: e.target.value}));
-                    }}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Destination City *</label>
-                  <input
-                    type="text"
-                    value={day.flights[0]?.to || formData.destinationCity}
-                    onChange={(e) => {
-                      handleDayFlightChange(dayIndex, 0, 'to', e.target.value);
-                      setFormData(prev => ({...prev, destinationCity: e.target.value}));
-                    }}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
+          <div className="space-y-3">
+            {flightPackages.length === 0 ? (
+              <div className="text-center py-6">
+                <p className="text-gray-500 text-sm">No flight packages found</p>
               </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Departure Date *</label>
-                  <input
-                    type="date"
-                    value={formData.departureDate}
-                    onChange={handleInputChange}
-                    name="departureDate"
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-                {formData.flightType === 'roundtrip' && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">Return Date *</label>
-                    <input
-                      type="date"
-                      name="returnDate"
-                      value={formData.returnDate}
-                      onChange={handleInputChange}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                      required
-                    />
+            ) : (
+              flightPackages.map((flight) => (
+                <div
+                  key={flight._id}
+                  className={`bg-white rounded-lg shadow-sm border p-3 ${
+                    dayWiseData[category][dayIndex].selectedFlightPackage === flight._id ? 'border-blue-500' : 'border-gray-200'
+                  }`}
+                >
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h5 className="font-medium text-gray-800">
+                        {flight.departure.city} → {flight.arrival.city}
+                      </h5>
+                      <p className="text-xs text-gray-600">
+                        {flight.airline} • {flight.flightNumber}
+                      </p>
+                    </div>
+                    <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
+                      Available
+                    </span>
                   </div>
-                )}
-              </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Airline</label>
-                  <input
-                    type="text"
-                    value={day.flights[0]?.airline || formData.preferredAirline}
-                    onChange={(e) => {
-                      handleDayFlightChange(dayIndex, 0, 'airline', e.target.value);
-                      setFormData(prev => ({...prev, preferredAirline: e.target.value}));
-                    }}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Airline name"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Class</label>
-                  <select
-                    value={day.flights[0]?.flightClass || formData.flightClass}
-                    onChange={(e) => {
-                      handleDayFlightChange(dayIndex, 0, 'flightClass', e.target.value);
-                      setFormData(prev => ({...prev, flightClass: e.target.value}));
-                    }}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="Economy">Economy</option>
-                    <option value="Premium Economy">Premium Economy</option>
-                    <option value="Business">Business</option>
-                    <option value="First Class">First Class</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {formData.flightSelectionType === 'existing' && existingFlightPackages()}
-      {formData.flightSelectionType === 'thirdParty' && ThirdPartyFlight()}
-    </div>
-  );
-
-  const hotelTabWithDays = () => (
-    <div className="space-y-6">
-      <div className="mb-6">
-        <div className="flex border-b border-gray-200">
-          <button
-            type="button"
-            onClick={() => setFormData({...formData, hotelSelectionType: 'new'})}
-            className={`py-2 px-4 font-medium text-sm ${formData.hotelSelectionType === 'new' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-          >
-            Create New Hotel
-          </button>
-          <button
-            type="button"
-            onClick={() => setFormData({...formData, hotelSelectionType: 'existing'})}
-            className={`py-2 px-4 font-medium text-sm ${formData.hotelSelectionType === 'existing' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-          >
-            Select From Existing
-          </button>
-          <button
-            type="button"
-            onClick={() => setFormData({...formData, hotelSelectionType: 'thirdParty'})}
-            className={`py-2 px-4 font-medium text-sm ${formData.hotelSelectionType === 'thirdParty' ? 'border-b-2 border-blue-500 text-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
-          >
-            Third Party Hotel
-          </button>
-        </div>
-      </div>
-
-      {formData.hotelSelectionType === 'new' && (
-        <div className="space-y-6">
-          {/* Day-wise Hotel Sections */}
-          {dayWiseItinerary.map((day, dayIndex) => (
-            <div key={dayIndex} className="border border-gray-200 rounded-lg p-6 bg-gray-50">
-              <h4 className="text-lg font-semibold text-blue-600 mb-4">Day {day.day} - Hotel Details</h4>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Location/City *</label>
-                  <input
-                    type="text"
-                    value={formData.goingTo}
-                    onChange={handleInputChange}
-                    name="goingTo"
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Hotel Name</label>
-                  <input
-                    type="text"
-                    value={day.hotels[0]?.name}
-                    onChange={(e) => handleDayHotelChange(dayIndex, 0, 'name', e.target.value)}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Hotel name"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Check-In Date *</label>
-                  <input
-                    type="date"
-                    name="checkIn"
-                    value={formData.hotelDetails.checkIn}
-                    onChange={(e) => handleNestedInputChange('hotelDetails', e)}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Check-Out Date *</label>
-                  <input
-                    type="date"
-                    name="checkOut"
-                    value={formData.hotelDetails.checkOut}
-                    onChange={(e) => handleNestedInputChange('hotelDetails', e)}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Room Type</label>
-                  <select
-                    value={day.hotels[0]?.roomType || formData.hotelDetails.roomType}
-                    onChange={(e) => {
-                      handleDayHotelChange(dayIndex, 0, 'roomType', e.target.value);
-                      setFormData(prev => ({
-                        ...prev,
-                        hotelDetails: {...prev.hotelDetails, roomType: e.target.value}
-                      }));
-                    }}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    {roomTypeOptions.map(option => (
-                      <option key={option} value={option}>{option}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Meal Plan</label>
-                  <div className="grid grid-cols-2 gap-2 mt-2">
-                    {mealPlanOptions.map(option => (
-                      <label key={option} className="inline-flex items-center">
-                        <input
-                          type="radio"
-                          name={`mealPlan-${dayIndex}`}
-                          checked={day.hotels[0]?.mealPlan === option || formData.hotelDetails.mealPlan === option}
-                          onChange={() => {
-                            handleDayHotelChange(dayIndex, 0, 'mealPlan', option);
-                            setFormData(prev => ({
-                              ...prev,
-                              hotelDetails: {...prev.hotelDetails, mealPlan: option}
-                            }));
-                          }}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-                        />
-                        <span className="ml-2 text-sm text-gray-700 capitalize">{option.replace('_', ' ')}</span>
-                      </label>
-                    ))}
+                  <div className="mt-2 flex justify-between items-center">
+                    <div>
+                      <p className="text-xs text-gray-500">Price</p>
+                      <p className="text-sm font-bold text-blue-600">
+                        {flight.currency} {flight.price?.toLocaleString() ?? "0"}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleFlightPackageSelect(category, dayIndex, flight)}
+                      className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                    >
+                      {dayWiseData[category][dayIndex].selectedFlightPackage === flight._id ? 'Selected' : 'Select'}
+                    </button>
                   </div>
                 </div>
-              </div>
-            </div>
-          ))}
+              ))
+            )}
+          </div>
         </div>
       )}
-
-      {formData.hotelSelectionType === 'existing' && existingHotelPackages()}
-      {formData.hotelSelectionType === 'thirdParty' && ThirdPartyHotel()}
     </div>
   );
 
-  const transferTabWithDays = () => (
-    <div className="space-y-6">
-      {/* Day-wise Transfer Sections */}
-      {dayWiseItinerary.map((day, dayIndex) => (
-        <div key={dayIndex} className="border border-gray-200 rounded-lg p-6 bg-gray-50">
-          <h4 className="text-lg font-semibold text-blue-600 mb-4">Day {day.day} - Transfer Details</h4>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Pickup Location *</label>
-              <input
-                type="text"
-                value={day.transfers[0]?.pickup || formData.transferDetails.pickup}
-                onChange={(e) => {
-                  handleDayTransferChange(dayIndex, 0, 'pickup', e.target.value);
-                  setFormData(prev => ({
-                    ...prev,
-                    transferDetails: {...prev.transferDetails, pickup: e.target.value}
-                  }));
-                }}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Dropoff Location *</label>
-              <input
-                type="text"
-                value={day.transfers[0]?.dropoff || formData.transferDetails.dropoff}
-                onChange={(e) => {
-                  handleDayTransferChange(dayIndex, 0, 'dropoff', e.target.value);
-                  setFormData(prev => ({
-                    ...prev,
-                    transferDetails: {...prev.transferDetails, dropoff: e.target.value}
-                  }));
-                }}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                required
-              />
+  // Existing Hotel Packages Component
+  const renderExistingHotelPackages = (category, dayIndex) => (
+    <div>
+      {hotelLoading ? (
+        <div className="flex justify-center items-center h-32">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      ) : (
+        <div>
+          <div className="bg-white p-4 rounded-lg shadow-md mb-4">
+            <h4 className="text-lg font-semibold mb-3">Filter Hotel Packages</h4>
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-700">City</label>
+                <input
+                  type="text"
+                  value={hotelFilters.city}
+                  onChange={(e) => setHotelFilters(prev => ({...prev, city: e.target.value}))}
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1 px-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700">Country</label>
+                <input
+                  type="text"
+                  value={hotelFilters.country}
+                  onChange={(e) => setHotelFilters(prev => ({...prev, country: e.target.value}))}
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1 px-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700">Star Rating</label>
+                <select
+                  value={hotelFilters.starRating}
+                  onChange={(e) => setHotelFilters(prev => ({...prev, starRating: e.target.value}))}
+                  className="mt-1 block w-full pl-2 pr-8 py-1 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm rounded-md"
+                >
+                  <option value="">Any</option>
+                  <option value="1">1 Star</option>
+                  <option value="2">2 Stars</option>
+                  <option value="3">3 Stars</option>
+                  <option value="4">4 Stars</option>
+                  <option value="5">5 Stars</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700">Min Price</label>
+                <input
+                  type="number"
+                  value={hotelFilters.minPrice}
+                  onChange={(e) => setHotelFilters(prev => ({...prev, minPrice: e.target.value}))}
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-1 px-2 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700">Sort By</label>
+                <select
+                  value={hotelFilters.sort}
+                  onChange={(e) => setHotelFilters(prev => ({...prev, sort: e.target.value}))}
+                  className="mt-1 block w-full pl-2 pr-8 py-1 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 text-sm rounded-md"
+                >
+                  <option value="">Default</option>
+                  <option value="price_asc">Price: Low to High</option>
+                  <option value="price_desc">Price: High to Low</option>
+                  <option value="rating">Rating</option>
+                </select>
+              </div>
             </div>
           </div>
 
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Vehicle Type</label>
-            <select
-              value={day.transfers[0]?.vehicleType || formData.transferDetails.vehicleType}
-              onChange={(e) => {
-                handleDayTransferChange(dayIndex, 0, 'vehicleType', e.target.value);
-                setFormData(prev => ({
-                  ...prev,
-                  transferDetails: {...prev.transferDetails, vehicleType: e.target.value}
-                }));
-              }}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="Sedan">Sedan</option>
-              <option value="SUV">SUV</option>
-              <option value="Van">Van</option>
-              <option value="Luxury">Luxury</option>
-              <option value="Bus">Bus</option>
-            </select>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {hotelPackages.length === 0 ? (
+              <div className="text-center py-6 col-span-2">
+                <p className="text-gray-500 text-sm">No hotel packages found</p>
+              </div>
+            ) : (
+              hotelPackages.map((hotel) => (
+                <div
+                  key={hotel._id}
+                  className={`bg-white rounded-lg shadow-sm overflow-hidden border ${
+                    dayWiseData[category][dayIndex].selectedHotelPackage === hotel._id ? 'border-blue-500' : 'border-gray-200'
+                  }`}
+                >
+                  <img
+                    src={hotel.images?.[0] || "https://via.placeholder.com/300x200?text=No+Image"}
+                    alt={hotel.name}
+                    className="w-full h-32 object-cover"
+                  />
+                  <div className="p-3">
+                    <div className="flex justify-between items-start">
+                      <h5 className="font-medium text-gray-800 text-sm">{hotel.name}</h5>
+                      <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
+                        Available
+                      </span>
+                    </div>
+
+                    <div className="mt-2 flex justify-between items-center">
+                      <div>
+                        <p className="text-xs text-gray-500">Price</p>
+                        <p className="text-sm font-bold text-blue-600">
+                          {hotel.currency} {hotel.totalPrice?.toLocaleString() ?? "0"}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleHotelPackageSelect(category, dayIndex, hotel)}
+                        className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                      >
+                        {dayWiseData[category][dayIndex].selectedHotelPackage === hotel._id ? 'Selected' : 'Select'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
-      ))}
+      )}
     </div>
   );
 
-  const visaTabWithDays = () => (
-    <div className="space-y-6">
-      {/* Day-wise Visa Sections */}
-      {dayWiseItinerary.map((day, dayIndex) => (
-        <div key={dayIndex} className="border border-gray-200 rounded-lg p-6 bg-gray-50">
-          <h4 className="text-lg font-semibold text-blue-600 mb-4">Day {day.day} - Visa Requirements</h4>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Country *</label>
-              <input
-                type="text"
-                name="country"
-                value={formData.visaDetails.country}
-                onChange={(e) => handleNestedInputChange('visaDetails', e)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Visa Type *</label>
-              <select
-                name="type"
-                value={formData.visaDetails.type}
-                onChange={(e) => handleNestedInputChange('visaDetails', e)}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="Tourist">Tourist</option>
-                <option value="Business">Business</option>
-                <option value="Student">Student</option>
-                <option value="Work">Work</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Processing Time</label>
-            <input
-              type="text"
-              name="processingTime"
-              value={formData.visaDetails.processingTime}
-              onChange={(e) => handleNestedInputChange('visaDetails', e)}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              placeholder="e.g., 5-7 business days"
-            />
-          </div>
-
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Visa Notes</label>
-            <textarea
-              value={day.notes}
-              onChange={(e) => handleDayFieldChange(dayIndex, 'notes', e.target.value)}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              rows="3"
-              placeholder="Visa requirements and notes..."
-            />
-          </div>
+  // Third Party Flight Component
+  const renderThirdPartyFlight = (category, dayIndex) => (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Booking Reference / PNR</label>
+          <input
+            type="text"
+            value={dayWiseData[category][dayIndex].thirdPartyDetails.pnr}
+            onChange={(e) => handleDayDeepFieldChange(category, dayIndex, 'thirdPartyDetails', 'pnr', e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm"
+          />
         </div>
-      ))}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Supplier / Vendor Name</label>
+          <input
+            type="text"
+            value={dayWiseData[category][dayIndex].thirdPartyDetails.supplier}
+            onChange={(e) => handleDayDeepFieldChange(category, dayIndex, 'thirdPartyDetails', 'supplier', e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm"
+          />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Total Cost</label>
+          <input
+            type="number"
+            value={dayWiseData[category][dayIndex].thirdPartyDetails.cost}
+            onChange={(e) => handleDayDeepFieldChange(category, dayIndex, 'thirdPartyDetails', 'cost', e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm"
+            min="0"
+            step="0.01"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Upload Confirmation</label>
+          <input
+            type="file"
+            onChange={(e) => handleDayDeepFieldChange(category, dayIndex, 'thirdPartyDetails', 'confirmationFile', e.target.files[0])}
+            className="w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+          />
+        </div>
+      </div>
     </div>
   );
+
+  // Third Party Hotel Component
+  const renderThirdPartyHotel = (category, dayIndex) => (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Booking Confirmation #</label>
+          <input
+            type="text"
+            value={dayWiseData[category][dayIndex].thirdPartyDetails.confirmationNumber}
+            onChange={(e) => handleDayDeepFieldChange(category, dayIndex, 'thirdPartyDetails', 'confirmationNumber', e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Supplier / Vendor Name</label>
+          <input
+            type="text"
+            value={dayWiseData[category][dayIndex].thirdPartyDetails.supplier}
+            onChange={(e) => handleDayDeepFieldChange(category, dayIndex, 'thirdPartyDetails', 'supplier', e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm"
+          />
+        </div>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Total Cost</label>
+          <input
+            type="number"
+            value={dayWiseData[category][dayIndex].thirdPartyDetails.cost}
+            onChange={(e) => handleDayDeepFieldChange(category, dayIndex, 'thirdPartyDetails', 'cost', e.target.value)}
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500 text-sm"
+            min="0"
+            step="0.01"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Upload Voucher</label>
+          <input
+            type="file"
+            onChange={(e) => handleDayDeepFieldChange(category, dayIndex, 'thirdPartyDetails', 'voucherFile', e.target.files[0])}
+            className="w-full text-xs text-gray-500 file:mr-2 file:py-1 file:px-3 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  // Main render function for form fields
+  const renderFormFields = () => {
+    const currentType = requirementTypes[activeTab];
+
+    switch(currentType) {
+      case 'Package':
+        return renderPackageTab();
+      case 'Flight':
+        return renderFlightTab();
+      case 'Hotel':
+        return renderHotelTab();
+      case 'Transfer':
+        return renderTransferTab();
+      case 'Visa':
+        return renderVisaTab();
+      case 'Sightseeing':
+        return renderSightseeingTab();
+      case 'Miscellaneous':
+        return renderMiscellaneousTab();
+      case 'Company Formation':
+        return renderCompanyFormationTab();
+      case 'Forex':
+        return renderForexTab();
+      case 'Day-wise Itinerary':
+        return renderDayWiseItineraryTab();
+      default:
+        return <div>Select a requirement type</div>;
+    }
+  };
 
   // Send Itinerary Modal Component
   const SendItineraryModal = () => {
@@ -2267,817 +3240,6 @@ function NewQuery({ leadId, user, customer }) {
           </div>
         </div>
       </div>
-    );
-  };
-
-  // Rest of the existing code for existingFlightPackages, existingHotelPackages, ThirdPartyFlight, ThirdPartyHotel
-  // ... (keep all the existing functions for flight packages, hotel packages, etc.)
-
-  const existingFlightPackages = () => (
-    <div>
-      {flightLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-        </div>
-      ) : (
-        <div>
-          {/* Flight package filters */}
-          <div className="bg-white p-4 rounded-lg shadow-md mb-6">
-            <h2 className="text-xl font-semibold mb-4">Filter Flight Packages</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Departure City
-                </label>
-                <input
-                  type="text"
-                  name="departureCity"
-                  value={flightFilters.departureCity}
-                  onChange={handleFlightFilterChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Arrival City
-                </label>
-                <input
-                  type="text"
-                  name="arrivalCity"
-                  value={flightFilters.arrivalCity}
-                  onChange={handleFlightFilterChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Min Price
-                </label>
-                <input
-                  type="number"
-                  name="minPrice"
-                  value={flightFilters.minPrice}
-                  onChange={handleFlightFilterChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Sort By
-                </label>
-                <select
-                  name="sort"
-                  value={flightFilters.sort}
-                  onChange={handleFlightFilterChange}
-                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-                >
-                  <option value="">Default</option>
-                  <option value="price_asc">Price: Low to High</option>
-                  <option value="price_desc">Price: High to Low</option>
-                  <option value="duration">Duration</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Flight packages list */}
-          <div className="space-y-4">
-            {flightPackages.length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-gray-500">
-                  No flight packages found matching your criteria
-                </p>
-              </div>
-            ) : (
-              flightPackages.map((flight) => (
-                <div
-                  key={flight._id}
-                  className={`bg-white rounded-lg shadow-md overflow-hidden border-2 ${
-                    formData.selectedFlightPackage === flight._id ? 'border-blue-500' : 'border-transparent'
-                  }`}
-                >
-                  <div className="p-4">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="text-lg font-bold text-gray-800">
-                          {flight.departure.city} ({flight.departure.airport}) → {flight.arrival.city} ({flight.arrival.airport})
-                        </h3>
-                        <p className="text-gray-600">
-                          {flight.airline} • {flight.flightNumber} • {flight.class.replace("_", " ")}
-                        </p>
-                      </div>
-                      <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
-                        Available
-                      </span>
-                    </div>
-
-                    <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <p className="font-medium">Departure</p>
-                        <p>{new Date(flight.departure.datetime).toLocaleString()}</p>
-                        <p>
-                          {flight.departure.airport} {flight.departure.terminal && (`Terminal ${flight.departure.terminal}`)}
-                        </p>
-                      </div>
-
-                      <div className="text-center">
-                        <p className="font-medium">{formatDuration(flight.duration)}</p>
-                        <div className="relative pt-4">
-                          <div className="absolute inset-0 flex items-center" aria-hidden="true">
-                            <div className="w-full border-t border-gray-300" />
-                          </div>
-                          <div className="relative flex justify-center">
-                            <span className="px-2 bg-white text-sm text-gray-500">
-                              {flight.stops > 0 ? `${flight.stops} stop${flight.stops > 1 ? 's' : ''}` : 'Non-stop'}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <p className="font-medium">Arrival</p>
-                        <p>{new Date(flight.arrival.datetime).toLocaleString()}</p>
-                        <p>
-                          {flight.arrival.airport} {flight.arrival.terminal && (`Terminal ${flight.arrival.terminal}`)}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="mt-4 flex justify-between items-center">
-                      <div>
-                        <p className="text-sm text-gray-500">Total Price</p>
-                        <p className="text-xl font-bold text-blue-600">
-                          {flight.currency} {flight.price?.toLocaleString() ?? "0"}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleFlightPackageSelect(flight)}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                      >
-                        {formData.selectedFlightPackage === flight._id ? 'Selected' : 'Select'}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
-  const existingHotelPackages = () => (
-    <div>
-      {hotelLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-        </div>
-      ) : (
-        <div>
-          {/* Hotel package filters */}
-          <div className="bg-white p-4 rounded-lg shadow-md mb-6">
-            <h2 className="text-xl font-semibold mb-4">Filter Hotel Packages</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  City
-                </label>
-                <input
-                  type="text"
-                  name="city"
-                  value={hotelFilters.city}
-                  onChange={handleHotelFilterChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Country
-                </label>
-                <input
-                  type="text"
-                  name="country"
-                  value={hotelFilters.country}
-                  onChange={handleHotelFilterChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Star Rating
-                </label>
-                <select
-                  name="starRating"
-                  value={hotelFilters.starRating}
-                  onChange={handleHotelFilterChange}
-                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-                >
-                  <option value="">Any</option>
-                  <option value="1">1 Star</option>
-                  <option value="2">2 Stars</option>
-                  <option value="3">3 Stars</option>
-                  <option value="4">4 Stars</option>
-                  <option value="5">5 Stars</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Min Price
-                </label>
-                <input
-                  type="number"
-                  name="minPrice"
-                  value={hotelFilters.minPrice}
-                  onChange={handleHotelFilterChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Sort By
-                </label>
-                <select
-                  name="sort"
-                  value={hotelFilters.sort}
-                  onChange={handleHotelFilterChange}
-                  className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-                >
-                  <option value="">Default</option>
-                  <option value="price_asc">Price: Low to High</option>
-                  <option value="price_desc">Price: High to Low</option>
-                  <option value="rating">Rating</option>
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Hotel packages list */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {hotelPackages.length === 0 ? (
-              <div className="text-center py-12 col-span-3">
-                <p className="text-gray-500">
-                  No hotel packages found matching your criteria
-                </p>
-              </div>
-            ) : (
-              hotelPackages.map((hotel) => (
-                <div
-                  key={hotel._id}
-                  className={`bg-white rounded-lg shadow-md overflow-hidden border-2 ${
-                    formData.selectedHotelPackage === hotel._id ? 'border-blue-500' : 'border-transparent'
-                  }`}
-                >
-                  <img
-                    src={hotel.images?.[0] || "https://via.placeholder.com/300x200?text=No+Image"}
-                    alt={hotel.name}
-                    className="w-full h-48 object-cover"
-                  />
-                  <div className="p-4">
-                    <div className="flex justify-between items-start">
-                      <h3 className="text-lg font-bold text-gray-800">{hotel.name}</h3>
-                      <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">
-                        Available
-                      </span>
-                    </div>
-
-                    <div className="mt-2 flex items-center">
-                      {[...Array(5)].map((_, i) => (
-                        <svg
-                          key={i}
-                          className={`w-4 h-4 ${
-                            i < hotel.starRating ? "text-yellow-400" : "text-gray-300"
-                          }`}
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                      ))}
-                      <span className="ml-1 text-gray-600 text-sm">
-                        {hotel.starRating} stars
-                      </span>
-                    </div>
-
-                    <p className="mt-2 text-gray-600">
-                      <svg
-                        className="w-4 h-4 inline mr-1"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth="2"
-                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                      </svg>
-                      {hotel.location?.city}, {hotel.location?.country}
-                    </p>
-
-                    <div className="mt-4 grid grid-cols-2 gap-2">
-                      <div>
-                        <p className="text-sm text-gray-500">Room Type</p>
-                        <p className="font-medium">{hotel.roomType}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Meal Plan</p>
-                        <p className="font-medium capitalize">
-                          {hotel.mealPlan?.replace('_', ' ') || 'Not specified'}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Check In</p>
-                        <p className="font-medium">
-                          {formatDate(hotel.checkIn)}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-500">Check Out</p>
-                        <p className="font-medium">
-                          {formatDate(hotel.checkOut)}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="mt-4">
-                      <p className="text-sm text-gray-500">Guests</p>
-                      <p className="font-medium">
-                        {hotel.guests?.adults || 0} Adults, {hotel.guests?.children || 0} Children
-                      </p>
-                    </div>
-
-                    <div className="mt-4 flex justify-between items-center">
-                      <div>
-                        <p className="text-sm text-gray-500">Total Price</p>
-                        <p className="text-xl font-bold text-blue-600">
-                          {hotel.currency} {hotel.totalPrice?.toLocaleString() ?? "0"}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {hotel.nights} night{hotel.nights !== 1 ? 's' : ''}
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => handleHotelPackageSelect(hotel)}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-                      >
-                        {formData.selectedHotelPackage === hotel._id ? 'Selected' : 'Select'}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-
-  const ThirdPartyFlight = () => (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Booking Reference / PNR *</label>
-              <input
-                  type="text"
-                  name="pnr"
-                  value={formData.thirdPartyFlightDetails.pnr}
-                  onChange={(e) => handleNestedInputChange('thirdPartyFlightDetails', e)}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  required
-              />
-          </div>
-          <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Supplier / Vendor Name *</label>
-              <input
-                  type="text"
-                  name="supplier"
-                  value={formData.thirdPartyFlightDetails.supplier}
-                  onChange={(e) => handleNestedInputChange('thirdPartyFlightDetails', e)}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  required
-              />
-          </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Total Cost *</label>
-              <input
-                  type="number"
-                  name="cost"
-                  value={formData.thirdPartyFlightDetails.cost}
-                  onChange={(e) => handleNestedInputChange('thirdPartyFlightDetails', e)}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  min="0"
-                  step="0.01"
-                  required
-              />
-          </div>
-          <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Upload Confirmation</label>
-              <input
-                  type="file"
-                  name="confirmationFile"
-                  onChange={(e) => handleNestedInputChange('thirdPartyFlightDetails', { target: { name: 'confirmationFile', value: e.target.files[0] } })}
-                  className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-              />
-          </div>
-      </div>
-      <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
-          <textarea
-              name="remarks"
-              value={formData.remarks}
-              onChange={handleInputChange}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              rows="3"
-          ></textarea>
-      </div>
-    </div>
-  );
-
-  const ThirdPartyHotel = () => (
-      <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Booking Confirmation # *</label>
-                  <input
-                      type="text"
-                      name="confirmationNumber"
-                      value={formData.thirdPartyHotelDetails.confirmationNumber}
-                      onChange={(e) => handleNestedInputChange('thirdPartyHotelDetails', e)}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                      required
-                  />
-              </div>
-              <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Supplier / Vendor Name *</label>
-                  <input
-                      type="text"
-                      name="supplier"
-                      value={formData.thirdPartyHotelDetails.supplier}
-                      onChange={(e) => handleNestedInputChange('thirdPartyHotelDetails', e)}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                      required
-                  />
-              </div>
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Total Cost *</label>
-                  <input
-                      type="number"
-                      name="cost"
-                      value={formData.thirdPartyHotelDetails.cost}
-                      onChange={(e) => handleNestedInputChange('thirdPartyHotelDetails', e)}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                      min="0"
-                      step="0.01"
-                      required
-                  />
-              </div>
-              <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Upload Voucher</label>
-                  <input
-                      type="file"
-                      name="voucherFile"
-                      onChange={(e) => handleNestedInputChange('thirdPartyHotelDetails', { target: { name: 'voucherFile', value: e.target.files[0] } })}
-                      className="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                  />
-              </div>
-          </div>
-           <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
-              <textarea
-                  name="remarks"
-                  value={formData.remarks}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  rows="3"
-              ></textarea>
-          </div>
-      </div>
-  );
-
-  const renderFormFields = () => {
-    const currentType = requirementTypes[activeTab];
-
-    const commonFields = (
-      <>
-        <div className="mb-6">
-          <h3 className="text-sm font-medium text-gray-700 mb-2">Query Type:</h3>
-          <div className="flex space-x-4">
-            <label className="inline-flex items-center">
-              <input
-                type="radio"
-                name="queryType"
-                checked={formData.queryType === 'FIT'}
-                onChange={() => setFormData({...formData, queryType: 'FIT'})}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-              />
-              <span className="ml-2 text-gray-700">FIT (Normal)</span>
-            </label>
-            <label className="inline-flex items-center">
-              <input
-                type="radio"
-                name="queryType"
-                checked={formData.queryType === 'GIT'}
-                onChange={() => setFormData({...formData, queryType: 'GIT'})}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300"
-              />
-              <span className="ml-2 text-gray-700">GIT (Group)</span>
-            </label>
-          </div>
-        </div>
-      </>
-    );
-
-    const packageFields = () => (
-      <div className="space-y-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Going From *</label>
-            <input
-              type="text"
-              name="goingFrom"
-              value={formData.goingFrom}
-              onChange={handleInputChange}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Going To *</label>
-            <input
-              type="text"
-              name="goingTo"
-              value={formData.goingTo}
-              onChange={handleInputChange}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              required
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Specific Date *</label>
-            <input
-              type="date"
-              name="specificDate"
-              value={formData.specificDate}
-              onChange={handleInputChange}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">No Of Days *</label>
-            <input
-              type="number"
-              name="noOfDays"
-              value={formData.noOfDays}
-              onChange={handleInputChange}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              min="1"
-              required
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Travellers Count *</label>
-            <input
-              type="number"
-              name="travellers"
-              value={formData.travellers}
-              onChange={handleInputChange}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              min="1"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Price Range (per person)</label>
-            <select
-              name="priceRange"
-              value={formData.priceRange}
-              onChange={handleInputChange}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="">Select Range</option>
-              <option value="0-500">$0 - $500</option>
-              <option value="500-1000">$500 - $1000</option>
-              <option value="1000-2000">$1000 - $2000</option>
-              <option value="2000-5000">$2000 - $5000</option>
-              <option value="5000+">$5000+</option>
-            </select>
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Select Inclusions</label>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mt-2">
-            {inclusionOptions.map(option => (
-              <label key={option} className="inline-flex items-center">
-                <input
-                  type="checkbox"
-                  checked={formData.inclusions.includes(option)}
-                  onChange={() => handleCheckboxChange('inclusions', option)}
-                  className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                />
-                <span className="ml-2 text-sm text-gray-700">{option}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Select Theme</label>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 mt-2">
-            {themeOptions.map(option => (
-              <label key={option} className="inline-flex items-center">
-                <input
-                  type="checkbox"
-                  checked={formData.themes.includes(option)}
-                  onChange={() => handleCheckboxChange('themes', option)}
-                  className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                />
-                <span className="ml-2 text-sm text-gray-700">{option}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Hotel Preference (1-5)</label>
-            <div className="flex items-center space-x-2">
-              {[1, 2, 3, 4, 5].map(star => (
-                <button
-                  key={star}
-                  type="button"
-                  onClick={() => setFormData({...formData, hotelPreference: star.toString()})}
-                  className={`p-1 rounded-full ${formData.hotelPreference >= star ? 'text-yellow-400' : 'text-gray-300'}`}
-                >
-                  <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                  </svg>
-                </button>
-              ))}
-            </div>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Food Preferences</label>
-            <div className="grid grid-cols-2 gap-2 mt-2">
-              {foodPreferenceOptions.map(option => (
-                <label key={option} className="inline-flex items-center">
-                  <input
-                    type="checkbox"
-                    checked={formData.foodPreferences.includes(option)}
-                    onChange={() => handleCheckboxChange('foodPreferences', option)}
-                    className="h-4 w-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500"
-                  />
-                  <span className="ml-2 text-sm text-gray-700">{option}</span>
-                </label>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Remarks</label>
-          <textarea
-            name="remarks"
-            value={formData.remarks}
-            onChange={handleInputChange}
-            className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-            rows="3"
-          ></textarea>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Expected Closure Date</label>
-            <input
-              type="date"
-              name="expectedClosureDate"
-              value={formData.expectedClosureDate}
-              onChange={handleInputChange}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Expected Closure Amount</label>
-            <input
-              type="number"
-              name="expectedClosureAmount"
-              value={formData.expectedClosureAmount}
-              onChange={handleInputChange}
-              className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-              min="0"
-              step="0.01"
-            />
-          </div>
-        </div>
-
-        {/* Show created days preview */}
-        {formData.noOfDays && parseInt(formData.noOfDays) > 0 && (
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-            <h4 className="font-semibold text-blue-800 mb-2">
-              {formData.noOfDays} days will be created automatically when you click "Save & Continue"
-            </h4>
-            <p className="text-sm text-blue-600">
-              Each day will include the basic information from this package and can be customized in subsequent tabs.
-            </p>
-          </div>
-        )}
-      </div>
-    );
-
-    const typeSpecificFields = () => {
-      const currentType = requirementTypes[activeTab];
-      
-      switch(currentType) {
-        case 'Package':
-          return packageFields();
-        case 'Flight':
-          return flightTabWithDays();
-        case 'Hotel':
-          return hotelTabWithDays();
-        case 'Transfer':
-          return transferTabWithDays();
-        case 'Visa':
-          return visaTabWithDays();
-        case 'Day-wise Itinerary':
-          return dayWiseItineraryFields();
-        default:
-          return (
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                <textarea
-                  name="remarks"
-                  value={formData.remarks}
-                  onChange={handleInputChange}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  rows="3"
-                  placeholder={`Describe your ${currentType.toLowerCase()} requirements...`}
-                ></textarea>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Expected Closure Date</label>
-                  <input
-                    type="date"
-                    name="expectedClosureDate"
-                    value={formData.expectedClosureDate}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Expected Closure Amount</label>
-                  <input
-                    type="number"
-                    name="expectedClosureAmount"
-                    value={formData.expectedClosureAmount}
-                    onChange={handleInputChange}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                    min="0"
-                    step="0.01"
-                  />
-                </div>
-              </div>
-            </div>
-          );
-      }
-    };
-
-    return (
-      <>
-        {commonFields}
-        {typeSpecificFields()}
-      </>
     );
   };
 
