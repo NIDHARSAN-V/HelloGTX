@@ -1,485 +1,452 @@
 const mongoose = require("mongoose");
 
-const QuerySchema = new mongoose.Schema({
-  // ======================
-  // 1. CORE REFERENCES
-  // ======================
-  leadId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Lead",
-    required: true,
-    index: true
-  },
-
-  customer: {
-    id: {
+const QuerySchema = new mongoose.Schema(
+  {
+    // ======================
+    // 1. CORE REFERENCES (from frontend)
+    // ======================
+    leadId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Customer",
-      required: true
-    },
-    name: String,
-    email: String,
-    contact: String,
-    type: String
-  },
-  
-  employee: {
-    id: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Employee",
-      required: true
-    },
-    email: String,
-    name: String
-  },
-
-  // ======================
-  // 2. QUERY STATUS
-  // ======================
-  onStatus: {
-    type: String,
-    enum: ["draft", "confirmed", "completed", "cancelled"],
-    default: "draft"
-  },
-
-  // ======================
-  // 3. FOLLOW-UP INTERACTIONS
-  // ======================
-  followupId: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Interaction",
-    index: true
-  }],
-
-  // ======================
-  // 4. INCLUSION FLAGS
-  // ======================
-  includes: {
-    flights: { type: Boolean, default: false },
-    hotels: { type: Boolean, default: false },
-    visas: { type: Boolean, default: false },
-    meals: {
-      breakfast: Boolean,
-      lunch: Boolean,
-      dinner: Boolean,
-    },
-    transfers: Boolean,
-    activities: Boolean,
-    insurance: Boolean,
-  },
-
-  // ======================
-  // 5. PACKAGE REQUIREMENTS
-  // ======================
-  package: {
-    sourceCity: String,
-    destinationCity: String,
-    departureDate: Date,
-    returnDate: Date,
-    adults: { type: Number, default: 1 },
-    children: { type: Number, default: 0 },
-    infants: { type: Number, default: 0 },
-    
-    name: {
-      type: String,
-      required: [true, "Package name is required"],
-      maxlength: [100, "Name cannot exceed 100 characters"],
-    },
-    description: {
-      type: String,
-      required: [true, "Description is required"],
-      minlength: [50, "Description should be at least 50 characters"],
-    },
-    slug: {
-      type: String,
-      unique: true,
-      lowercase: true,
-    },
-    images: {
-      mainImage: { type: String, required: true },
-      gallery: [String],
-    },
-    tags: {
-      type: [String],
-      enum: {
-        values: ["family", "honeymoon", "adventure", "luxury", "budget"],
-        message: "{VALUE} is not a valid tag",
-      },
-    },
-    queryType: {
-      type: String,
-      enum: ["FIT", "GIT"],
-      default: "FIT"
-    },
-    goingFrom: String,
-    goingTo: String,
-    specificDate: Date,
-    noOfDays: Number,
-    travellers: {
-      type: Number,
-      default: 2
-    },
-    priceRange: String,
-    inclusions: [{
-      type: String,
-      enum: ['Flights', 'Hotels', 'Transfers', 'Meals', 'Sightseeing', 'Insurance', 'Visa Assistance']
-    }],
-    themes: [{
-      type: String,
-      enum: ['Beach', 'Adventure', 'Honeymoon', 'Family', 'Luxury', 'Wildlife', 'Cultural']
-    }],
-    hotelPreference: {
-      type: String,
-      default: "3"
-    },
-    foodPreferences: [{
-      type: String,
-      enum: ['Vegetarian', 'Vegan', 'Halal', 'Kosher', 'Gluten-Free', 'Jain']
-    }],
-    remarks: String,
-    expectedClosureDate: Date,
-    expectedClosureAmount: Number
-  },
-
-  // ======================
-  // 6. TRIP DATA (Grouped by Day and Date)
-  // ======================
-  tripData: [{
-    day: { 
-      type: Number, 
-      required: true 
-    },
-    date: { 
-      type: Date, 
-      required: true 
-    },
-    description: String,
-    
-    // Flight data for this day
-    flight: {
-      flightType: {
-        type: String,
-        enum: ["oneway", "roundtrip", "multicity"],
-        default: "oneway"
-      },
-      airline: { type: String, required: true },
-      flightNumber: { type: String, required: true },
-      departure: {
-        airport: { type: String, required: true },
-        terminal: String,
-        datetime: { type: Date, required: true },
-        city: { type: String, required: true },
-      },
-      arrival: {
-        airport: { type: String, required: true },
-        terminal: String,
-        datetime: { type: Date, required: true },
-        city: { type: String, required: true },
-      },
-      duration: Number,
-      cabinClass: {
-        type: String,
-        enum: ["economy", "premium", "business", "first"],
-        default: "economy",
-      },
-      baggage: {
-        carryOn: {
-          allowed: Boolean,
-          weight: Number,
-          dimensions: String,
-        },
-        checked: {
-          allowed: Boolean,
-          pieces: Number,
-          weight: Number,
-        },
-      },
-      refundable: { type: Boolean, default: false },
+      ref: "Lead",
+      required: true,
+      index: true,
     },
 
-    // Hotel data for this day
-    hotel: {
-      name: { type: String, required: true },
-      starRating: { type: Number, min: 1, max: 5 },
-      location: {
-        address: String,
-        city: { type: String, required: true },
-        coordinates: [Number],
-      },
-      roomType: { type: String, required: true },
-      amenities: [String],
-      checkIn: { type: Date, required: true },
-      checkOut: { type: Date, required: true },
-      cancellationPolicy: [String],
-      mealPlan: {
-        type: String,
-        enum: ["breakfast", "half_board", "full_board", "all_inclusive"],
-        default: "breakfast"
-      },
-      adults: { type: Number, default: 2 },
-      children: { type: Number, default: 0 }
-    },
-
-    // Transfer data for this day
-    transfer: {
-      pickup: String,
-      dropoff: String,
-      vehicleType: {
-        type: String,
-        enum: ["Sedan", "SUV", "Van", "Luxury", "Bus"],
-        default: "Sedan"
-      },
-      time: String,
-      duration: String,
-      cost: Number,
-      remarks: String
-    },
-
-    // Visa data for this day
-    visa: {
-      country: { type: String, required: true },
-      type: {
-        type: String,
-        enum: ["tourist", "business", "student"],
+    customer: {
+      id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Customer",
         required: true,
       },
-      processingTime: String,
-      requirements: [String],
-      remarks: String
-    },
-
-    // Sightseeing data for this day
-    sightseeing: {
-      activity: String,
-      location: String,
-      duration: String,
-      time: String,
-      cost: Number,
-      includes: [String],
-      remarks: String
-    },
-
-    // Miscellaneous data for this day
-    miscellaneous: {
-      description: String,
-      category: String,
-      cost: Number,
-      remarks: String
-    },
-
-    // Day notes
-    notes: String
-  }],
-
-  // ======================
-  // 7. COMPANY FORMATION REQUIREMENTS
-  // ======================
-  companyFormation: {
-    description: String,
-    requirements: [String],
-    timeline: String,
-    documents: [String],
-    remarks: String,
-    expectedClosureDate: Date,
-    expectedClosureAmount: Number
-  },
-
-  // ======================
-  // 8. FOREX REQUIREMENTS
-  // ======================
-  forex: {
-    description: String,
-    currency: String,
-    amount: Number,
-    exchangeRate: Number,
-    deliveryDate: Date,
-    remarks: String,
-    expectedClosureDate: Date,
-    expectedClosureAmount: Number
-  },
-
-  // ======================
-  // 9. PRICING & PAYMENTS
-  // ======================
-  pricing: {
-    basePrice: { type: Number, required: true },
-    components: {
-      flights: { type: Number, default: 0 },
-      accommodation: { type: Number, default: 0 },
-      visas: { type: Number, default: 0 },
-      transfers: { type: Number, default: 0 },
-      activities: { type: Number, default: 0 },
-      taxes: { type: Number, default: 0 },
-      fees: { type: Number, default: 0 },
-    },
-    discounts: {
-      earlyBird: Number,
-      group: Number,
-      promoCode: String,
-    },
-    totalPrice: {
-      type: Number,
-      required: true,
-      validate: {
-        validator: function (value) {
-          if (!value) {
-            return this.calculateTotal();
-          }
-          return true;
-        },
-        message: "Total price validation failed",
-      },
-    },
-    currency: {
+      name: String,
+      email: String,
+      contact: String,
       type: String,
-      default: "USD",
-      enum: ["USD", "EUR", "GBP", "INR"],
     },
-    paymentPlan: {
-      depositRequired: Boolean,
-      depositAmount: Number,
-      installmentOptions: [
+
+    employee: {
+      id: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Employee",
+        required: true,
+      },
+      email: String,
+      name: String,
+    },
+
+    // ======================
+    // 2. QUERY STATUS (from frontend formData.onStatus)
+    // ======================
+    onStatus: {
+      type: String,
+      enum: ["draft", "confirmed", "completed", "cancelled"],
+      default: "draft",
+    },
+
+    // ======================
+    // 3. FOLLOW-UP INTERACTIONS
+    // ======================
+    followupId: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Interaction",
+        index: true,
+      },
+    ],
+
+    // ======================
+    // 4. PACKAGE DETAILS (from frontend formData.package)
+    // ======================
+    package: {
+      queryType: {
+        type: String,
+        enum: ["FIT", "GIT"],
+        default: "FIT",
+      },
+      goingFrom: String,
+      goingTo: String,
+      specificDate: Date,
+      noOfDays: Number,
+      travellers: {
+        type: Number,
+        default: 2,
+      },
+      priceRange: String,
+      inclusions: [String],
+      themes: [String],
+      hotelPreference: {
+        type: String,
+        default: "3",
+      },
+      foodPreferences: [String],
+      remarks: String,
+      expectedClosureDate: Date,
+      expectedClosureAmount: Number,
+      name: String,
+      description: String,
+      tags: [String],
+    },
+
+    // ======================
+    // 5. DAY-WISE DATA (from frontend dayWiseData)
+    // ======================
+    dayWiseData: {
+      flights: [
         {
-          percentage: Number,
-          dueDate: Date,
+          day: { type: Number, required: true },
+          date: Date,
+          flightType: {
+            type: String,
+            enum: ["oneway", "roundtrip", "multicity"],
+            default: "oneway",
+          },
+          airline: String,
+          flightNumber: String,
+          departure: {
+            airport: String,
+            terminal: String,
+            datetime: Date,
+            city: String,
+          },
+          arrival: {
+            airport: String,
+            terminal: String,
+            datetime: Date,
+            city: String,
+          },
+          duration: String,
+          cabinClass: {
+            type: String,
+            enum: ["economy", "premium", "business", "first"],
+            default: "economy",
+          },
+          baggage: {
+            carryOn: {
+              allowed: { type: Boolean, default: false },
+              weight: String,
+              dimensions: String,
+            },
+            checked: {
+              allowed: { type: Boolean, default: false },
+              pieces: String,
+              weight: String,
+            },
+          },
+          refundable: { type: Boolean, default: false },
+          adults: { type: Number, default: 1 },
+          children: { type: Number, default: 0 },
+          infants: { type: Number, default: 0 },
+          preferredAirline: String,
+          selectionType: {
+            type: String,
+            enum: ["new", "existing", "thirdParty"],
+            default: "new",
+          },
+          selectedFlightPackage: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "FlightPackage",
+          },
+          thirdPartyDetails: {
+            pnr: String,
+            supplier: String,
+            cost: Number,
+            confirmationFile: String,
+          },
+          price: Number,
+          remarks: String,
+        },
+      ],
+
+      hotels: [
+        {
+          day: { type: Number, required: true },
+          date: Date,
+          name: String,
+          starRating: { type: Number, min: 1, max: 5 },
+          location: {
+            address: String,
+            city: String,
+            coordinates: [Number],
+          },
+          roomType: String,
+          amenities: [String],
+          checkIn: Date,
+          checkOut: Date,
+          cancellationPolicy: [String],
+          mealPlan: {
+            type: String,
+            enum: ["breakfast", "half_board", "full_board", "all_inclusive"],
+            default: "breakfast",
+          },
+          adults: { type: Number, default: 2 },
+          children: { type: Number, default: 0 },
+          selectionType: {
+            type: String,
+            enum: ["new", "existing", "thirdParty"],
+            default: "new",
+          },
+          selectedHotelPackage: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "HotelPackage",
+          },
+          thirdPartyDetails: {
+            confirmationNumber: String,
+            supplier: String,
+            cost: Number,
+            voucherFile: String,
+          },
+          price: Number,
+          remarks: String,
+        },
+      ],
+
+      transfers: [
+        {
+          day: { type: Number, required: true },
+          date: Date,
+          pickup: String,
+          dropoff: String,
+          vehicleType: {
+            type: String,
+            enum: ["Sedan", "SUV", "Van", "Luxury", "Bus"],
+            default: "Sedan",
+          },
+          time: String,
+          duration: String,
+          cost: Number,
+          price: Number,
+          remarks: String,
+        },
+      ],
+
+      visas: [
+        {
+          day: { type: Number, required: true },
+          date: Date,
+          country: String,
+          type: {
+            type: String,
+            enum: ["tourist", "business", "student", "work"],
+            default: "tourist",
+          },
+          processingTime: String,
+          requirements: [String],
+          price: Number,
+          remarks: String,
+        },
+      ],
+
+      sightseeing: [
+        {
+          day: { type: Number, required: true },
+          date: Date,
+          activity: String,
+          location: String,
+          duration: String,
+          time: String,
+          cost: Number,
+          price: Number,
+          includes: [String],
+          remarks: String,
+        },
+      ],
+
+      miscellaneous: [
+        {
+          day: { type: Number, required: true },
+          date: Date,
+          description: String,
+          category: String,
+          cost: Number,
+          price: Number,
+          remarks: String,
+        },
+      ],
+
+      companyFormation: [
+        {
+          day: { type: Number, required: true },
+          date: Date,
+          description: String,
+          requirements: [String],
+          timeline: String,
+          documents: [String],
+          price: Number,
+          remarks: String,
+          expectedClosureDate: Date,
+          expectedClosureAmount: Number,
+        },
+      ],
+
+      forex: [
+        {
+          day: { type: Number, required: true },
+          date: Date,
+          description: String,
+          currency: {
+            type: String,
+            default: "USD",
+            enum: ["USD", "EUR", "GBP", "INR"],
+          },
+          amount: Number,
+          exchangeRate: Number,
+          deliveryDate: Date,
+          price: Number,
+          remarks: String,
+          expectedClosureDate: Date,
+          expectedClosureAmount: Number,
         },
       ],
     },
-  },
 
-  // ======================
-  // 10. LOGISTICS & POLICIES
-  // ======================
-  cancellationPolicy: {
-    freeCancellation: Boolean,
-    deadline: Date,
-    penalty: {
-      percentage: Number,
-      flatFee: Number,
+    // ======================
+    // 6. INCLUSION FLAGS (calculated from requirement types)
+    // ======================
+    includes: {
+      flights: { type: Boolean, default: false },
+      hotels: { type: Boolean, default: false },
+      visas: { type: Boolean, default: false },
+      meals: {
+        breakfast: { type: Boolean, default: false },
+        lunch: { type: Boolean, default: false },
+        dinner: { type: Boolean, default: false },
+      },
+      transfers: { type: Boolean, default: false },
+      activities: { type: Boolean, default: false },
+      insurance: { type: Boolean, default: false },
+    },
+
+    // ======================
+    // 7. PRICING (from frontend formData.pricing)
+    // ======================
+    pricing: {
+      basePrice: { type: Number, default: 0 },
+      components: {
+        flights: { type: Number, default: 0 },
+        accommodation: { type: Number, default: 0 },
+        visas: { type: Number, default: 0 },
+        transfers: { type: Number, default: 0 },
+        activities: { type: Number, default: 0 },
+        taxes: { type: Number, default: 0 },
+        fees: { type: Number, default: 0 },
+      },
+      discounts: {
+        earlyBird: Number,
+        group: Number,
+        promoCode: String,
+      },
+      totalPrice: { type: Number, default: 0 },
+      currency: {
+        type: String,
+        default: "USD",
+        enum: ["USD", "EUR", "GBP", "INR"],
+      },
+      paymentPlan: {
+        depositRequired: Boolean,
+        depositAmount: Number,
+        installmentOptions: [
+          {
+            percentage: Number,
+            dueDate: Date,
+          },
+        ],
+      },
+    },
+
+    // ======================
+    // 8. TOP-LEVEL FIELDS (from frontend formData)
+    // ======================
+    expectedClosureDate: Date,
+    expectedClosureAmount: Number,
+    remarks: String,
+
+    // ======================
+    // 9. SYSTEM FIELDS
+    // ======================
+    offStatus: {
+      type: String,
+      enum: ["sold_out", "active"],
+      default: "active",
     },
   },
-  termsConditions: String,
-
-  // ======================
-  // 11. SYSTEM FIELDS
-  // ======================
-  offStatus: {
-    type: String,
-    enum: ["sold_out", "active"],
-    default: "active",
+  {
+    timestamps: true,
   }
-
-}, {
-  timestamps: true
-});
+);
 
 // ======================
 // INSTANCE METHODS
 // ======================
-QuerySchema.methods.calculateTotal = function() {
-  const components = this.pricing.components || {};
-  let total = this.pricing.basePrice || 0;
-  
-  total += (components.flights || 0);
-  total += (components.accommodation || 0);
-  total += (components.visas || 0);
-  total += (components.transfers || 0);
-  total += (components.activities || 0);
-  total += (components.taxes || 0);
-  total += (components.fees || 0);
-  
-  // Apply discounts
-  if (this.pricing.discounts) {
-    if (this.pricing.discounts.earlyBird) total -= this.pricing.discounts.earlyBird;
-    if (this.pricing.discounts.group) total -= this.pricing.discounts.group;
-  }
-  
-  return Math.max(0, total);
-};
+QuerySchema.methods.calculateTotalPrice = function () {
+  let total = 0;
 
-// Method to get data for a specific day
-QuerySchema.methods.getDayData = function(dayNumber) {
-  return this.tripData.find(day => day.day === dayNumber) || null;
-};
-
-// Method to add or update day data
-QuerySchema.methods.updateDayData = function(dayNumber, date, data) {
-  const dayIndex = this.tripData.findIndex(day => day.day === dayNumber);
-  
-  const dayData = {
-    day: dayNumber,
-    date: date,
-    description: data.description || `Day ${dayNumber}`,
-    flight: data.flight || {},
-    hotel: data.hotel || {},
-    transfer: data.transfer || {},
-    visa: data.visa || {},
-    sightseeing: data.sightseeing || {},
-    miscellaneous: data.miscellaneous || {},
-    notes: data.notes || ''
-  };
-
-  if (dayIndex !== -1) {
-    // Update existing day
-    this.tripData[dayIndex] = { ...this.tripData[dayIndex], ...dayData };
-  } else {
-    // Add new day
-    this.tripData.push(dayData);
+  // Add package expected closure amount
+  if (this.package.expectedClosureAmount) {
+    total += this.package.expectedClosureAmount;
   }
 
-  // Sort by day number
-  this.tripData.sort((a, b) => a.day - b.day);
+  // Add day-wise prices from all categories
+  const categories = ['flights', 'hotels', 'transfers', 'visas', 'sightseeing', 'miscellaneous', 'companyFormation', 'forex'];
+  
+  categories.forEach(category => {
+    if (this.dayWiseData[category]) {
+      this.dayWiseData[category].forEach(item => {
+        if (item.price) {
+          total += item.price;
+        }
+      });
+    }
+  });
+
+  return total;
 };
 
-// Method to generate comprehensive itinerary HTML
-QuerySchema.methods.generateItineraryHTML = function() {
-  // Implementation for generating HTML content
-  return `<h1>Travel Itinerary</h1>`; // Simplified for example
+QuerySchema.methods.generateItineraryHTML = function () {
+  // This will be implemented in the controller based on your frontend function
+  return `<h1>Travel Itinerary</h1>`;
 };
 
-// Pre-save middleware
-QuerySchema.pre("save", function(next) {
-  // Generate slug if new
-  if (this.isNew && !this.slug) {
-    const timestamp = Date.now().toString(36);
-    const randomStr = Math.random().toString(36).substring(2, 8);
-    this.slug = `query-${timestamp}-${randomStr}`;
-  }
-
+// ======================
+// PRE-SAVE MIDDLEWARE
+// ======================
+QuerySchema.pre("save", function (next) {
   // Calculate total price if not set
-  if (!this.pricing.totalPrice) {
-    this.pricing.totalPrice = this.calculateTotal();
+  if (!this.pricing.totalPrice || this.pricing.totalPrice === 0) {
+    this.pricing.totalPrice = this.calculateTotalPrice();
   }
 
-  // Auto-populate package fields from tripData if empty
-  if (this.tripData && this.tripData.length > 0) {
-    const firstDay = this.tripData[0];
-    const lastDay = this.tripData[this.tripData.length - 1];
-    
-    if (!this.package.goingFrom && firstDay.flight?.departure?.city) {
-      this.package.goingFrom = firstDay.flight.departure.city;
-    }
-    if (!this.package.goingTo && firstDay.flight?.arrival?.city) {
-      this.package.goingTo = firstDay.flight.arrival.city;
-    }
-    if (!this.package.specificDate && firstDay.date) {
-      this.package.specificDate = firstDay.date;
-    }
-    if (!this.package.noOfDays) {
-      this.package.noOfDays = this.tripData.length;
-    }
+  // Auto-populate includes based on dayWiseData
+  if (this.dayWiseData.flights && this.dayWiseData.flights.length > 0) {
+    this.includes.flights = true;
+  }
+  if (this.dayWiseData.hotels && this.dayWiseData.hotels.length > 0) {
+    this.includes.hotels = true;
+  }
+  if (this.dayWiseData.visas && this.dayWiseData.visas.length > 0) {
+    this.includes.visas = true;
+  }
+  if (this.dayWiseData.transfers && this.dayWiseData.transfers.length > 0) {
+    this.includes.transfers = true;
+  }
+  if (this.dayWiseData.sightseeing && this.dayWiseData.sightseeing.length > 0) {
+    this.includes.activities = true;
+  }
+
+  // Set insurance inclusion if present in package inclusions
+  if (this.package.inclusions && this.package.inclusions.includes('Insurance')) {
+    this.includes.insurance = true;
   }
 
   next();
 });
 
-// Indexes
+// ======================
+// INDEXES
+// ======================
 QuerySchema.index({ leadId: 1, createdAt: -1 });
 QuerySchema.index({ "customer.id": 1 });
 QuerySchema.index({ onStatus: 1 });
-QuerySchema.index({ slug: 1 });
-QuerySchema.index({ "tripData.day": 1 });
-QuerySchema.index({ "tripData.date": 1 });
+QuerySchema.index({ createdAt: -1 });
 
 const Query = mongoose.model("Query", QuerySchema);
 module.exports = Query;

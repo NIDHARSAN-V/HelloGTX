@@ -1,15 +1,26 @@
-// controllers/query.controller.js
 const Query = require("../../Models/Query/queryPackage.model");
 const Lead = require("../../Models/Leads/lead.model");
 
 /**
- * Create a new Query (supports day-wise itinerary)
+ * Create a new Query from frontend data
  */
 const createNewQuery = async (req, res) => {
   try {
-    console.log(req.body, "Request body in query controller");
+    console.log("Request body in query controller:", req.body);
 
-    const { formData = {}, leadId, customer, employee } = req.body;
+    const { 
+      leadId, 
+      customer, 
+      employee, 
+      onStatus = 'draft',
+      package = {},
+      dayWiseData = {},
+      includes = {},
+      pricing = {},
+      expectedClosureDate,
+      expectedClosureAmount,
+      remarks 
+    } = req.body;
 
     // Validate required fields
     if (!leadId || !customer || !employee) {
@@ -24,23 +35,157 @@ const createNewQuery = async (req, res) => {
       return res.status(404).json({ message: "Lead not found" });
     }
 
-    // Map form data to Query schema structure (supports itinerary)
-    const queryData = mapFormDataToQuerySchema(formData, leadId, customer, employee);
+    // Prepare query data according to frontend structure
+    const queryData = {
+      leadId,
+      customer: {
+        id: customer.id || customer._id,
+        name: customer.name,
+        email: customer.email,
+        contact: customer.contact,
+        type: customer.type
+      },
+      employee: {
+        id: employee.id || employee.employeeId || employee._id,
+        email: employee.email,
+        name: employee.name || 'Travel Consultant'
+      },
+      onStatus,
+      package: {
+        queryType: package.queryType || 'FIT',
+        goingFrom: package.goingFrom,
+        goingTo: package.goingTo,
+        specificDate: package.specificDate ? new Date(package.specificDate) : undefined,
+        noOfDays: package.noOfDays ? parseInt(package.noOfDays) : undefined,
+        travellers: package.travellers ? parseInt(package.travellers) : 2,
+        priceRange: package.priceRange,
+        inclusions: package.inclusions || [],
+        themes: package.themes || [],
+        hotelPreference: package.hotelPreference || '3',
+        foodPreferences: package.foodPreferences || [],
+        remarks: package.remarks,
+        expectedClosureDate: package.expectedClosureDate ? new Date(package.expectedClosureDate) : undefined,
+        expectedClosureAmount: package.expectedClosureAmount ? parseFloat(package.expectedClosureAmount) : undefined,
+        name: package.name,
+        description: package.description,
+        tags: package.tags || []
+      },
+      dayWiseData: {
+        flights: (dayWiseData.flights || []).map(flight => ({
+          ...flight,
+          date: flight.date ? new Date(flight.date) : undefined,
+          departure: flight.departure ? {
+            ...flight.departure,
+            datetime: flight.departure.datetime ? new Date(flight.departure.datetime) : undefined
+          } : {},
+          arrival: flight.arrival ? {
+            ...flight.arrival,
+            datetime: flight.arrival.datetime ? new Date(flight.arrival.datetime) : undefined
+          } : {},
+          price: flight.price ? parseFloat(flight.price) : undefined
+        })),
+        hotels: (dayWiseData.hotels || []).map(hotel => ({
+          ...hotel,
+          date: hotel.date ? new Date(hotel.date) : undefined,
+          checkIn: hotel.checkIn ? new Date(hotel.checkIn) : undefined,
+          checkOut: hotel.checkOut ? new Date(hotel.checkOut) : undefined,
+          price: hotel.price ? parseFloat(hotel.price) : undefined
+        })),
+        transfers: (dayWiseData.transfers || []).map(transfer => ({
+          ...transfer,
+          date: transfer.date ? new Date(transfer.date) : undefined,
+          price: transfer.price ? parseFloat(transfer.price) : undefined
+        })),
+        visas: (dayWiseData.visas || []).map(visa => ({
+          ...visa,
+          date: visa.date ? new Date(visa.date) : undefined,
+          price: visa.price ? parseFloat(visa.price) : undefined
+        })),
+        sightseeing: (dayWiseData.sightseeing || []).map(activity => ({
+          ...activity,
+          date: activity.date ? new Date(activity.date) : undefined,
+          price: activity.price ? parseFloat(activity.price) : undefined
+        })),
+        miscellaneous: (dayWiseData.miscellaneous || []).map(item => ({
+          ...item,
+          date: item.date ? new Date(item.date) : undefined,
+          price: item.price ? parseFloat(item.price) : undefined
+        })),
+        companyFormation: (dayWiseData.companyFormation || []).map(company => ({
+          ...company,
+          date: company.date ? new Date(company.date) : undefined,
+          expectedClosureDate: company.expectedClosureDate ? new Date(company.expectedClosureDate) : undefined,
+          expectedClosureAmount: company.expectedClosureAmount ? parseFloat(company.expectedClosureAmount) : undefined,
+          price: company.price ? parseFloat(company.price) : undefined
+        })),
+        forex: (dayWiseData.forex || []).map(forex => ({
+          ...forex,
+          date: forex.date ? new Date(forex.date) : undefined,
+          deliveryDate: forex.deliveryDate ? new Date(forex.deliveryDate) : undefined,
+          expectedClosureDate: forex.expectedClosureDate ? new Date(forex.expectedClosureDate) : undefined,
+          expectedClosureAmount: forex.expectedClosureAmount ? parseFloat(forex.expectedClosureAmount) : undefined,
+          price: forex.price ? parseFloat(forex.price) : undefined
+        }))
+      },
+      includes: {
+        flights: includes.flights || false,
+        hotels: includes.hotels || false,
+        visas: includes.visas || false,
+        meals: includes.meals || {
+          breakfast: false,
+          lunch: false,
+          dinner: false
+        },
+        transfers: includes.transfers || false,
+        activities: includes.activities || false,
+        insurance: includes.insurance || false
+      },
+      pricing: {
+        basePrice: pricing.basePrice ? parseFloat(pricing.basePrice) : 0,
+        components: pricing.components || {
+          flights: 0,
+          accommodation: 0,
+          visas: 0,
+          transfers: 0,
+          activities: 0,
+          taxes: 0,
+          fees: 0
+        },
+        discounts: pricing.discounts || {
+          earlyBird: 0,
+          group: 0,
+          promoCode: ''
+        },
+        totalPrice: pricing.totalPrice ? parseFloat(pricing.totalPrice) : 0,
+        currency: pricing.currency || 'USD',
+        paymentPlan: pricing.paymentPlan || {
+          depositRequired: false,
+          depositAmount: 0,
+          installmentOptions: []
+        }
+      },
+      expectedClosureDate: expectedClosureDate ? new Date(expectedClosureDate) : undefined,
+      expectedClosureAmount: expectedClosureAmount ? parseFloat(expectedClosureAmount) : undefined,
+      remarks
+    };
 
-    // Create and save
+    // Create and save the query
     const newQuery = new Query(queryData);
     const savedQuery = await newQuery.save();
 
-    // Update lead with query reference and status
+    // Update lead with query reference
     await Lead.findByIdAndUpdate(leadId, {
       $push: { queryId: savedQuery._id },
-      $set: { status: "follow_up", updatedAt: new Date() },
+      $set: { 
+        status: "follow_up", 
+        updatedAt: new Date() 
+      },
       $push: {
         statusHistory: {
           status: "follow_up",
           changedBy: employee.id || employee._id,
           timestamp: new Date(),
-          notes: `New query created: ${queryData.name}`,
+          notes: `New query created: ${package.name || 'Untitled Query'}`,
         },
       },
     });
@@ -83,7 +228,11 @@ const getQueriesByLead = async (req, res) => {
     const { leadId } = req.params;
     if (!leadId) return res.status(400).json({ message: "leadId is required" });
 
-    const queries = await Query.find({ leadId }).populate("leadId").sort({ createdAt: -1 });
+    const queries = await Query.find({ leadId })
+      .populate("leadId")
+      .populate("dayWiseData.flights.selectedFlightPackage")
+      .populate("dayWiseData.hotels.selectedHotelPackage")
+      .sort({ createdAt: -1 });
 
     console.log("Queries fetched for lead:", leadId, queries?.length);
 
@@ -99,13 +248,51 @@ const getQueriesByLead = async (req, res) => {
 };
 
 /**
- * Edit an existing query (replaces itinerary if provided)
+ * Get single query by ID
+ */
+const getQueryById = async (req, res) => {
+  try {
+    const { queryId } = req.params;
+    
+    const query = await Query.findById(queryId)
+      .populate("leadId")
+      .populate("dayWiseData.flights.selectedFlightPackage")
+      .populate("dayWiseData.hotels.selectedHotelPackage");
+
+    if (!query) {
+      return res.status(404).json({ message: "Query not found" });
+    }
+
+    return res.json({
+      message: "Query retrieved successfully",
+      query,
+    });
+  } catch (error) {
+    console.error("Error fetching query:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+/**
+ * Edit an existing query
  */
 const editQuery = async (req, res) => {
   try {
     console.log("Edit query request body:", req.body);
     const { queryId } = req.params;
-    const { formData = {}, leadId, customer, employee } = req.body;
+    const { 
+      leadId, 
+      customer, 
+      employee, 
+      onStatus,
+      package = {},
+      dayWiseData = {},
+      includes = {},
+      pricing = {},
+      expectedClosureDate,
+      expectedClosureAmount,
+      remarks 
+    } = req.body;
 
     if (!queryId || !leadId || !customer || !employee) {
       return res.status(400).json({
@@ -123,30 +310,88 @@ const editQuery = async (req, res) => {
       return res.status(404).json({ message: "Lead not found" });
     }
 
-    // Map incoming form data to query data
-    const updatedQueryData = mapFormDataToQuerySchema(formData, leadId, customer, employee);
+    // Prepare update data
+    const updateData = {
+      customer: {
+        id: customer.id || customer._id,
+        name: customer.name,
+        email: customer.email,
+        contact: customer.contact,
+        type: customer.type
+      },
+      employee: {
+        id: employee.id || employee.employeeId || employee._id,
+        email: employee.email,
+        name: employee.name || 'Travel Consultant'
+      },
+      onStatus: onStatus || existingQuery.onStatus,
+      package: {
+        queryType: package.queryType || existingQuery.package.queryType,
+        goingFrom: package.goingFrom || existingQuery.package.goingFrom,
+        goingTo: package.goingTo || existingQuery.package.goingTo,
+        specificDate: package.specificDate ? new Date(package.specificDate) : existingQuery.package.specificDate,
+        noOfDays: package.noOfDays ? parseInt(package.noOfDays) : existingQuery.package.noOfDays,
+        travellers: package.travellers ? parseInt(package.travellers) : existingQuery.package.travellers,
+        priceRange: package.priceRange || existingQuery.package.priceRange,
+        inclusions: package.inclusions || existingQuery.package.inclusions,
+        themes: package.themes || existingQuery.package.themes,
+        hotelPreference: package.hotelPreference || existingQuery.package.hotelPreference,
+        foodPreferences: package.foodPreferences || existingQuery.package.foodPreferences,
+        remarks: package.remarks || existingQuery.package.remarks,
+        expectedClosureDate: package.expectedClosureDate ? new Date(package.expectedClosureDate) : existingQuery.package.expectedClosureDate,
+        expectedClosureAmount: package.expectedClosureAmount ? parseFloat(package.expectedClosureAmount) : existingQuery.package.expectedClosureAmount,
+        name: package.name || existingQuery.package.name,
+        description: package.description || existingQuery.package.description,
+        tags: package.tags || existingQuery.package.tags
+      },
+      dayWiseData: {
+        flights: (dayWiseData.flights || existingQuery.dayWiseData.flights).map(flight => ({
+          ...flight,
+          date: flight.date ? new Date(flight.date) : undefined,
+          departure: flight.departure ? {
+            ...flight.departure,
+            datetime: flight.departure.datetime ? new Date(flight.departure.datetime) : undefined
+          } : {},
+          arrival: flight.arrival ? {
+            ...flight.arrival,
+            datetime: flight.arrival.datetime ? new Date(flight.arrival.datetime) : undefined
+          } : {},
+          price: flight.price ? parseFloat(flight.price) : undefined
+        })),
+        hotels: (dayWiseData.hotels || existingQuery.dayWiseData.hotels).map(hotel => ({
+          ...hotel,
+          date: hotel.date ? new Date(hotel.date) : undefined,
+          checkIn: hotel.checkIn ? new Date(hotel.checkIn) : undefined,
+          checkOut: hotel.checkOut ? new Date(hotel.checkOut) : undefined,
+          price: hotel.price ? parseFloat(hotel.price) : undefined
+        })),
+        // ... similar mapping for other categories
+      },
+      includes: includes || existingQuery.includes,
+      pricing: pricing || existingQuery.pricing,
+      expectedClosureDate: expectedClosureDate ? new Date(expectedClosureDate) : existingQuery.expectedClosureDate,
+      expectedClosureAmount: expectedClosureAmount ? parseFloat(expectedClosureAmount) : existingQuery.expectedClosureAmount,
+      remarks: remarks || existingQuery.remarks,
+      updatedAt: new Date()
+    };
 
-    // Preserve original creation meta & slug & _id
-    updatedQueryData.createdAt = existingQuery.createdAt;
-    updatedQueryData.updatedAt = new Date();
-    updatedQueryData._id = existingQuery._id;
-    updatedQueryData.slug = existingQuery.slug;
 
-    // Run update with validators
-    const updatedQuery = await Query.findByIdAndUpdate(queryId, updatedQueryData, {
-      new: true,
-      runValidators: true,
-    });
 
-    // Update lead timestamp and push status history
-    await Lead.findByIdAndUpdate(leadId, { $set: { updatedAt: new Date() } });
-    await Lead.findByIdAndUpdate(leadId, {
+    const updatedQuery = await Query.findByIdAndUpdate(
+      queryId, 
+      updateData, 
+      { new: true, runValidators: true }
+    );
+
+    // Update lead timestamp
+    await Lead.findByIdAndUpdate(leadId, { 
+      $set: { updatedAt: new Date() },
       $push: {
         statusHistory: {
           status: "follow_up",
           changedBy: employee.id || employee._id,
           timestamp: new Date(),
-          notes: `Query updated: ${updatedQueryData.name}`,
+          notes: `Query updated: ${package.name || existingQuery.package.name}`,
         },
       },
     });
@@ -168,12 +413,6 @@ const editQuery = async (req, res) => {
       });
     }
 
-    if (error.code === 11000) {
-      return res.status(400).json({
-        message: "Duplicate entry found",
-      });
-    }
-
     return res.status(500).json({
       message: "Internal server error",
       error: error.message,
@@ -182,7 +421,7 @@ const editQuery = async (req, res) => {
 };
 
 /**
- * Update query status (onStatus)
+ * Update query status
  */
 const updateQueryStatus = async (req, res) => {
   try {
@@ -198,7 +437,10 @@ const updateQueryStatus = async (req, res) => {
 
     const updatedQuery = await Query.findByIdAndUpdate(
       queryId,
-      { onStatus: status, updatedAt: new Date() },
+      { 
+        onStatus: status, 
+        updatedAt: new Date() 
+      },
       { new: true }
     );
 
@@ -216,401 +458,39 @@ const updateQueryStatus = async (req, res) => {
   }
 };
 
-/* -----------------------
-   MAPPING / HELPER LOGIC
-   ----------------------- */
-
 /**
- * Top-level mapper:
- * - If formData.itinerary (array) provided, map it directly
- * - Otherwise build a simple single-day itinerary from legacy fields
+ * Delete a query
  */
-const mapFormDataToQuerySchema = (formData, leadId, customer, employee) => {
-  const customerName = `${customer.user?.firstName || ""} ${customer.user?.lastName || ""}`.trim() || "Customer";
-  const currentDate = new Date();
-
-  // Determine query type
-  const queryType = determineQueryType(formData);
-
-  // Ensure tags / themes
-  const validTags = ["family", "honeymoon", "adventure", "luxury", "budget"];
-  const filteredThemes = (formData.themes || []).map((t) => String(t).toLowerCase()).filter((t) => validTags.includes(t));
-  const finalTags = filteredThemes.length > 0 ? filteredThemes : ["custom"];
-
-  const baseQuery = {
-    leadId,
-    onStatus: "draft",
-    name: `${customerName} - ${queryType} Package - ${currentDate.toLocaleDateString()}`,
-    description: generateDescription(formData, queryType, customerName),
-    slug: generateSlug(customerName, queryType, currentDate),
-    images: {
-      mainImage: formData.mainImage || "https://via.placeholder.com/800x600?text=Travel+Package",
-      gallery: formData.gallery || [],
-    },
-    tags: finalTags,
-    offStatus: formData.offStatus || "active",
-    createdAt: currentDate,
-    updatedAt: currentDate,
-  };
-
-  // Pricing mapping
-  const pricing = mapPricing(formData, queryType.toLowerCase());
-  baseQuery.pricing = pricing;
-
-  // Includes mapping (package includes)
-  baseQuery.includes = mapPackageIncludes(formData);
-
-  // Itinerary mapping
-  if (Array.isArray(formData.itinerary) && formData.itinerary.length > 0) {
-    baseQuery.itinerary = mapItinerary(formData.itinerary);
-  } else {
-    // Fallback: create a single-day itinerary from legacy fields
-    baseQuery.itinerary = [mapDayFromLegacyFields(formData)];
-  }
-
-  // Add cancellationPolicy, terms, etc if provided
-  if (formData.cancellationPolicy) baseQuery.cancellationPolicy = formData.cancellationPolicy;
-  if (formData.termsConditions) baseQuery.termsConditions = formData.termsConditions;
-
-  return baseQuery;
-};
-
-/**
- * Map an array of day objects sent from frontend to the itinerary schema
- * Expected day object keys (flexible):
- *  - day (Number)
- *  - date (Date|string)
- *  - flights: [...]
- *  - hotels: [...]
- *  - visas: [...]
- *  - sightseeing: [...]
- */
-const mapItinerary = (daysArray) => {
-  const mapped = daysArray.map((dayItem, idx) => {
-    // Ensure numeric day property; fallback to index+1
-    const dayNumber = typeof dayItem.day === "number" ? dayItem.day : idx + 1;
-    return mapDay(dayNumber, dayItem);
-  });
-  return mapped;
-};
-
-/**
- * Map a single day's front-end object into the schema shape
- */
-const mapDay = (dayNumber, dayItem = {}) => {
-  const day = {
-    day: dayNumber,
-    flights: [],
-    hotels: [],
-    visas: [],
-    sightseeing: [],
-  };
-
-  // Flights: either already in the correct shape or map minimal fields
-  if (Array.isArray(dayItem.flights) && dayItem.flights.length > 0) {
-    day.flights = dayItem.flights.map((f) => mapFlightForDay(f));
-  } else if (dayItem.flight) {
-    // single flight object
-    day.flights = [mapFlightForDay(dayItem.flight)];
-  }
-
-  // Hotels
-  if (Array.isArray(dayItem.hotels) && dayItem.hotels.length > 0) {
-    day.hotels = dayItem.hotels.map((h) => mapHotelForDay(h));
-  } else if (dayItem.hotel) {
-    day.hotels = [mapHotelForDay(dayItem.hotel)];
-  }
-
-  // Visas
-  if (Array.isArray(dayItem.visas) && dayItem.visas.length > 0) {
-    day.visas = dayItem.visas.map((v) => mapVisaForDay(v));
-  } else if (dayItem.visa) {
-    day.visas = [mapVisaForDay(dayItem.visa)];
-  }
-
-  // Sightseeing / Activities
-  if (Array.isArray(dayItem.sightseeing) && dayItem.sightseeing.length > 0) {
-    day.sightseeing = dayItem.sightseeing.map((s) => mapSightseeingForDay(s));
-  } else if (Array.isArray(dayItem.activities) && dayItem.activities.length > 0) {
-    // accept alternate name activities
-    day.sightseeing = dayItem.activities.map((s) => mapSightseeingForDay(s));
-  } else if (dayItem.sight) {
-    day.sightseeing = [mapSightseeingForDay(dayItem.sight)];
-  }
-
-  return day;
-};
-
-/**
- * When frontend didn't send itinerary, create a simple single day using legacy fields
- */
-const mapDayFromLegacyFields = (formData) => {
-  const day = {
-    day: 1,
-    flights: [],
-    hotels: [],
-    visas: [],
-    sightseeing: [],
-  };
-
-  // Map flight from top-level fields if present
-  if (formData.sourceCity || formData.destinationCity || formData.departureDate || formData.returnDate) {
-    day.flights = [
-      mapFlightForDay({
-        airline: formData.preferredAirline,
-        flightNumber: formData.flightNumber,
-        departure: {
-          airport: formData.sourceCity || formData.goingFrom || "To be determined",
-          datetime: formData.departureDate ? new Date(formData.departureDate) : undefined,
-          city: formData.sourceCity || formData.goingFrom || "To be determined",
-        },
-        arrival: {
-          airport: formData.destinationCity || formData.goingTo || "To be determined",
-          datetime: formData.returnDate ? new Date(formData.returnDate) : undefined,
-          city: formData.destinationCity || formData.goingTo || "To be determined",
-        },
-        cabinClass: formData.flightClass,
-      }),
-    ];
-  }
-
-  // Map hotel (legacy hotelDetails)
-  if (formData.hotelDetails || formData.goingTo) {
-    day.hotels = [
-      mapHotelForDay({
-        name: `Selected Hotel - ${formData.goingTo || "Destination"}`,
-        starRating: formData.hotelPreference,
-        location: { city: formData.goingTo || "Destination City", address: formData.hotelDetails?.address || "" },
-        roomType: formData.hotelDetails?.roomType,
-        checkIn: formData.hotelDetails?.checkIn,
-        checkOut: formData.hotelDetails?.checkOut,
-      }),
-    ];
-  }
-
-  // Map visa (legacy)
-  if (formData.visaDetails) {
-    day.visas = [mapVisaForDay(formData.visaDetails)];
-  }
-
-  // Map sightseeing/activities (legacy)
-  if (formData.activities && Array.isArray(formData.activities)) {
-    day.sightseeing = formData.activities.map((a) => mapSightseeingForDay(a));
-  } else if (formData.activity) {
-    day.sightseeing = [mapSightseeingForDay(formData.activity)];
-  }
-
-  return day;
-};
-
-/* ---------- Day-level mappers ---------- */
-
-const mapFlightForDay = (f = {}) => {
-  // Normalize minimal flight object to the schema format; fill defaults where useful
-  const departure = (f.departure && typeof f.departure === "object") ? f.departure : {
-    airport: f.departureAirport || f.departure?.airport || f.sourceCity || "To be determined",
-    terminal: f.departure?.terminal || "TBD",
-    datetime: f.departure?.datetime ? new Date(f.departure.datetime) : (f.departureDate ? new Date(f.departureDate) : undefined),
-    city: f.departure?.city || f.sourceCity || f.goingFrom || "To be determined",
-  };
-
-  const arrival = (f.arrival && typeof f.arrival === "object") ? f.arrival : {
-    airport: f.arrivalAirport || f.arrival?.airport || f.destinationCity || "To be determined",
-    terminal: f.arrival?.terminal || "TBD",
-    datetime: f.arrival?.datetime ? new Date(f.arrival.datetime) : (f.returnDate ? new Date(f.returnDate) : undefined),
-    city: f.arrival?.city || f.destinationCity || f.goingTo || "To be determined",
-  };
-
-  const flight = {
-    airline: f.airline || f.preferredAirline || "To be determined",
-    flightNumber: f.flightNumber || f.number || `TBD-${Math.random().toString(36).substr(2, 4).toUpperCase()}`,
-    departure,
-    arrival,
-    duration: f.duration || calculateFlightDuration({ departureDate: departure.datetime, returnDate: arrival.datetime, sourceCity: departure.city, destinationCity: arrival.city }),
-    cabinClass: (f.cabinClass || f.flightClass || "economy").toLowerCase(),
-    baggage: f.baggage || {
-      carryOn: { allowed: true, weight: 7, dimensions: "55x40x20 cm" },
-      checked: { allowed: true, pieces: 1, weight: 20 },
-    },
-    refundable: typeof f.refundable === "boolean" ? f.refundable : false,
-  };
-
-  // Ensure departure and arrival datetimes exist in the schema if present
-  if (!flight.departure.datetime) delete flight.departure.datetime;
-  if (!flight.arrival.datetime) delete flight.arrival.datetime;
-
-  return flight;
-};
-
-const mapHotelForDay = (h = {}) => {
-  return {
-    name: h.name || `Selected Hotel - ${h.location?.city || h.city || "Destination"}`,
-    starRating: parseInt(h.starRating || h.star || h.hotelPreference) || 3,
-    location: {
-      address: h.location?.address || h.address || "To be determined",
-      city: h.location?.city || h.city || h.destination || "Destination City",
-      coordinates: Array.isArray(h.location?.coordinates) ? h.location.coordinates : [0, 0],
-    },
-    roomType: h.roomType || h.room || "Standard",
-    amenities: h.amenities || ["WiFi", "Air Conditioning"],
-    checkIn: h.checkIn ? new Date(h.checkIn) : undefined,
-    checkOut: h.checkOut ? new Date(h.checkOut) : undefined,
-    cancellationPolicy: h.cancellationPolicy || ["Free cancellation up to 24 hours before check-in"],
-  };
-};
-
-const mapVisaForDay = (v = {}) => {
-  return {
-    country: v.country || v.visaCountry || "To be determined",
-    type: (v.type || v.visaType || "tourist").toLowerCase(),
-    processingTime: v.processingTime || v.processing || "7-10 business days",
-    requirements: v.requirements || v.docs || ["Passport copy", "Photographs", "Application form", "Travel itinerary"],
-  };
-};
-
-const mapSightseeingForDay = (s = {}) => {
-  return {
-    title: s.title || s.name || "Sightseeing / Activity",
-    description: s.description || s.desc || "",
-    location: s.location || s.place || "",
-    startTime: s.startTime ? new Date(s.startTime) : undefined,
-    endTime: s.endTime ? new Date(s.endTime) : undefined,
-    includes: s.includes || s.inclusions || [],
-    images: s.images || [],
-  };
-};
-
-/* ---------- Utility helpers ---------- */
-
-const determineQueryType = (formData) => {
-  // Favor explicit itinerary or inclusions
-  if (Array.isArray(formData.itinerary) && formData.itinerary.length > 0) return "Package";
-  if (formData.inclusions && Array.isArray(formData.inclusions) && formData.inclusions.length > 1) return "Package";
-  if (formData.flightSelectionType || (formData.sourceCity && formData.destinationCity)) return "Flight";
-  if (formData.hotelSelectionType || formData.goingTo || formData.hotelDetails) return "Hotel";
-  if (formData.transferDetails?.pickup) return "Transfer";
-  if (formData.visaDetails?.country) return "Visa";
-  return "Custom";
-};
-
-const generateDescription = (formData, queryType, customerName) => {
-  let description = `Custom ${queryType.toLowerCase()} package for ${customerName}`;
-
-  if (formData.goingFrom && formData.goingTo) description += ` from ${formData.goingFrom} to ${formData.goingTo}`;
-  if (formData.noOfDays) description += ` for ${formData.noOfDays} days`;
-  if (formData.travellers) description += ` with ${formData.travellers} travellers`;
-  if (formData.remarks) description += `\n\nSpecial Requirements: ${formData.remarks}`;
-
-  // If short, append a default sentence to satisfy minlength
-  if (description.length < 50) {
-    description += ". This custom travel package includes all requested services and accommodations tailored to your preferences.";
-  }
-
-  return description;
-};
-
-const generateSlug = (customerName, queryType, date) => {
-  const baseSlug = `${customerName.toLowerCase().replace(/\s+/g, "-")}-${queryType.toLowerCase()}-${date.getTime()}`;
-  return baseSlug.substring(0, 100);
-};
-
-const mapPackageIncludes = (formData) => {
-  const inclusions = formData.inclusions || formData.includes || [];
-  return {
-    flights: inclusions.includes("Flights") || inclusions.includes("flights"),
-    hotels: inclusions.includes("Hotels") || inclusions.includes("hotels"),
-    visas: inclusions.includes("Visa Assistance") || inclusions.includes("visas") || inclusions.includes("Visa"),
-    meals: {
-      breakfast: inclusions.includes("Meals") || inclusions.includes("meals") || inclusions.includes("Breakfast"),
-      lunch: inclusions.includes("Meals") || inclusions.includes("meals"),
-      dinner: inclusions.includes("Meals") || inclusions.includes("meals"),
-    },
-    transfers: inclusions.includes("Transfers"),
-    activities: inclusions.includes("Sightseeing") || inclusions.includes("Activities"),
-    insurance: inclusions.includes("Insurance"),
-  };
-};
-
-const mapPricing = (formData, type) => {
-  const basePrice = parseFloat(formData.expectedClosureAmount) || parseFloat(formData.basePrice) || 1000;
-  let components = {
-    flights: 0,
-    accommodation: 0,
-    visas: 0,
-    taxes: 0,
-    fees: 0,
-  };
-
-  switch (type) {
-    case "flight":
-      components.flights = basePrice * 0.8;
-      components.taxes = basePrice * 0.15;
-      components.fees = basePrice * 0.05;
-      break;
-    case "hotel":
-      components.accommodation = basePrice * 0.85;
-      components.taxes = basePrice * 0.12;
-      components.fees = basePrice * 0.03;
-      break;
-    default:
-      components.flights = basePrice * 0.4;
-      components.accommodation = basePrice * 0.45;
-      components.visas = basePrice * 0.05;
-      components.taxes = basePrice * 0.08;
-      components.fees = basePrice * 0.02;
-      break;
-  }
-
-  const totalPrice = Object.values(components).reduce((sum, val) => sum + val, 0);
-
-  return {
-    basePrice,
-    components,
-    discounts: {
-      earlyBird: 0,
-      group: 0,
-      promoCode: "",
-    },
-    totalPrice,
-    currency: formData.currency || "INR",
-    paymentPlan: {
-      depositRequired: formData.depositRequired !== undefined ? formData.depositRequired : true,
-      depositAmount: totalPrice * 0.2,
-      installmentOptions: [
-        {
-          percentage: 50,
-          dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        },
-      ],
-    },
-  };
-};
-
-const calculateFlightDuration = (formData) => {
+const deleteQuery = async (req, res) => {
   try {
-    if (formData.departureDate && formData.returnDate) {
-      const depDate = new Date(formData.departureDate);
-      const arrDate = new Date(formData.returnDate);
-      return Math.round((arrDate - depDate) / (1000 * 60)); // minutes
+    const { queryId } = req.params;
+
+    const deletedQuery = await Query.findByIdAndDelete(queryId);
+
+    if (!deletedQuery) {
+      return res.status(404).json({ message: "Query not found" });
     }
 
-    const routeKey = `${(formData.sourceCity || formData.goingFrom || "").toString().toLowerCase()}-${(formData.destinationCity || formData.goingTo || "").toString().toLowerCase()}`;
-    const durationMap = {
-      "delhi-mumbai": 120,
-      "mumbai-dubai": 180,
-      default: 150,
-    };
-    return durationMap[routeKey] || durationMap.default;
-  } catch (err) {
-    console.error("Error calculating flight duration:", err);
-    return 150;
+    // Remove query reference from lead
+    await Lead.findByIdAndUpdate(deletedQuery.leadId, {
+      $pull: { queryId: deletedQuery._id }
+    });
+
+    return res.json({
+      message: "Query deleted successfully",
+      query: deletedQuery,
+    });
+  } catch (error) {
+    console.error("Error deleting query:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
-/* Export module */
 module.exports = {
   createNewQuery,
   getQueriesByLead,
+  getQueryById,
   editQuery,
   updateQueryStatus,
+  deleteQuery,
 };

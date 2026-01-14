@@ -305,26 +305,43 @@ function NewQuery({ leadId, user, customer }) {
     setItinerarySelections(initialSelections);
   }, []);
 
-  // Auto-create days when noOfDays changes
+  // Helper function to calculate date for a specific day
+  const calculateDateForDay = (dayNumber) => {
+    if (!formData.package.specificDate) return '';
+    
+    const startDate = new Date(formData.package.specificDate);
+    const dayDate = new Date(startDate);
+    dayDate.setDate(startDate.getDate() + (dayNumber - 1));
+    
+    return dayDate.toISOString().split('T')[0];
+  };
+
+  // Helper function to calculate dates for all days
+  const calculateAllDates = () => {
+    if (!formData.package.specificDate || !formData.package.noOfDays) return;
+    
+    const numberOfDays = parseInt(formData.package.noOfDays);
+    const updatedDayWiseData = { ...dayWiseData };
+    
+    Object.keys(updatedDayWiseData).forEach(category => {
+      updatedDayWiseData[category] = Array.from({ length: numberOfDays }, (_, i) => {
+        const existingDay = updatedDayWiseData[category][i] || {};
+        return {
+          day: i + 1,
+          date: calculateDateForDay(i + 1),
+          ...getDefaultDayData(category),
+          ...existingDay
+        };
+      });
+    });
+    
+    setDayWiseData(updatedDayWiseData);
+  };
+
+  // Auto-create days and calculate dates when noOfDays or specificDate changes
   useEffect(() => {
     if (formData.package.noOfDays && formData.package.noOfDays > 0) {
-      const numberOfDays = parseInt(formData.package.noOfDays);
-      Object.keys(dayWiseData).forEach(category => {
-        if (dayWiseData[category].length !== numberOfDays) {
-          setDayWiseData(prev => ({
-            ...prev,
-            [category]: Array.from({ length: numberOfDays }, (_, i) => {
-              const existingDay = prev[category][i] || {};
-              return {
-                day: i + 1,
-                date: existingDay.date || '',
-                ...getDefaultDayData(category),
-                ...existingDay
-              };
-            })
-          }));
-        }
-      });
+      calculateAllDates();
     }
   }, [formData.package.noOfDays, formData.package.specificDate]);
 
@@ -532,13 +549,14 @@ function NewQuery({ leadId, user, customer }) {
 
   // Day-wise data handlers
   const addNewDay = (category) => {
+    const newDayNumber = dayWiseData[category].length + 1;
     setDayWiseData(prev => ({
       ...prev,
       [category]: [
         ...prev[category],
         {
-          day: prev[category].length + 1,
-          date: formData.package.specificDate || '',
+          day: newDayNumber,
+          date: calculateDateForDay(newDayNumber),
           ...getDefaultDayData(category)
         }
       ]
@@ -3231,6 +3249,8 @@ function NewQuery({ leadId, user, customer }) {
           </div>
         </div>
 
+
+
         {/* Flights Review */}
         {dayWiseData.flights.some(flight => flight.airline || flight.flightNumber) && (
           <div className="border border-gray-200 rounded-lg p-6">
@@ -3832,6 +3852,8 @@ function NewQuery({ leadId, user, customer }) {
                 disabled={activeTab === 0}
                 className={`inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md ${activeTab === 0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-white text-gray-700 hover:bg-gray-50'}`}
               >
+
+                
                 <svg className="-ml-1 mr-2 h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
                 </svg>
