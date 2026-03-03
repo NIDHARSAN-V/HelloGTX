@@ -33,6 +33,7 @@ const UserSchema = new mongoose.Schema({
   role: { 
     type: String, 
     enum: ["super_admin","employee", "admin", "customer"], 
+    //bugs present in lead identification on change in lead page 
     default: "customer",
     required: true
   },
